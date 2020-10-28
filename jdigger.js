@@ -142,7 +142,7 @@ function game_restore() {
                 score_raum = Number(c.substring(name.length, c.length));
         }
 
-        var name = "lives=";
+        name = "lives=";
         var ca = document.cookie.split(';');
         for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
@@ -154,7 +154,7 @@ function game_restore() {
             }
         }
 
-        var name = "score=";
+        name = "score=";
         var ca = document.cookie.split(';');
         for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
@@ -1178,8 +1178,6 @@ setpixelated(context_menuimg);
 function draw_frame() {
 
     if (state == 'look' || state == 'init' || state == 'play') {
-
-        var data_scoreline;
 
         //DIGGER HALT
         if ((state == 'play') && !digger_death && !digger_idle && (digger_go == 'NONE')) {
