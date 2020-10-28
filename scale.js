@@ -20,7 +20,7 @@ var LEBENMAX = 20;
 var LEBENMIN = 1;
 
 //allgem. Variablen
-var digger_version = '20.10.23';
+var digger_version = '20.10.28';
 var blink_tick = 3;
 var diamond_blink = 64;
 var zufall = 1;
