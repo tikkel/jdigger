@@ -882,6 +882,7 @@ function init_room(level) {
     score_ges = 0;
     score_zeit = 5000;
     var trans;
+    var richtung;
 
     // Raum(level) initialisieren(idx[])
     // orig. NOTHING=0 STONE=1 GROUND=2 GHOST=0x3,0x7,0xB,0xF LDIGGER=4 DIAMOND=5 WALL=6 UVSTONE=9 DIGGER=10 EXIT=12 CHANGER=14 FSTODMD=15
@@ -927,7 +928,7 @@ function init_room(level) {
             else if (trans == 15) trans = 51.1; // ghost_90leftright
             // Geist-Richtung aus P9-P16 holen
             if ((trans >= 43) && (trans < 63)) {
-                var richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
+                richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
                 if (richtung == 1) trans = trans + 2;
                 else if (richtung == 2) trans = trans + 1;
                 else if (richtung == 3) trans = trans + 3;
@@ -955,7 +956,7 @@ function init_room(level) {
             else if (trans == 15) trans = 51.1; // ghost_90leftright
             // Geist-Richtung aus P9-P16 holen
             if ((trans >= 43) && (trans < 63)) {
-                var richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
+                richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
                 if (richtung == 1) trans = trans + 2;
                 else if (richtung == 2) trans = trans + 1;
                 else if (richtung == 3) trans = trans + 3;
