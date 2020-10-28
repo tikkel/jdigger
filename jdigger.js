@@ -882,6 +882,7 @@ function init_room(level) {
     digger_death = false;
     score_ges = 0;
     score_zeit = 5000;
+    var trans;
 
     // Raum(level) initialisieren(idx[])
     // orig. NOTHING=0 STONE=1 GROUND=2 GHOST=0x3,0x7,0xB,0xF LDIGGER=4 DIAMOND=5 WALL=6 UVSTONE=9 DIGGER=10 EXIT=12 CHANGER=14 FSTODMD=15
