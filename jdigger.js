@@ -514,8 +514,7 @@ function kb_input(taste) {
 
 //Highscore-ALIAS-Eingabe (Table, Handy, LG-SmartTV)
 function vkb_input() {
-    if (state == 'input')
-        if (virt_kbd_last_length < virt_kbd.value.length) {
+    if (state == 'input' && (virt_kbd_last_length < virt_kbd.value.length)) {
             input = virt_kbd.value.charAt(virt_kbd.value.length - 1).replace(/[^a-zA-Z0-9!"#$%&()*+,./:;<=>?@\-\s]+/g, '');
             virt_kbd_last_length = virt_kbd.value.length;
         }
