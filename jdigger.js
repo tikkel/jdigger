@@ -2052,7 +2052,6 @@ function draw_frame() {
                         }
                     }
                     pre_tim20 = ti - 20;
-                    pre_tip20 = ti + 20;
 
                     //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
                     //- bewegter Stein/Diamant: 3.2/7.2
@@ -2281,7 +2280,6 @@ function draw_frame() {
                                 break;
                         }
                     }
-                    pre_tim1 = ti - 1;
                     pre_tim20 = ti - 20;
 
                     //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
@@ -2511,7 +2509,6 @@ function draw_frame() {
                                 break;
                         }
                     }
-                    pre_tim1 = ti - 1;
                     pre_tip1 = ti + 1;
                     pre_tim20 = ti - 20;
 
