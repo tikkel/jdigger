@@ -1425,7 +1425,10 @@ function draw_frame() {
             var pre_p2;
             var pre_p19;
             var pre_p20;
-            //ar pre_p40;
+            var pre_p39;
+            var pre_p40;
+            var pre_p41;
+            var pre_p60;
             var pre_p21;
             var ti = 1;
             var pre_tim1;
@@ -2528,10 +2531,10 @@ function draw_frame() {
 
                 // Steine und Diamanten
                 else if ((idx[l] == 7) || (idx[l] == 3)) {
-                    var pre_p39 = l + 39;
-                    var pre_p40 = l + 40;
-                    var pre_p41 = l + 41;
-                    var pre_p60 = l + 60;
+                    pre_p39 = l + 39;
+                    pre_p40 = l + 40;
+                    pre_p41 = l + 41;
+                    pre_p60 = l + 60;
                     //Stein in Diamant umwandeln
                     if ((idx[l] == 7) && (idx[pre_p20] == 5) && (idx[pre_p40] == 1)) {
                         idx[pre_p40] = 3.2;
