@@ -1432,7 +1432,6 @@ function draw_frame() {
             var pre_p21;
             var ti = 1;
             var pre_tim20;
-            var pre_tip1;
             for (var l = 1; l < 281; l++) {
                 pre_m1 = l - 1;
                 pre_m2 = l - 2;
@@ -2502,7 +2501,6 @@ function draw_frame() {
                                 break;
                         }
                     }
-                    pre_tip1 = ti + 1;
                     pre_tim20 = ti - 20;
 
                     //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
