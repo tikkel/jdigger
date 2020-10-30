@@ -1431,10 +1431,8 @@ function draw_frame() {
             var pre_p60;
             var pre_p21;
             var ti = 1;
-            var pre_tim1;
             var pre_tim20;
             var pre_tip1;
-            var pre_tip20;
             for (var l = 1; l < 281; l++) {
                 pre_m1 = l - 1;
                 pre_m2 = l - 2;
