@@ -1425,7 +1425,7 @@ function draw_frame() {
             var pre_p2;
             var pre_p19;
             var pre_p20;
-            var pre_p40;
+            //ar pre_p40;
             var pre_p21;
             var ti = 1;
             var pre_tim1;
