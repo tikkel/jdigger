@@ -35,6 +35,7 @@ function init_events() {
 //Highscore laden und aktualisieren
 function highscore_update() {
     //lade Array
+    var h;
     try { //wird localStorage unterstützt?
         if (localStorage.getItem("highscore"))
             highscore = JSON.parse(localStorage.getItem("highscore"));
@@ -60,13 +61,13 @@ function highscore_update() {
         highscore[2] = "08000  (c) 1988 by";
         highscore[3] = "07000  Alexander Lang";
         highscore[4] = "06000  --------------";
-        for (var h = 5; h < 20; h++) {
+        for (h = 5; h < 20; h++) {
             highscore[h] = "00000";
         }
     }
 
     //über alle 20 Einträge iterieren
-    for (var h = 0; h < 20; h++) {
+    for (h = 0; h < 20; h++) {
         //aktueller score > als aktueller Highscore-Eintrag
         if (score_punkte > Number(highscore[h].substring(0, 5))) {
 
@@ -122,6 +123,9 @@ function game_save() {
 }
 //Spielstand restaurieren
 function game_restore() {
+    var ca;
+    var i;
+    var c;
     try { //wird localStorage unterstützt?
         if (localStorage.getItem("level"))
             score_raum = Number(localStorage.getItem("level"));
@@ -132,9 +136,9 @@ function game_restore() {
         console.log('game_restore: von localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     } catch (e) { //ansonsten Cookies benutzen
         var name = "level=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
+        ca = document.cookie.split(';');
+        for (i = 0; i < ca.length; i++) {
+            c = ca[i];
             while (c.charAt(0) == ' ') {
                 c = c.substring(1);
             }
@@ -143,9 +147,9 @@ function game_restore() {
         }
 
         name = "lives=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
+        ca = document.cookie.split(';');
+        for (i = 0; i < ca.length; i++) {
+            c = ca[i];
             while (c.charAt(0) == ' ') {
                 c = c.substring(1);
             }
@@ -155,9 +159,9 @@ function game_restore() {
         }
 
         name = "score=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
+        ca = document.cookie.split(';');
+        for (i = 0; i < ca.length; i++) {
+            c = ca[i];
             while (c.charAt(0) == ' ') {
                 c = c.substring(1);
             }
