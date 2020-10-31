@@ -63,7 +63,10 @@ var digger_down = false;
 var digger_start_down = false;
 var digger_idle = true;
 var digger_in_idle = false;
-var digger_animation = false;
+var digger_animation_left = false;
+var digger_animation_right = false;
+var digger_animation_up = false;
+var digger_animation_down = false;
 
 var backup_left = digger_left;
 var backup_up = digger_up;
@@ -76,7 +79,6 @@ var cheat_tmp = '';
 var digger_half_step = false;
 var digger_go = 'NONE'; //LEFT, RIGHT, UP, DOWN, NONE
 var digger_death = false;
-var digger_die = false;
 var digger_is_dead = false;
 
 var input;

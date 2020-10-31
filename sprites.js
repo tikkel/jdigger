@@ -40,18 +40,18 @@ var sprites = [
     33, // 12=Digger down2
 
     21, //13 Laufanimation links
-    22, //14
-    23, //15
+    20, //14
+    21, //15
     22, //16
-    21, //17
-    20, //18
+    23, //17
+    22, //18
 
     25, //19 Laufanimation rechts
-    26, //20
-    27, //21
+    24, //20
+    25, //21
     26, //22
-    25, //23
-    24, //24
+    27, //23
+    26, //24
 
     35, //eye1 Idle Animation Augenblinzeln
     36, //eye2
@@ -394,8 +394,8 @@ function drawText(s, x, y) {
 function drawHeader() {
     // Header darstellen
     var sr = "" + score_raum;
-    var sd = "" + score_dia;
     var sl = "" + score_leben;
+    var sd = "" + score_dia;
     while (sr.length < 2)
         sr = "0" + sr;
     while (sl.length < 2)

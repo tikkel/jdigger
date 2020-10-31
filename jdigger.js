@@ -240,9 +240,8 @@ function mo_press(ev) {
 
         //im Spiel
         else if ((state == 'play') && digger_death) {
-            //Esc, Neustart
+            //Neustart
             state = 'init';
-            score_leben--;
             if (score_leben < LEBENMIN) {
                 state = 'highscore';
                 drawHighscore();
@@ -285,19 +284,9 @@ function touchDown(e) {
     //2 Finger Tap (entspricht [Esc], Abbruch und Level neu starten)
     else if (e.touches.length > 1) {
         //ESC
-        if (state == 'play') {
-            state = 'init';
-            score_leben--;
-            if (score_leben < LEBENMIN) {
-                state = 'highscore';
-                drawHighscore();
-                score_punkte = 0;
-                score_leben = LEBENMAX;
-                score_raum = 1;
-            }
-            game_save(); //spielstand sichern
-            init_room(score_raum);
-        } else if (state == 'highscore' || state == 'look') {
+        if (state == 'play')
+            digger_death = true;
+        else if (state == 'highscore' || state == 'look') {
             state = 'menu';
             drawMenu();
         }
@@ -306,9 +295,8 @@ function touchDown(e) {
     //1 Finger Tap    
     //im Spiel und tot
     else if ((state == 'play') && digger_death) {
-        //Esc
+        //Neustart
         state = 'init';
-        score_leben--;
         if (score_leben < LEBENMIN) {
             //virtuelle Tastatur einblenden
             document.body.removeEventListener('click', vkb_focus, false);
@@ -565,7 +553,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //h Highscore
+            //h Highscore
             case 72:
                 if (state == 'menu') {
                     state = 'highscore';
@@ -573,12 +561,12 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //9
+            //9
             case 57:
                 cheat_tmp = '9' + cheat_tmp;
                 handled = true;
                 break;
-                //d
+            //d
             case 68:
                 cheat_tmp = cheat_tmp + 'd';
                 if (cheat_tmp == '99d') {
@@ -588,7 +576,7 @@ function kb_press(taste) {
                 cheat_tmp = '';
                 handled = true;
                 break;
-                //pos1
+            //pos1
             case 36:
                 if ((score_raum < room.length) && digger_cheat) {
                     idle_stop();
@@ -596,31 +584,20 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //Escape
+            //Escape
             case 27:
-                if (state == 'play') {
-                    state = 'init';
-                    score_leben--;
-                    if (score_leben < LEBENMIN) {
-                        state = 'highscore';
-                        drawHighscore();
-                        score_punkte = 0;
-                        score_leben = LEBENMAX;
-                        score_raum = 1;
-                    }
-                    game_save(); //spielstand sichern
-                    init_room(score_raum);
-                } else if (state == 'highscore' || state == 'look') {
+                if (state == 'play')
+                    digger_death = true;
+                else if (state == 'highscore' || state == 'look') {
                     state = 'menu';
                     drawMenu();
                 }
                 handled = true;
                 break;
-                //Enter
+            //Enter
             case 13:
                 if ((state == 'play') && digger_death) {
                     state = 'init';
-                    score_leben--;
                     if (score_leben < LEBENMIN) {
                         state = 'highscore';
                         drawHighscore();
@@ -636,11 +613,10 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //Space
+            //Space
             case 32:
                 if ((state == 'play') && digger_death) {
                     state = 'init';
-                    score_leben--;
                     if (score_leben < LEBENMIN) {
                         state = 'highscore';
                         drawHighscore();
@@ -656,7 +632,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //p Play
+            //p Play
             case 80:
                 if (state == 'menu') {
                     game_restore(); //spielstand restaurieren
@@ -665,7 +641,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //l Look
+            //l Look
             case 76:
                 if (state == 'menu') {
                     state = 'look';
@@ -684,22 +660,22 @@ function kb_press(taste) {
                 handled = true;
                 break;
 
-                //oben
+            //oben
             case 38:
                 kb_press_up();
                 handled = true;
                 break;
-                //unten
+            //unten
             case 40:
                 kb_press_down();
                 handled = true;
                 break;
-                //links
+            //links
             case 37:
                 kb_press_left();
                 handled = true;
                 break;
-                //rechts
+            //rechts
             case 39:
                 kb_press_right();
                 handled = true;
@@ -866,6 +842,15 @@ function kb_unpress() {
 
 
 function init_digger() {
+    //Diggeranimation zurücksetzen
+    digger_animation_left = false;
+    digger_animation_right = false;
+    digger_animation_up = false;
+    digger_animation_down = false;
+    digger_step_left = 13;
+    digger_step_up = 9;
+    digger_step_right = 19;
+    digger_step_down = 11;
     //EXIT(41) finden und Digger dort positionieren(d_idx)
     for (var l = 1; l < 281; l++) {
         if (idx[l] == 41.1) d_idx = l;
@@ -1006,9 +991,17 @@ function draw_digger_death() {
     else idx[d_idx + 20] = 0.1;
     if (score_ges > 7) idx[d_idx + 21] = 3.1;
     else idx[d_idx + 21] = 0.1;
-    digger_die = false;
     digger_is_dead = true;
     ton_diamant = true;
+    //Diggeranimation zurücksetzen
+    digger_animation_left = false;
+    digger_animation_right = false;
+    digger_animation_up = false;
+    digger_animation_down = false;
+    digger_step_left = 13;
+    digger_step_up = 9;
+    digger_step_right = 19;
+    digger_step_down = 11;
 }
 
 //Softscroller
@@ -1112,11 +1105,18 @@ function draw_field() {
                 context_digger.drawImage(buffer_canvas, 0, sprites[i] * pre_icon_size, pre_icon_size, pre_icon_size, x, y, pre_icon_size, pre_icon_size);
         }
     }
-    //soft_scroll();
 }
 
 function draw_line() {
-    //refresh "score_zeit"
+    //refresh "übrige Leben" wenn getötet
+    if (digger_death) {
+        var sl = "" + score_leben;
+        while (sl.length < 2)
+            sl = "0" + sl;
+        drawText(sl, 7, 0);
+    }
+    
+    //refresh "Countdown"
     var sz = "" + score_zeit;
     while (sz.length < 4)
         sz = "0" + sz;
@@ -1126,12 +1126,13 @@ function draw_line() {
     }
     drawText(sz, 15, 0);
 
-    //refresh "score_ges"
+    //refresh "gesammelte Diamanten"
     var sg = "" + score_ges;
-    while (sg.length < 2) sg = "0" + sg;
+    while (sg.length < 2)
+        sg = "0" + sg;
     drawText(sg, 23, 0);
 
-    //refresh "score_punkte"
+    //refresh "gesamte Punktanzahl"
     var sp = "" + score_punkte;
     while (sp.length < 5)
         sp = "0" + sp;
@@ -1185,17 +1186,17 @@ function draw_frame() {
     if (state == 'look' || state == 'init' || state == 'play') {
 
         //DIGGER HALT
-        if ((state == 'play') && !digger_death && !digger_idle && (digger_go == 'NONE')) {
+        if ((state == 'play') && !digger_death && !digger_idle && !digger_half_step && (digger_go == 'NONE')) {
             // Animation zuruecksetzen
             idx[d_idx] = 8.1;
             digger_step_left = 13;
-            idx[d_idx] = 8.1;
             digger_step_up = 9;
-            idx[d_idx] = 8.1;
             digger_step_right = 19;
-            idx[d_idx] = 8.1;
             digger_step_down = 11;
-            digger_animation = false;
+            digger_animation_left = false;
+            digger_animation_right = false;
+            digger_animation_up = false;
+            digger_animation_down = false;
             digger_idle = true;
         }
 
@@ -1223,10 +1224,8 @@ function draw_frame() {
                     next_raum = true;
                 }
                 // ? Geist
-                else if (((idx[pre_l] >= 43) && (idx[pre_l] < 63)) && !digger_half_step) {
+                else if (((idx[pre_l] >= 43) && (idx[pre_l] < 63)) && !digger_half_step)
                     digger_death = true;
-                    digger_die = true;
-                }
                 // ? Stein
                 else if ((idx[pre_l] == 7) && !digger_half_step) {
                     // ? Platz zum wegschieben
@@ -1249,14 +1248,15 @@ function draw_frame() {
                     ton_schritt = true;
                 }
                 //Animation aktivieren, Start ab Vollbild
-                if ( (!digger_half_step) && (digger_step_left == 13) )
-                    digger_animation = true;
-                //Animation setzen...
-                if (digger_animation) {                 //... bei jedem Halbbild
-                    idx[d_idx] = digger_step_left + 0.1;
-                    digger_step_left++;
-                    if (digger_step_left > 18)
-                        digger_step_left = 13;
+                if ( (!digger_half_step) && (digger_step_left == 13) ) {
+                    digger_animation_left = true;
+                    digger_animation_right = false;
+                    digger_animation_up = false;
+                    digger_animation_down = false;
+                    //digger_step_left = 13;
+                    digger_step_up = 9;
+                    digger_step_right = 19;
+                    digger_step_down = 11;
                 }
             }
 
@@ -1275,10 +1275,8 @@ function draw_frame() {
                     next_raum = true;
                 }
                 // ? Geist
-                else if (((idx[pre_h] >= 43) && (idx[pre_h] < 63)) && !digger_half_step) {
+                else if (((idx[pre_h] >= 43) && (idx[pre_h] < 63)) && !digger_half_step)
                     digger_death = true;
-                    digger_die = true;
-                }
                 // ? Sand, Diamant oder Leer
                 if ((idx[pre_h] < 4) && !digger_half_step) {
                     idx[pre_idx] = 1.1;
@@ -1286,14 +1284,15 @@ function draw_frame() {
                     ton_schritt = true;
                 }
                 //Animation aktivieren, beginnen ab Vollbild
-                if ( (!digger_half_step) && (digger_step_left == 9) )
-                    digger_animation = true;
-                //Animation setzen...
-                if (!digger_half_step) {                //...nur bei jedem Vollbild
-                    idx[d_idx] = digger_step_up + 0.1;
-                    digger_step_up++;
-                    if (digger_step_up > 10)
-                        digger_step_up = 9;
+                if ( (!digger_half_step) && (digger_step_up == 9) ) {
+                    digger_animation_left = false;
+                    digger_animation_right = false;
+                    digger_animation_up = true;
+                    digger_animation_down = false;
+                    digger_step_left = 13;
+                    //digger_step_up = 9;
+                    digger_step_right = 19;
+                    digger_step_down = 11;
                 }
             }
 
@@ -1313,10 +1312,8 @@ function draw_frame() {
                     next_raum = true;
                 }
                 // ? Geist
-                else if (((idx[pre_r] >= 43) && (idx[pre_r] < 63)) && !digger_half_step) {
+                else if (((idx[pre_r] >= 43) && (idx[pre_r] < 63)) && !digger_half_step)
                     digger_death = true;
-                    digger_die = true;
-                }
                 // ? Stein
                 else if ((idx[pre_r] == 7) && !digger_half_step) {
                     // ? Platz zum wegschieben
@@ -1336,18 +1333,18 @@ function draw_frame() {
                 if ((idx[pre_r] < 4) && !digger_half_step) {
                     idx[pre_idx] = 1.1;
                     d_idx++;
-                    digger_animation = true;
                     ton_schritt = true;
                 }
                 //Animation aktivieren, Start ab Vollbild
-                if ( (!digger_half_step) && (digger_step_left == 19) )
-                    digger_animation = true;
-                //Animation setzen...
-                if (digger_animation) {                     //...bei jedem Halbbild
-                    idx[d_idx] = digger_step_right + 0.1;
-                    digger_step_right++;
-                    if (digger_step_right > 24)
-                        digger_step_right = 19;
+                if ( (!digger_half_step) && (digger_step_right == 19) ) {
+                    digger_animation_left = false;
+                    digger_animation_right = true;
+                    digger_animation_up = false;
+                    digger_animation_down = false;
+                    digger_step_left = 13;
+                    digger_step_up = 9;
+                    //digger_step_right = 19;
+                    digger_step_down = 11;
                 }
             }
 
@@ -1366,10 +1363,8 @@ function draw_frame() {
                     next_raum = true;
                 }
                 // ? Geist
-                else if (((idx[pre_d] >= 43) && (idx[pre_d] < 63)) && !digger_half_step) {
+                else if (((idx[pre_d] >= 43) && (idx[pre_d] < 63)) && !digger_half_step)
                     digger_death = true;
-                    digger_die = true;
-                }
                 // ? Sand, Diamant oder Leer
                 if ((idx[pre_d] < 4) && !digger_half_step) {
                     idx[pre_idx] = 1.1;
@@ -1377,22 +1372,56 @@ function draw_frame() {
                     ton_schritt = true;
                 }
                 //Animation aktivieren, Start ab Vollbild
-                if ( (!digger_half_step) && (digger_step_left == 11) )
-                    digger_animation = true;
-                //Animation setzen...
-                if (!digger_half_step) {                //...nur bei jedem Vollbild
-                    idx[d_idx] = digger_step_down + 0.1;
-                    digger_step_down++;
-                    if (digger_step_down > 12)
-                        digger_step_down = 11;
+                if ( (!digger_half_step) && (digger_step_down == 11) ) {
+                    digger_animation_left = false;
+                    digger_animation_right = false;
+                    digger_animation_up = false;
+                    digger_animation_down = true;
+                    digger_step_left = 13;
+                    digger_step_up = 9;
+                    digger_step_right = 19;
+                    //digger_step_down = 11;
                 }
             }
         }
 
+        //DIGGER ANIMIEREN
+        //links (bei jedem Halbbild)
+        if (digger_animation_left) {
+            idx[d_idx] = digger_step_left + 0.1;
+            digger_step_left++;
+            if (digger_step_left > 18)
+                digger_step_left = 13;
+        }
+        //hoch (nur bei jedem Vollbild)
+        if (digger_animation_up && !digger_half_step) {
+            idx[d_idx] = digger_step_up + 0.1;
+            digger_step_up++;
+            if (digger_step_up > 10)
+                digger_step_up = 9;
+        }
+        //rechts (bei jedem Halbbild)
+        if (digger_animation_right) {
+            idx[d_idx] = digger_step_right + 0.1;
+            digger_step_right++;
+            if (digger_step_right > 24)
+                digger_step_right = 19;
+        }
+        //runter (nur bei jedem Vollbild)
+        if (digger_animation_down && !digger_half_step) {
+            idx[d_idx] = digger_step_down + 0.1;
+            digger_step_down++;
+            if (digger_step_down > 12)
+                digger_step_down = 11;
+        }
+        
         //DIGGER TOETEN
-        else if (digger_death && digger_die && !digger_is_dead) {
+        else if (digger_death && !digger_is_dead) {
             draw_digger_death();
             digger_go = 'NONE';
+            score_leben--;
+            //spielstand sichern
+            game_save();
         }
 
         //SPIELFELD AKTIVITAETEN
@@ -1478,10 +1507,8 @@ function draw_frame() {
                     // Zum sterben markierte Geister(nn.2)?
                     if ((idx[l] == 43.2) || (idx[l] == 44.2) || (idx[l] == 45.2) || (idx[l] == 46.2)) {
                         // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41))) {
+                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
                             digger_death = true;
-                            digger_die = true;
-                        }
                         // Geist zu Staub
                         idx[pre_m21] = 0.1;
                         idx[pre_m20] = 0.1;
@@ -1505,31 +1532,23 @@ function draw_frame() {
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 45.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
                                 }
                                 // wenn drüber DIGGER 8-40
-                                else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 // wenn drunter NOTHING 1
                                 else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) {
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 43.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
                                 }
                                 // wenn drunter DIGGER 8-40
-                                else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RUNTER
                             case 43:
@@ -1538,25 +1557,18 @@ function draw_frame() {
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 43.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 45.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RECHTS
                             case 44:
@@ -1564,25 +1576,18 @@ function draw_frame() {
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 44.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 46.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //LINKS
                             case 46:
@@ -1590,25 +1595,18 @@ function draw_frame() {
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 46.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 44.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                         }
                     }
@@ -1627,10 +1625,8 @@ function draw_frame() {
                     // Zum sterben markierte Geister(nn.2)?
                     if ((idx[l] == 47.2) || (idx[l] == 48.2) || (idx[l] == 49.2) || (idx[l] == 50.2)) {
                         // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41))) {
+                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
                             digger_death = true;
-                            digger_die = true;
-                        }
                         // Geist zu Staub
                         idx[pre_m21] = 0.1;
                         idx[pre_m20] = 0.1;
@@ -1653,47 +1649,34 @@ function draw_frame() {
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 49.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 50.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 48.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 47.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RUNTER down right left up
                             case 47:
@@ -1701,47 +1684,34 @@ function draw_frame() {
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 47.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 48.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 50.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 49.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RECHTS right up down left
                             case 48:
@@ -1749,47 +1719,34 @@ function draw_frame() {
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 48.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 49.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 47.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 50.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //LINKS left down up right
                             case 50:
@@ -1797,47 +1754,34 @@ function draw_frame() {
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 50.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 47.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 49.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 48.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                         }
                     }
@@ -1856,10 +1800,8 @@ function draw_frame() {
                     // Zum sterben markierte Geister(nn.2)?
                     if ((idx[l] == 51.2) || (idx[l] == 52.2) || (idx[l] == 53.2) || (idx[l] == 54.2)) {
                         // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41))) {
+                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
                             digger_death = true;
-                            digger_die = true;
-                        }
                         // Geist zu Staub
                         idx[pre_m21] = 0.1;
                         idx[pre_m20] = 0.1;
@@ -1882,47 +1824,34 @@ function draw_frame() {
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 53.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 52.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 54.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 51.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RUNTER down left right up
                             case 51:
@@ -1930,47 +1859,34 @@ function draw_frame() {
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 51.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 54.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 52.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 53.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RECHTS right down up left
                             case 52:
@@ -1978,47 +1894,34 @@ function draw_frame() {
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 52.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 51.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 53.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 54.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //LINKS left up down right
                             case 54:
@@ -2026,47 +1929,34 @@ function draw_frame() {
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 54.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 53.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 51.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 52.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                         }
                     }
@@ -2085,10 +1975,8 @@ function draw_frame() {
                     // Zum sterben markierte Geister(nn.2)?
                     if ((idx[l] == 55.2) || (idx[l] == 56.2) || (idx[l] == 57.2) || (idx[l] == 58.2)) {
                         // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41))) {
+                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
                             digger_death = true;
-                            digger_die = true;
-                        }
                         // Geist zu Staub
                         idx[pre_m21] = 0.1;
                         idx[pre_m20] = 0.1;
@@ -2111,47 +1999,34 @@ function draw_frame() {
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 57.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 62.1; // links setzen -> 90RL
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 60.1; // rechts setzen -> 90RL
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 55.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RUNTER down right left up
                             case 55:
@@ -2159,47 +2034,34 @@ function draw_frame() {
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 55.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 60.1; // rechts setzen -> 90RL
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 62.1; // links setzen -> 90RL
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 57.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RECHTS right up down left
                             case 56:
@@ -2207,47 +2069,34 @@ function draw_frame() {
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 56.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 61.1; // drüber setzen -> 90RL
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 59.1; // drunter setzen -> 90RL
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 58.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //LINKS left down up right
                             case 58:
@@ -2255,47 +2104,34 @@ function draw_frame() {
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 58.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 59.1; // drunter setzen 90RL
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 61.1; // drüber setzen -> 90RL
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 56.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                         }
                     }
@@ -2314,10 +2150,8 @@ function draw_frame() {
                     // Zum sterben markierte Geister(nn.2)?
                     if ((idx[l] == 59.2) || (idx[l] == 60.2) || (idx[l] == 61.2) || (idx[l] == 62.2)) {
                         // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41))) {
+                        if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
                             digger_death = true;
-                            digger_die = true;
-                        }
                         // Geist zu Staub
                         idx[pre_m21] = 0.1;
                         idx[pre_m20] = 0.1;
@@ -2340,47 +2174,34 @@ function draw_frame() {
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 61.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 56.1; // rechts setzen -> 90LR
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 58.1; // links setzen -> 90LR
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 59.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RUNTER down left right up
                             case 59:
@@ -2388,47 +2209,34 @@ function draw_frame() {
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 59.1; // drunter setzen
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 58.1; // links setzen 90LR
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 56.1; // rechts setzen -> 90LR
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 61.1; // drüber setzen
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //RECHTS right down up left
                             case 60:
@@ -2436,47 +2244,34 @@ function draw_frame() {
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 60.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 55.1; // drunter setzen 90LR
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 57.1; // drüber setzen 90LR
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 62.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                                 //LINKS left up down right
                             case 62:
@@ -2484,47 +2279,34 @@ function draw_frame() {
                                     ti = pre_m1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 62.1; // links setzen
-                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41)) {
+                                    if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) {
+                                } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
                                     ti = pre_m20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 57.1; // drüber setzen 90LR
-                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41)) {
+                                    if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) {
+                                } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                     ti = pre_p20;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 55.1; // drunter setzen 90LR
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) {
+                                } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                } else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                     ti = pre_p1;
                                     idx[l] = 1.1; // lokal löschen
                                     idx[ti] = 60.1; // rechts setzen
-                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41)) {
+                                    if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
-                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) {
+                                } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 break;
                         }
                     }
@@ -2553,10 +2335,8 @@ function draw_frame() {
                             // Ja: Sound abspielen!
                             ton_stein = true;
                             // Digger: KILLEN!
-                            if ((idx[pre_p60] >= 8) && (idx[pre_p60] < 41)) {
+                            if ((idx[pre_p60] >= 8) && (idx[pre_p60] < 41))
                                 digger_death = true;
-                                digger_die = true;
-                            }
                             // Geist: KILLEN!
                             else if ((idx[pre_p60] >= 43) && (idx[pre_p60] < 63))
                                 idx[pre_p60] = ((idx[pre_p60]) << 0) + 0.2;
@@ -2574,10 +2354,8 @@ function draw_frame() {
                                 //Ja: Sound abspielen
                                 ton_stein = true;
                                 // Digger KILLEN
-                                if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41)) {
+                                if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                     digger_death = true;
-                                    digger_die = true;
-                                }
                                 // Geist KILLEN
                                 else if ((idx[pre_p40] >= 43) && (idx[pre_p40] < 63))
                                     idx[pre_p40] = ((idx[pre_p40]) << 0) + 0.2;
@@ -2594,10 +2372,8 @@ function draw_frame() {
                                     //Ja: Sound abspielen
                                     ton_stein = true;
                                     // Digger KILLEN
-                                    if ((idx[pre_p39] >= 8) && (idx[pre_p39] < 41)) {
+                                    if ((idx[pre_p39] >= 8) && (idx[pre_p39] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
                                     // Geist KILLEN
                                     else if ((idx[pre_p39] >= 43) && (idx[pre_p39] < 63))
                                         idx[pre_p39] = ((idx[pre_p39]) << 0) + 0.2;
@@ -2612,10 +2388,8 @@ function draw_frame() {
                                     //Ja: Sound abspielen
                                     ton_stein = true;
                                     // Digger KILLEN
-                                    if ((idx[pre_p41] >= 8) && (idx[pre_p41] < 41)) {
+                                    if ((idx[pre_p41] >= 8) && (idx[pre_p41] < 41))
                                         digger_death = true;
-                                        digger_die = true;
-                                    }
                                     // Geist KILLEN
                                     else if ((idx[pre_p41] >= 43) && (idx[pre_p41] < 63))
                                         idx[pre_p41] = ((idx[pre_p41]) << 0) + 0.2;
@@ -2687,10 +2461,8 @@ function draw_frame() {
         //Countdown
         if ((state == 'play') && !digger_death && !digger_half_step) {
             score_zeit--;
-            if (score_zeit <= 0) {
+            if (score_zeit <= 0)
                 digger_death = true;
-                digger_die = true;
-            }
         }
 
         //LEVEL WECHSELN
