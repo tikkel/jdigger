@@ -1195,7 +1195,7 @@ function draw_frame() {
             digger_step_right = 19;
             idx[d_idx] = 8.1;
             digger_step_down = 11;
-
+            digger_animation = false;
             digger_idle = true;
         }
 
@@ -1248,10 +1248,16 @@ function draw_frame() {
                     d_idx--;
                     ton_schritt = true;
                 }
-                idx[d_idx] = digger_step_left + 0.1;
-                digger_step_left++;
-                if (digger_step_left > 18)
-                    digger_step_left = 13;
+                //Animation aktivieren, Start ab Vollbild
+                if ( (!digger_half_step) && (digger_step_left == 13) )
+                    digger_animation = true;
+                //Animation setzen...
+                if (digger_animation) {                 //... bei jedem Halbbild
+                    idx[d_idx] = digger_step_left + 0.1;
+                    digger_step_left++;
+                    if (digger_step_left > 18)
+                        digger_step_left = 13;
+                }
             }
 
             // ? HOCH
@@ -1279,11 +1285,16 @@ function draw_frame() {
                     d_idx -= 20;
                     ton_schritt = true;
                 }
-                idx[d_idx] = digger_step_up + 0.1;
-                if (!digger_half_step)
+                //Animation aktivieren, beginnen ab Vollbild
+                if ( (!digger_half_step) && (digger_step_left == 9) )
+                    digger_animation = true;
+                //Animation setzen...
+                if (!digger_half_step) {                //...nur bei jedem Vollbild
+                    idx[d_idx] = digger_step_up + 0.1;
                     digger_step_up++;
-                if (digger_step_up > 10)
-                    digger_step_up = 9;
+                    if (digger_step_up > 10)
+                        digger_step_up = 9;
+                }
             }
 
             // ? RECHTS
@@ -1325,12 +1336,19 @@ function draw_frame() {
                 if ((idx[pre_r] < 4) && !digger_half_step) {
                     idx[pre_idx] = 1.1;
                     d_idx++;
+                    digger_animation = true;
                     ton_schritt = true;
                 }
-                idx[d_idx] = digger_step_right + 0.1;
-                digger_step_right++;
-                if (digger_step_right > 24)
-                    digger_step_right = 19;
+                //Animation aktivieren, Start ab Vollbild
+                if ( (!digger_half_step) && (digger_step_left == 19) )
+                    digger_animation = true;
+                //Animation setzen...
+                if (digger_animation) {                     //...bei jedem Halbbild
+                    idx[d_idx] = digger_step_right + 0.1;
+                    digger_step_right++;
+                    if (digger_step_right > 24)
+                        digger_step_right = 19;
+                }
             }
 
             // ? RUNTER
@@ -1358,11 +1376,16 @@ function draw_frame() {
                     d_idx += 20;
                     ton_schritt = true;
                 }
-                idx[d_idx] = digger_step_down + 0.1;
-                if (!digger_half_step)
+                //Animation aktivieren, Start ab Vollbild
+                if ( (!digger_half_step) && (digger_step_left == 11) )
+                    digger_animation = true;
+                //Animation setzen...
+                if (!digger_half_step) {                //...nur bei jedem Vollbild
+                    idx[d_idx] = digger_step_down + 0.1;
                     digger_step_down++;
-                if (digger_step_down > 12)
-                    digger_step_down = 11;
+                    if (digger_step_down > 12)
+                        digger_step_down = 11;
+                }
             }
         }
 

@@ -63,6 +63,7 @@ var digger_down = false;
 var digger_start_down = false;
 var digger_idle = true;
 var digger_in_idle = false;
+var digger_animation = false;
 
 var backup_left = digger_left;
 var backup_up = digger_up;
