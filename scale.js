@@ -20,7 +20,7 @@ var LEBENMAX = 20;
 var LEBENMIN = 1;
 
 //allgem. Variablen
-var digger_version = '20.11.01';
+var digger_version = '20.11.03';
 var blink_tick = 3;
 var diamond_blink = 64;
 var zufall = 1;
@@ -158,6 +158,7 @@ function reset_scale() {
 
     // Puffer refreshen (Sprites and Chars)
     scaleBuffer();
+    context_digger.scale(0.5, 0.5);
 
     // Menu refreshen
     document.getElementById('menudiv').style.width = (body_width) + 'px';

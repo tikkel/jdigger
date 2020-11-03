@@ -17,6 +17,7 @@
 
 //  PNGs mit Gimp hochoptimiert abspeichern (compress 9) und dann alle Metadaten entfernen (convert strip)
 //  z.B. convert sprites.png -strip sprites.png
+
 var rescale = false;
 var spriteset; // Sprites
 var charset; // Zeichensatz

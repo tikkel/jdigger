@@ -855,6 +855,9 @@ function init_digger() {
     for (var l = 1; l < 281; l++) {
         if (idx[l] == 41.1) d_idx = l;
     }
+    // bestimme die Malposition im Canvas
+    digger_y = (((d_idx - 1) / 20) << 0) * pre_icon_size;
+    digger_x = ((d_idx - 1) - ((((d_idx - 1) / 20) << 0) * 20)) * pre_icon_size;
 }
 
 function init_room(level) {
@@ -1009,14 +1012,28 @@ function draw_digger_death() {
 // Canvas-Verschiebung innerhalb des div-Containers (marginTop, marginLeft)
 function soft_scroll() {
     var pre_abstand = pre_icon_size * 2;
+    var duration = 90;
 
+    //hin- und herscrollen bei der Raumvorschau "look"
+    if (state == 'look') {
+        duration = 25;
+        if (viewport_x == 0)
+            digger_x = field_width;
+        else
+            digger_x = 0;
+        if (viewport_y == 0)
+            digger_y = field_height;
+        else
+            digger_y = 0;
+    }
+    
     //links, Randabstand < 2 Spritebreiten?
     if (((digger_x + viewport_x) < (pre_abstand)) && (actual_marginLeft <= viewport_x) && (viewport_x != 0)) {
         //scroll nach rechts, -x..0
         viewport_x = (diggerdiv_width / 2 - digger_x - pre_icon_size / 2) << 0;
         if (viewport_x > 0)
             viewport_x = 0;
-        duration_x = Math.abs(viewport_x - actual_marginLeft) / 90 / (pre_icon_size / 16);
+        duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginLeft = viewport_x + "px";
     }
@@ -1028,7 +1045,7 @@ function soft_scroll() {
             viewport_x = pre_max_w_offset;
         if (viewport_x > 0)
             viewport_x = 0;
-        duration_x = Math.abs(viewport_x - actual_marginLeft) / 90 / (pre_icon_size / 16);
+        duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginLeft = viewport_x + "px";
     }
@@ -1039,19 +1056,19 @@ function soft_scroll() {
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y > 0)
             viewport_y = 0;
-        duration_y = Math.abs(viewport_y - actual_marginTop) / 90 / (pre_icon_size / 16);
+        duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginTop = viewport_y + "px";
     }
     //unten, Randabstand < 2 Spritehöhen
     else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_marginTop >= viewport_y) && (viewport_y != pre_max_h_offset)) {
-        //scroll nach unten, 0--+y
+        //scroll nach oben, 0--+y
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y < pre_max_h_offset)
             viewport_y = pre_max_h_offset;
         if (viewport_y > 0)
             viewport_y = 0;
-        duration_y = Math.abs(viewport_y - actual_marginTop) / 90 / (pre_icon_size / 16);
+        duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginTop = viewport_y + "px";
     }
