@@ -18,9 +18,10 @@
 //Parameter
 var LEBENMAX = 20;
 var LEBENMIN = 1;
+var FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 
 //allgem. Variablen
-var digger_version = '20.11.03';
+var digger_version = '20.11.05';
 var blink_tick = 3;
 var diamond_blink = 64;
 var zufall = 1;
@@ -77,6 +78,7 @@ var backup_idle = digger_idle;
 var digger_cheat = false;
 var cheat_tmp = '';
 var digger_half_step = false;
+var takt_teiler = 1; //siehe setTimeout(draw_frame, FPS)
 var digger_go = 'NONE'; //LEFT, RIGHT, UP, DOWN, NONE
 var digger_death = false;
 var digger_is_dead = false;

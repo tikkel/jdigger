@@ -41,8 +41,7 @@ var TON_HIGH = 1;
 var TON_RATE = 44100; //default  44100 Hz webAudio-API-Samplefreq. (Halbwellen)
 
 function initAudio() {
-    //window.AudioContext = window.AudioContext || window.webkitAudioContext;
-
+    
     // webAudio API: "Audio-Puffer"
     if (window.AudioContext || window.webkitAudioContext) {
 
