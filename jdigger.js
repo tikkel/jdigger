@@ -2442,15 +2442,8 @@ function draw_frame() {
                 }
             }
 
-
-
-            //Frame 1/2 <---> Frame 2/2
+            //Frame 1/2
             if (!digger_half_step) {
-                digger_half_step = true;
-                digger_start_up = false;
-                digger_start_down = false;
-                digger_start_left = false;
-                digger_start_right = false;
 
                 //Statuszeile aktualisieren und Softscroller
                 draw_line();
@@ -2466,7 +2459,7 @@ function draw_frame() {
                     playAudio('Step');
                 }
                 ton_diamant = false;
-                ton_schritt = false;
+                ton_schritt = false;//Frame 1/2 <---> Frame 2/2
                 ton_stein = false;
 
                 //Vibration abspielen
@@ -2475,7 +2468,17 @@ function draw_frame() {
                         navigator.vibrate(48);
                     brumm = false;
                 }
+
+                //Frame 1/2 --> Frame 2/2
+                digger_half_step = true;
+                digger_start_up = false;
+                digger_start_down = false;
+                digger_start_left = false;
+                digger_start_right = false;
+
+            //Frame 2/2
             } else
+                //Frame 2/2 --> 1/2
                 digger_half_step = false;
 
             //LEVEL WECHSELN
