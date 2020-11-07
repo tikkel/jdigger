@@ -2442,8 +2442,21 @@ function draw_frame() {
                 }
             }
 
-            //Ton abspielen und Vibration
+            
+
+            //Frame 1/2 <---> Frame 2/2
             if (!digger_half_step) {
+                digger_half_step = true;
+                digger_start_up = false;
+                digger_start_down = false;
+                digger_start_left = false;
+                digger_start_right = false;
+
+                //Statuszeile aktualisieren und Softscroller
+                draw_line();
+                soft_scroll();
+                
+                //Ton abspielen
                 if (ton_diamant) {
                     playAudio('Diamond');
                 } else if (ton_stein) {
@@ -2456,23 +2469,12 @@ function draw_frame() {
                 ton_schritt = false;
                 ton_stein = false;
 
+                //Vibration auf dem Handy
                 if (brumm) {
                     if (navigator.vibrate)
-                        navigator.vibrate(50);
+                        navigator.vibrate(48);
                     brumm = false;
                 }
-            }
-
-            //Frame 1/2 <---> Frame 2/2
-            if (!digger_half_step) {
-                digger_half_step = true;
-                digger_start_up = false;
-                digger_start_down = false;
-                digger_start_left = false;
-                digger_start_right = false;
-                //Statuszeile aktualisieren und Softscroller
-                draw_line();
-                soft_scroll();
             } else
                 digger_half_step = false;
 
