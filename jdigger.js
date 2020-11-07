@@ -1222,7 +1222,6 @@ function draw_frame() {
 
             //DIGGER MOVE
             if ((state == 'play') && !digger_death && !digger_idle) {
-                var pre_idx = d_idx;
                 if (stone_l && (digger_go != 'LEFT'))
                     stone_l = false;
                 if (stone_r && (digger_go != 'RIGHT'))
@@ -1230,8 +1229,8 @@ function draw_frame() {
 
                 // ? LINKS
                 if (digger_go == 'LEFT') {
-                    var pre_l = pre_idx - 1;
-                    var pre_ll = pre_idx - 2;
+                    var pre_l = d_idx - 1;
+                    var pre_ll = d_idx - 2;
                     // ? Diamant
                     if ((idx[pre_l] == 3) && !digger_half_step) {
                         score_ges++;
@@ -1263,7 +1262,7 @@ function draw_frame() {
                     }
                     // ? Sand, Diamant oder Leer
                     if ((idx[pre_l] < 4) && !digger_half_step) {
-                        idx[pre_idx] = 1.1;
+                        idx[d_idx] = 1.1;
                         d_idx--;
                         ton_schritt = true;
                     }
@@ -1282,7 +1281,7 @@ function draw_frame() {
 
                 // ? HOCH
                 else if (digger_go == 'UP') {
-                    var pre_h = pre_idx - 20;
+                    var pre_h = d_idx - 20;
                     // ? Diamant
                     if ((idx[pre_h] == 3) && !digger_half_step) {
                         score_ges++;
@@ -1299,7 +1298,7 @@ function draw_frame() {
                         digger_death = true;
                     // ? Sand, Diamant oder Leer
                     if ((idx[pre_h] < 4) && !digger_half_step) {
-                        idx[pre_idx] = 1.1;
+                        idx[d_idx] = 1.1;
                         d_idx -= 20;
                         ton_schritt = true;
                     }
@@ -1318,8 +1317,8 @@ function draw_frame() {
 
                 // ? RECHTS
                 else if (digger_go == 'RIGHT') {
-                    var pre_r = pre_idx + 1;
-                    var pre_rr = pre_idx + 2;
+                    var pre_r = d_idx + 1;
+                    var pre_rr = d_idx + 2;
                     // ? Diamant
                     if ((idx[pre_r] == 3) && !digger_half_step) {
                         score_ges++;
@@ -1351,7 +1350,7 @@ function draw_frame() {
                     }
                     // ? Sand, Diamant oder Leer
                     if ((idx[pre_r] < 4) && !digger_half_step) {
-                        idx[pre_idx] = 1.1;
+                        idx[d_idx] = 1.1;
                         d_idx++;
                         ton_schritt = true;
                     }
@@ -1370,7 +1369,7 @@ function draw_frame() {
 
                 // ? RUNTER
                 else if (digger_go == 'DOWN') {
-                    var pre_d = pre_idx + 20;
+                    var pre_d = d_idx + 20;
                     // ? Diamant
                     if ((idx[pre_d] == 3) && !digger_half_step) {
                         score_ges++;
@@ -1387,7 +1386,7 @@ function draw_frame() {
                         digger_death = true;
                     // ? Sand, Diamant oder Leer
                     if ((idx[pre_d] < 4) && !digger_half_step) {
-                        idx[pre_idx] = 1.1;
+                        idx[d_idx] = 1.1;
                         d_idx += 20;
                         ton_schritt = true;
                     }
@@ -1444,1008 +1443,1010 @@ function draw_frame() {
                 game_save();
             }
 
-            //SPIELFELD AKTIVITAETEN
-            if ((state == 'play') && !digger_half_step) {
-
-                //DIGGER_IDLE
-                //- Digger langweilt sich
-                //- und blinzelt dann mit den Augen
-                //- oder stampft mit dem Fuß
-                if (digger_idle) {
-                    zufall++;
-                    if (zufall > 280)
-                        zufall = 1;
-                    // ZUFALL(Stein=blinzeln)
-                    if ((!digger_in_idle) && (idx[zufall] == 7)) {
-                        digger_idle_augen = 24;
-                        digger_in_idle = true;
-                        idle_augen = true;
-                    }
-                    // ZUFALL(Diamant=stampfen)
-                    else if ((!digger_in_idle) && (idx[zufall] == 3)) {
-                        digger_idle_eier = 32;
-                        digger_in_idle = true;
-                        idle_augen = false;
-                    }
-                    if (digger_in_idle) {
-                        // Animationsfortschritt, blinzeln
-                        if (idle_augen) {
-                            digger_idle_augen++;
-                            if (digger_idle_augen == 33)
-                                digger_in_idle = false;
-                        }
-                        // Animationsfortschritt, stampfen
-                        else {
-                            digger_idle_eier++;
-                            if (digger_idle_eier == 41)
-                                digger_in_idle = false;
-                        }
-                    }
-                } else
-                    digger_in_idle = false; // DIGGER nix in IDLE
-                if (digger_in_idle && idle_augen && !digger_death)
-                    idx[d_idx] = digger_idle_augen + 0.1;
-                else if (digger_in_idle && !digger_death)
-                    idx[d_idx] = digger_idle_eier + 0.1;
-
-                //STONE DIAMOND GEISTER
-                //- Steine und Diamanten fallen lassen
-                //- Geister bewegen
-                var pre_m1;
-                var pre_m2;
-                var pre_m19;
-                var pre_m20;
-                var pre_m40;
-                var pre_m21;
-                var pre_p1;
-                var pre_p2;
-                var pre_p19;
-                var pre_p20;
-                var pre_p39;
-                var pre_p40;
-                var pre_p41;
-                var pre_p60;
-                var pre_p21;
-                var ti = 1;
-                var pre_tim20;
-                for (var l = 1; l < 281; l++) {
-                    pre_m1 = l - 1;
-                    pre_m2 = l - 2;
-                    pre_m19 = l - 19;
-                    pre_m20 = l - 20;
-                    pre_m40 = l - 40;
-                    pre_m21 = l - 21;
-                    pre_p1 = l + 1;
-                    pre_p2 = l + 2;
-                    pre_p19 = l + 19;
-                    pre_p20 = l + 20;
-                    pre_p40 = l + 40;
-                    pre_p21 = l + 21;
-
-                    // GEISTER 180 (43-46)
-                    if ((idx[l] >= 43) && (idx[l] < 47)) {
-                        // Zum sterben markierte Geister(nn.2)?
-                        if ((idx[l] == 43.2) || (idx[l] == 44.2) || (idx[l] == 45.2) || (idx[l] == 46.2)) {
-                            // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                            if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
-                                digger_death = true;
-                            // Geist zu Staub
-                            idx[pre_m21] = 0.1;
-                            idx[pre_m20] = 0.1;
-                            idx[pre_m19] = 0.1;
-                            idx[pre_m1] = 0.1;
-                            idx[l] = 0.1;
-                            idx[pre_p1] = 0.1;
-                            idx[pre_p19] = 0.1;
-                            idx[pre_p20] = 0.1;
-                            idx[pre_p21] = 0.1;
-                            ton_stein = true;
-                        }
-                        //GEISTER hin und her (43-46)
-                        else {
-                            ti = l;
-                            switch (idx[l]) {
-                                //HOCH
-                                case 45:
-                                    // wenn drüber NOTHING 1
-                                    if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) {
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 45.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    }
-                                    // wenn drüber DIGGER 8-40
-                                    else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    // wenn drunter NOTHING 1
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) {
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 43.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    }
-                                    // wenn drunter DIGGER 8-40
-                                    else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RUNTER
-                                case 43:
-                                    // wenn drunter NOTHING 1
-                                    if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) {
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 43.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 45.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RECHTS
-                                case 44:
-                                    if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 44.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 46.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //LINKS
-                                case 46:
-                                    if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 46.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 44.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    break;
-                            }
-                        }
-                        pre_tim20 = ti - 20;
-
-                        //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                        //- bewegter Stein/Diamant: 3.2/7.2
-                        //- zu toetender Geist: n + 0.2
-                        if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
-                            idx[ti] = ((idx[ti]) << 0) + 0.2;
-
-                    }
-
-                    // GEISTER 90L (47-50)
-                    else if ((idx[l] >= 47) && (idx[l] < 51)) {
-                        // Zum sterben markierte Geister(nn.2)?
-                        if ((idx[l] == 47.2) || (idx[l] == 48.2) || (idx[l] == 49.2) || (idx[l] == 50.2)) {
-                            // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                            if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
-                                digger_death = true;
-                            // Geist zu Staub
-                            idx[pre_m21] = 0.1;
-                            idx[pre_m20] = 0.1;
-                            idx[pre_m19] = 0.1;
-                            idx[pre_m1] = 0.1;
-                            idx[l] = 0.1;
-                            idx[pre_p1] = 0.1;
-                            idx[pre_p19] = 0.1;
-                            idx[pre_p20] = 0.1;
-                            idx[pre_p21] = 0.1;
-                            ton_stein = true;
-                        }
-                        //Geister bewegen: 47=down,  49=up,  48=right,  50=left 90L
-                        else {
-                            ti = l;
-                            switch (idx[l]) {
-                                //HOCH up left right down
-                                case 49:
-                                    if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 49.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 50.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 48.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 47.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RUNTER down right left up
-                                case 47:
-                                    if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 47.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 48.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 50.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 49.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RECHTS right up down left
-                                case 48:
-                                    if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 48.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 49.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 47.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 50.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //LINKS left down up right
-                                case 50:
-                                    if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 50.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 47.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 49.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 48.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    break;
-                            }
-                        }
-                        pre_tim20 = ti - 20;
-
-                        //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                        //- bewegter Stein/Diamant: 3.2/7.2
-                        //- zu toetender Geist: n + 0.2
-                        if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
-                            idx[ti] = ((idx[ti]) << 0) + 0.2;
-
-                    }
-
-                    // GEISTER 90R (51-54)
-                    else if ((idx[l] >= 51) && (idx[l] < 55)) {
-                        // Zum sterben markierte Geister(nn.2)?
-                        if ((idx[l] == 51.2) || (idx[l] == 52.2) || (idx[l] == 53.2) || (idx[l] == 54.2)) {
-                            // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                            if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
-                                digger_death = true;
-                            // Geist zu Staub
-                            idx[pre_m21] = 0.1;
-                            idx[pre_m20] = 0.1;
-                            idx[pre_m19] = 0.1;
-                            idx[pre_m1] = 0.1;
-                            idx[l] = 0.1;
-                            idx[pre_p1] = 0.1;
-                            idx[pre_p19] = 0.1;
-                            idx[pre_p20] = 0.1;
-                            idx[pre_p21] = 0.1;
-                            ton_stein = true;
-                        }
-                        //Geister bewegen: 51=down,  53=up,  52=right,  54=left 90R
-                        else {
-                            ti = l;
-                            switch (idx[l]) {
-                                //HOCH up right left down
-                                case 53:
-                                    if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 53.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 52.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 54.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 51.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RUNTER down left right up
-                                case 51:
-                                    if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 51.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 54.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 52.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 53.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RECHTS right down up left
-                                case 52:
-                                    if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 52.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 51.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 53.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 54.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //LINKS left up down right
-                                case 54:
-                                    if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 54.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 53.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 51.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 52.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    break;
-                            }
-                        }
-                        pre_tim20 = ti - 20;
-
-                        //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                        //- bewegter Stein/Diamant: 3.2/7.2
-                        //- zu toetender Geist: n + 0.2
-                        if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
-                            idx[ti] = ((idx[ti]) << 0) + 0.2;
-
-                    }
-
-                    // GEISTER 90LR (55-58)
-                    else if ((idx[l] >= 55) && (idx[l] < 59)) {
-                        // Zum sterben markierte Geister(nn.2)?
-                        if ((idx[l] == 55.2) || (idx[l] == 56.2) || (idx[l] == 57.2) || (idx[l] == 58.2)) {
-                            // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                            if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
-                                digger_death = true;
-                            // Geist zu Staub
-                            idx[pre_m21] = 0.1;
-                            idx[pre_m20] = 0.1;
-                            idx[pre_m19] = 0.1;
-                            idx[pre_m1] = 0.1;
-                            idx[l] = 0.1;
-                            idx[pre_p1] = 0.1;
-                            idx[pre_p19] = 0.1;
-                            idx[pre_p20] = 0.1;
-                            idx[pre_p21] = 0.1;
-                            ton_stein = true;
-                        }
-                        //Geister bewegen: 55=down,  57=up,  56=right,  58=left 90LR
-                        else {
-                            ti = l;
-                            switch (idx[l]) {
-                                //HOCH up left right down
-                                case 57:
-                                    if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 57.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 62.1; // links setzen -> 90RL
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 60.1; // rechts setzen -> 90RL
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 55.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RUNTER down right left up
-                                case 55:
-                                    if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 55.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 60.1; // rechts setzen -> 90RL
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 62.1; // links setzen -> 90RL
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 57.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RECHTS right up down left
-                                case 56:
-                                    if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 56.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 61.1; // drüber setzen -> 90RL
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 59.1; // drunter setzen -> 90RL
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 58.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //LINKS left down up right
-                                case 58:
-                                    if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 58.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 59.1; // drunter setzen 90RL
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 61.1; // drüber setzen -> 90RL
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 56.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    break;
-                            }
-                        }
-                        pre_tim20 = ti - 20;
-
-                        //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                        //- bewegter Stein/Diamant: 3.2/7.2
-                        //- zu toetender Geist: n + 0.2
-                        if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
-                            idx[ti] = ((idx[ti]) << 0) + 0.2;
-
-                    }
-
-                    // GEISTER 90RL (59-62)
-                    else if ((idx[l] >= 59) && (idx[l] < 63)) {
-                        // Zum sterben markierte Geister(nn.2)?
-                        if ((idx[l] == 59.2) || (idx[l] == 60.2) || (idx[l] == 61.2) || (idx[l] == 62.2)) {
-                            // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                            if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
-                                digger_death = true;
-                            // Geist zu Staub
-                            idx[pre_m21] = 0.1;
-                            idx[pre_m20] = 0.1;
-                            idx[pre_m19] = 0.1;
-                            idx[pre_m1] = 0.1;
-                            idx[l] = 0.1;
-                            idx[pre_p1] = 0.1;
-                            idx[pre_p19] = 0.1;
-                            idx[pre_p20] = 0.1;
-                            idx[pre_p21] = 0.1;
-                            ton_stein = true;
-                        }
-                        //Geister bewegen: 59=down,  61=up,  60=right,  62=left 90RL
-                        else {
-                            ti = l;
-                            switch (idx[l]) {
-                                //HOCH up right left down
-                                case 61:
-                                    if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 61.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 56.1; // rechts setzen -> 90LR
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 58.1; // links setzen -> 90LR
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 59.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RUNTER down left right up
-                                case 59:
-                                    if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 59.1; // drunter setzen
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 58.1; // links setzen 90LR
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 56.1; // rechts setzen -> 90LR
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 61.1; // drüber setzen
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //RECHTS right down up left
-                                case 60:
-                                    if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 60.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 55.1; // drunter setzen 90LR
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 57.1; // drüber setzen 90LR
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 62.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    break;
-                                    //LINKS left up down right
-                                case 62:
-                                    if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
-                                        ti = pre_m1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 62.1; // links setzen
-                                        if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
-                                        ti = pre_m20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 57.1; // drüber setzen 90LR
-                                        if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
-                                        ti = pre_p20;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 55.1; // drunter setzen 90LR
-                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
-                                        digger_death = true;
-                                    else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
-                                        ti = pre_p1;
-                                        idx[l] = 1.1; // lokal löschen
-                                        idx[ti] = 60.1; // rechts setzen
-                                        if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
-                                            digger_death = true;
-                                    } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
-                                        digger_death = true;
-                                    break;
-                            }
-                        }
-                        pre_tim20 = ti - 20;
-
-                        //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                        //- bewegter Stein/Diamant: 3.2/7.2
-                        //- zu toetender Geist: n + 0.2
-                        if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
-                            idx[ti] = ((idx[ti]) << 0) + 0.2;
-
-                    }
-
-                    // Steine und Diamanten
-                    else if ((idx[l] == 7) || (idx[l] == 3)) {
-                        pre_p39 = l + 39;
-                        pre_p40 = l + 40;
-                        pre_p41 = l + 41;
-                        pre_p60 = l + 60;
-                        //Stein in Diamant umwandeln
-                        if ((idx[l] == 7) && (idx[pre_p20] == 5) && (idx[pre_p40] == 1)) {
-                            idx[pre_p40] = 3.2;
-                            idx[l] = 1.1;
-                            // trifft er auf einen Gegenstand?
-                            if (idx[pre_p60] > 1) {
-                                // Ja: Sound abspielen!
-                                ton_stein = true;
-                                // Digger: KILLEN!
-                                if ((idx[pre_p60] >= 8) && (idx[pre_p60] < 41))
-                                    digger_death = true;
-                                // Geist: KILLEN!
-                                else if ((idx[pre_p60] >= 43) && (idx[pre_p60] < 63))
-                                    idx[pre_p60] = ((idx[pre_p60]) << 0) + 0.2;
-                            }
-                        }
-
-                        //Stein oder Diamant fallen
-                        else if ((idx[l] == 7) || (idx[l] == 3)) {
-                            // ? Drunter: frei
-                            if (idx[pre_p20] == 1) {
-                                idx[pre_p20] = idx[l] + 0.2;
-                                idx[l] = 1.1;
-                                // trifft er auf einen Gegenstand
-                                if (idx[pre_p40] >= 2) {
-                                    //Ja: Sound abspielen
-                                    ton_stein = true;
-                                    // Digger KILLEN
-                                    if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
-                                        digger_death = true;
-                                    // Geist KILLEN
-                                    else if ((idx[pre_p40] >= 43) && (idx[pre_p40] < 63))
-                                        idx[pre_p40] = ((idx[pre_p40]) << 0) + 0.2;
-                                }
-                            }
-                            // ? Drunter: Stein, Diamant oder toter Digger
-                            else if ((idx[pre_p20] == 7) || (idx[pre_p20] == 3) || (idx[pre_p20] == 60)) {
-                                //links plumpsen!
-                                if (((idx[pre_m1] == 1) || (idx[pre_m1] == 7.2) || (idx[pre_m1] == 3.2)) && (idx[pre_p19] == 1)) {
-                                    idx[pre_p19] = idx[l] + 0.2;
-                                    idx[l] = 1 + (idx[l] / 10);
-                                    // trifft er auf einen Gegenstand
-                                    if (idx[pre_p39] >= 2) {
-                                        //Ja: Sound abspielen
-                                        ton_stein = true;
-                                        // Digger KILLEN
-                                        if ((idx[pre_p39] >= 8) && (idx[pre_p39] < 41))
-                                            digger_death = true;
-                                        // Geist KILLEN
-                                        else if ((idx[pre_p39] >= 43) && (idx[pre_p39] < 63))
-                                            idx[pre_p39] = ((idx[pre_p39]) << 0) + 0.2;
-                                    }
-                                }
-                                //rechts plumpsen!
-                                else if (((idx[pre_p1] == 1) || (idx[pre_p1] == 7.2) || (idx[pre_p1] == 3.2)) && (idx[pre_p21] == 1)) {
-                                    idx[pre_p21] = idx[l] + 0.2;
-                                    idx[l] = 1 + (idx[l] / 10);
-                                    // trifft er auf einen Gegenstand
-                                    if (idx[pre_p41] >= 2) {
-                                        //Ja: Sound abspielen
-                                        ton_stein = true;
-                                        // Digger KILLEN
-                                        if ((idx[pre_p41] >= 8) && (idx[pre_p41] < 41))
-                                            digger_death = true;
-                                        // Geist KILLEN
-                                        else if ((idx[pre_p41] >= 43) && (idx[pre_p41] < 63))
-                                            idx[pre_p41] = ((idx[pre_p41]) << 0) + 0.2;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    //sichtbaren EXIT (41, 42) blinken lassen
-                    // 41 = exit, exit.gif
-                    // 42 = exit, wall.gif
-                    else if (blink_tick === 0) {
-                        if (idx[l] == 41)
-                            idx[l] = 42.1;
-                        else if (idx[l] == 42)
-                            idx[l] = 41.1;
-                    }
-
-                    // mache den unsichtbaren/unbenutzbaren Ausgang (6) sichtbar (41), bei genuegent Diamanten
-                    else if ((idx[l] == 6) && (score_ges >= score_dia))
-                        idx[l] = 41.1;
-
-                    // Staub (0.1) nach 3 Loops in Leere (1.1) aufloesen
-                    else if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
-                        idx[l] += 0.1;
-                        if (idx[l] == 0.4)
-                            idx[l] = 1.1;
-                    }
-                }
-            }
-
-            //Frame 1/2
+            //FRAME 1/2
             if (!digger_half_step) {
 
-                //Statuszeile aktualisieren und Softscroller
+                //SPIELFELD AKTIVITAETEN
+                if (state == 'play') {
+
+                    //DIGGER_IDLE
+                    //- Digger langweilt sich
+                    //- und blinzelt dann mit den Augen
+                    //- oder stampft mit dem Fuß
+                    if (digger_idle) {
+                        zufall++;
+                        if (zufall > 280)
+                            zufall = 1;
+                        // ZUFALL(Stein=blinzeln)
+                        if ((!digger_in_idle) && (idx[zufall] == 7)) {
+                            digger_idle_augen = 24;
+                            digger_in_idle = true;
+                            idle_augen = true;
+                        }
+                        // ZUFALL(Diamant=stampfen)
+                        else if ((!digger_in_idle) && (idx[zufall] == 3)) {
+                            digger_idle_eier = 32;
+                            digger_in_idle = true;
+                            idle_augen = false;
+                        }
+                        if (digger_in_idle) {
+                            // Animationsfortschritt, blinzeln
+                            if (idle_augen) {
+                                digger_idle_augen++;
+                                if (digger_idle_augen == 33)
+                                    digger_in_idle = false;
+                            }
+                            // Animationsfortschritt, stampfen
+                            else {
+                                digger_idle_eier++;
+                                if (digger_idle_eier == 41)
+                                    digger_in_idle = false;
+                            }
+                        }
+                    } else
+                        digger_in_idle = false; // DIGGER nix in IDLE
+                    if (digger_in_idle && idle_augen && !digger_death)
+                        idx[d_idx] = digger_idle_augen + 0.1;
+                    else if (digger_in_idle && !digger_death)
+                        idx[d_idx] = digger_idle_eier + 0.1;
+
+                    //STONE DIAMOND GEISTER
+                    //- Steine und Diamanten fallen lassen
+                    //- Geister bewegen
+                    var pre_m1;
+                    var pre_m2;
+                    var pre_m19;
+                    var pre_m20;
+                    var pre_m40;
+                    var pre_m21;
+                    var pre_p1;
+                    var pre_p2;
+                    var pre_p19;
+                    var pre_p20;
+                    var pre_p39;
+                    var pre_p40;
+                    var pre_p41;
+                    var pre_p60;
+                    var pre_p21;
+                    var ti = 1;
+                    var pre_tim20;
+                    for (var l = 1; l < 281; l++) {
+                        pre_m1 = l - 1;
+                        pre_m2 = l - 2;
+                        pre_m19 = l - 19;
+                        pre_m20 = l - 20;
+                        pre_m40 = l - 40;
+                        pre_m21 = l - 21;
+                        pre_p1 = l + 1;
+                        pre_p2 = l + 2;
+                        pre_p19 = l + 19;
+                        pre_p20 = l + 20;
+                        pre_p40 = l + 40;
+                        pre_p21 = l + 21;
+
+                        // GEISTER 180 (43-46)
+                        if ((idx[l] >= 43) && (idx[l] < 47)) {
+                            // Zum sterben markierte Geister(nn.2)?
+                            if ((idx[l] == 43.2) || (idx[l] == 44.2) || (idx[l] == 45.2) || (idx[l] == 46.2)) {
+                                // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
+                                if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
+                                    digger_death = true;
+                                // Geist zu Staub
+                                idx[pre_m21] = 0.1;
+                                idx[pre_m20] = 0.1;
+                                idx[pre_m19] = 0.1;
+                                idx[pre_m1] = 0.1;
+                                idx[l] = 0.1;
+                                idx[pre_p1] = 0.1;
+                                idx[pre_p19] = 0.1;
+                                idx[pre_p20] = 0.1;
+                                idx[pre_p21] = 0.1;
+                                ton_stein = true;
+                            }
+                            //GEISTER hin und her (43-46)
+                            else {
+                                ti = l;
+                                switch (idx[l]) {
+                                    //HOCH
+                                    case 45:
+                                        // wenn drüber NOTHING 1
+                                        if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) {
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 45.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        }
+                                        // wenn drüber DIGGER 8-40
+                                        else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        // wenn drunter NOTHING 1
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) {
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 43.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        }
+                                        // wenn drunter DIGGER 8-40
+                                        else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RUNTER
+                                    case 43:
+                                        // wenn drunter NOTHING 1
+                                        if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) {
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 43.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 45.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RECHTS
+                                    case 44:
+                                        if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 44.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 46.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //LINKS
+                                    case 46:
+                                        if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 46.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 44.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        break;
+                                }
+                            }
+                            pre_tim20 = ti - 20;
+
+                            //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
+                            //- bewegter Stein/Diamant: 3.2/7.2
+                            //- zu toetender Geist: n + 0.2
+                            if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
+                                idx[ti] = ((idx[ti]) << 0) + 0.2;
+
+                        }
+
+                        // GEISTER 90L (47-50)
+                        else if ((idx[l] >= 47) && (idx[l] < 51)) {
+                            // Zum sterben markierte Geister(nn.2)?
+                            if ((idx[l] == 47.2) || (idx[l] == 48.2) || (idx[l] == 49.2) || (idx[l] == 50.2)) {
+                                // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
+                                if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
+                                    digger_death = true;
+                                // Geist zu Staub
+                                idx[pre_m21] = 0.1;
+                                idx[pre_m20] = 0.1;
+                                idx[pre_m19] = 0.1;
+                                idx[pre_m1] = 0.1;
+                                idx[l] = 0.1;
+                                idx[pre_p1] = 0.1;
+                                idx[pre_p19] = 0.1;
+                                idx[pre_p20] = 0.1;
+                                idx[pre_p21] = 0.1;
+                                ton_stein = true;
+                            }
+                            //Geister bewegen: 47=down,  49=up,  48=right,  50=left 90L
+                            else {
+                                ti = l;
+                                switch (idx[l]) {
+                                    //HOCH up left right down
+                                    case 49:
+                                        if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 49.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 50.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 48.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 47.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RUNTER down right left up
+                                    case 47:
+                                        if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 47.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 48.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 50.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 49.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RECHTS right up down left
+                                    case 48:
+                                        if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 48.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 49.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 47.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 50.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //LINKS left down up right
+                                    case 50:
+                                        if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 50.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 47.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 49.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 48.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        break;
+                                }
+                            }
+                            pre_tim20 = ti - 20;
+
+                            //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
+                            //- bewegter Stein/Diamant: 3.2/7.2
+                            //- zu toetender Geist: n + 0.2
+                            if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
+                                idx[ti] = ((idx[ti]) << 0) + 0.2;
+
+                        }
+
+                        // GEISTER 90R (51-54)
+                        else if ((idx[l] >= 51) && (idx[l] < 55)) {
+                            // Zum sterben markierte Geister(nn.2)?
+                            if ((idx[l] == 51.2) || (idx[l] == 52.2) || (idx[l] == 53.2) || (idx[l] == 54.2)) {
+                                // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
+                                if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
+                                    digger_death = true;
+                                // Geist zu Staub
+                                idx[pre_m21] = 0.1;
+                                idx[pre_m20] = 0.1;
+                                idx[pre_m19] = 0.1;
+                                idx[pre_m1] = 0.1;
+                                idx[l] = 0.1;
+                                idx[pre_p1] = 0.1;
+                                idx[pre_p19] = 0.1;
+                                idx[pre_p20] = 0.1;
+                                idx[pre_p21] = 0.1;
+                                ton_stein = true;
+                            }
+                            //Geister bewegen: 51=down,  53=up,  52=right,  54=left 90R
+                            else {
+                                ti = l;
+                                switch (idx[l]) {
+                                    //HOCH up right left down
+                                    case 53:
+                                        if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 53.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 52.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 54.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 51.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RUNTER down left right up
+                                    case 51:
+                                        if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 51.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 54.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 52.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 53.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RECHTS right down up left
+                                    case 52:
+                                        if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 52.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 51.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 53.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 54.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //LINKS left up down right
+                                    case 54:
+                                        if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 54.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 53.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 51.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 52.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        break;
+                                }
+                            }
+                            pre_tim20 = ti - 20;
+
+                            //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
+                            //- bewegter Stein/Diamant: 3.2/7.2
+                            //- zu toetender Geist: n + 0.2
+                            if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
+                                idx[ti] = ((idx[ti]) << 0) + 0.2;
+
+                        }
+
+                        // GEISTER 90LR (55-58)
+                        else if ((idx[l] >= 55) && (idx[l] < 59)) {
+                            // Zum sterben markierte Geister(nn.2)?
+                            if ((idx[l] == 55.2) || (idx[l] == 56.2) || (idx[l] == 57.2) || (idx[l] == 58.2)) {
+                                // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
+                                if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
+                                    digger_death = true;
+                                // Geist zu Staub
+                                idx[pre_m21] = 0.1;
+                                idx[pre_m20] = 0.1;
+                                idx[pre_m19] = 0.1;
+                                idx[pre_m1] = 0.1;
+                                idx[l] = 0.1;
+                                idx[pre_p1] = 0.1;
+                                idx[pre_p19] = 0.1;
+                                idx[pre_p20] = 0.1;
+                                idx[pre_p21] = 0.1;
+                                ton_stein = true;
+                            }
+                            //Geister bewegen: 55=down,  57=up,  56=right,  58=left 90LR
+                            else {
+                                ti = l;
+                                switch (idx[l]) {
+                                    //HOCH up left right down
+                                    case 57:
+                                        if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 57.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 62.1; // links setzen -> 90RL
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 60.1; // rechts setzen -> 90RL
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 55.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RUNTER down right left up
+                                    case 55:
+                                        if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 55.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 60.1; // rechts setzen -> 90RL
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 62.1; // links setzen -> 90RL
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 57.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RECHTS right up down left
+                                    case 56:
+                                        if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 56.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 61.1; // drüber setzen -> 90RL
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 59.1; // drunter setzen -> 90RL
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 58.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //LINKS left down up right
+                                    case 58:
+                                        if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 58.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 59.1; // drunter setzen 90RL
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 61.1; // drüber setzen -> 90RL
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 56.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        break;
+                                }
+                            }
+                            pre_tim20 = ti - 20;
+
+                            //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
+                            //- bewegter Stein/Diamant: 3.2/7.2
+                            //- zu toetender Geist: n + 0.2
+                            if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
+                                idx[ti] = ((idx[ti]) << 0) + 0.2;
+
+                        }
+
+                        // GEISTER 90RL (59-62)
+                        else if ((idx[l] >= 59) && (idx[l] < 63)) {
+                            // Zum sterben markierte Geister(nn.2)?
+                            if ((idx[l] == 59.2) || (idx[l] == 60.2) || (idx[l] == 61.2) || (idx[l] == 62.2)) {
+                                // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
+                                if (((idx[pre_m21] >= 8) && (idx[pre_m21] < 41)) || ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41)) || ((idx[pre_m19] >= 8) && (idx[pre_m19] < 41)) || ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41)) || ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41)) || ((idx[pre_p19] >= 8) && (idx[pre_p19] < 41)) || ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41)) || ((idx[pre_p21] >= 8) && (idx[pre_p21] < 41)))
+                                    digger_death = true;
+                                // Geist zu Staub
+                                idx[pre_m21] = 0.1;
+                                idx[pre_m20] = 0.1;
+                                idx[pre_m19] = 0.1;
+                                idx[pre_m1] = 0.1;
+                                idx[l] = 0.1;
+                                idx[pre_p1] = 0.1;
+                                idx[pre_p19] = 0.1;
+                                idx[pre_p20] = 0.1;
+                                idx[pre_p21] = 0.1;
+                                ton_stein = true;
+                            }
+                            //Geister bewegen: 59=down,  61=up,  60=right,  62=left 90RL
+                            else {
+                                ti = l;
+                                switch (idx[l]) {
+                                    //HOCH up right left down
+                                    case 61:
+                                        if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 61.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 56.1; // rechts setzen -> 90LR
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 58.1; // links setzen -> 90LR
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 59.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RUNTER down left right up
+                                    case 59:
+                                        if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 59.1; // drunter setzen
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 58.1; // links setzen 90LR
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 56.1; // rechts setzen -> 90LR
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 61.1; // drüber setzen
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //RECHTS right down up left
+                                    case 60:
+                                        if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 60.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 55.1; // drunter setzen 90LR
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 57.1; // drüber setzen 90LR
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 62.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        break;
+                                        //LINKS left up down right
+                                    case 62:
+                                        if ((idx[pre_m1] == 1) || (idx[pre_m1] == 1.1)) { // wenn links frei
+                                            ti = pre_m1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 62.1; // links setzen
+                                            if ((idx[pre_m2] >= 8) && (idx[pre_m2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m1] >= 8) && (idx[pre_m1] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_m20] == 1) || (idx[pre_m20] == 1.1)) { // wenn drüber frei
+                                            ti = pre_m20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 57.1; // drüber setzen 90LR
+                                            if ((idx[pre_m40] >= 8) && (idx[pre_m40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
+                                            ti = pre_p20;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 55.1; // drunter setzen 90LR
+                                            if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
+                                            digger_death = true;
+                                        else if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
+                                            ti = pre_p1;
+                                            idx[l] = 1.1; // lokal löschen
+                                            idx[ti] = 60.1; // rechts setzen
+                                            if ((idx[pre_p2] >= 8) && (idx[pre_p2] < 41))
+                                                digger_death = true;
+                                        } else if ((idx[pre_p1] >= 8) && (idx[pre_p1] < 41))
+                                            digger_death = true;
+                                        break;
+                                }
+                            }
+                            pre_tim20 = ti - 20;
+
+                            //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
+                            //- bewegter Stein/Diamant: 3.2/7.2
+                            //- zu toetender Geist: n + 0.2
+                            if ((idx[pre_tim20] == 3.2) || (idx[pre_tim20] == 7.2))
+                                idx[ti] = ((idx[ti]) << 0) + 0.2;
+
+                        }
+
+                        // Steine und Diamanten
+                        else if ((idx[l] == 7) || (idx[l] == 3)) {
+                            pre_p39 = l + 39;
+                            pre_p40 = l + 40;
+                            pre_p41 = l + 41;
+                            pre_p60 = l + 60;
+                            //Stein in Diamant umwandeln
+                            if ((idx[l] == 7) && (idx[pre_p20] == 5) && (idx[pre_p40] == 1)) {
+                                idx[pre_p40] = 3.2;
+                                idx[l] = 1.1;
+                                // trifft er auf einen Gegenstand?
+                                if (idx[pre_p60] > 1) {
+                                    // Ja: Sound abspielen!
+                                    ton_stein = true;
+                                    // Digger: KILLEN!
+                                    if ((idx[pre_p60] >= 8) && (idx[pre_p60] < 41))
+                                        digger_death = true;
+                                    // Geist: KILLEN!
+                                    else if ((idx[pre_p60] >= 43) && (idx[pre_p60] < 63))
+                                        idx[pre_p60] = ((idx[pre_p60]) << 0) + 0.2;
+                                }
+                            }
+
+                            //Stein oder Diamant fallen
+                            else if ((idx[l] == 7) || (idx[l] == 3)) {
+                                // ? Drunter: frei
+                                if (idx[pre_p20] == 1) {
+                                    idx[pre_p20] = idx[l] + 0.2;
+                                    idx[l] = 1.1;
+                                    // trifft er auf einen Gegenstand
+                                    if (idx[pre_p40] >= 2) {
+                                        //Ja: Sound abspielen
+                                        ton_stein = true;
+                                        // Digger KILLEN
+                                        if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
+                                            digger_death = true;
+                                        // Geist KILLEN
+                                        else if ((idx[pre_p40] >= 43) && (idx[pre_p40] < 63))
+                                            idx[pre_p40] = ((idx[pre_p40]) << 0) + 0.2;
+                                    }
+                                }
+                                // ? Drunter: Stein, Diamant oder toter Digger
+                                else if ((idx[pre_p20] == 7) || (idx[pre_p20] == 3) || (idx[pre_p20] == 60)) {
+                                    //links plumpsen!
+                                    if (((idx[pre_m1] == 1) || (idx[pre_m1] == 7.2) || (idx[pre_m1] == 3.2)) && (idx[pre_p19] == 1)) {
+                                        idx[pre_p19] = idx[l] + 0.2;
+                                        idx[l] = 1 + (idx[l] / 10);
+                                        // trifft er auf einen Gegenstand
+                                        if (idx[pre_p39] >= 2) {
+                                            //Ja: Sound abspielen
+                                            ton_stein = true;
+                                            // Digger KILLEN
+                                            if ((idx[pre_p39] >= 8) && (idx[pre_p39] < 41))
+                                                digger_death = true;
+                                            // Geist KILLEN
+                                            else if ((idx[pre_p39] >= 43) && (idx[pre_p39] < 63))
+                                                idx[pre_p39] = ((idx[pre_p39]) << 0) + 0.2;
+                                        }
+                                    }
+                                    //rechts plumpsen!
+                                    else if (((idx[pre_p1] == 1) || (idx[pre_p1] == 7.2) || (idx[pre_p1] == 3.2)) && (idx[pre_p21] == 1)) {
+                                        idx[pre_p21] = idx[l] + 0.2;
+                                        idx[l] = 1 + (idx[l] / 10);
+                                        // trifft er auf einen Gegenstand
+                                        if (idx[pre_p41] >= 2) {
+                                            //Ja: Sound abspielen
+                                            ton_stein = true;
+                                            // Digger KILLEN
+                                            if ((idx[pre_p41] >= 8) && (idx[pre_p41] < 41))
+                                                digger_death = true;
+                                            // Geist KILLEN
+                                            else if ((idx[pre_p41] >= 43) && (idx[pre_p41] < 63))
+                                                idx[pre_p41] = ((idx[pre_p41]) << 0) + 0.2;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        //sichtbaren EXIT (41, 42) blinken lassen
+                        // 41 = exit, exit.gif
+                        // 42 = exit, wall.gif
+                        else if (blink_tick === 0) {
+                            if (idx[l] == 41)
+                                idx[l] = 42.1;
+                            else if (idx[l] == 42)
+                                idx[l] = 41.1;
+                        }
+
+                        // mache den unsichtbaren/unbenutzbaren Ausgang (6) sichtbar (41), bei genuegent Diamanten
+                        else if ((idx[l] == 6) && (score_ges >= score_dia))
+                            idx[l] = 41.1;
+
+                        // Staub (0.1) nach 3 Loops in Leere (1.1) aufloesen
+                        else if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
+                            idx[l] += 0.1;
+                            if (idx[l] == 0.4)
+                                idx[l] = 1.1;
+                        }
+                    }
+                } //Ende Spielfeld Aktivitäten
+
+
+                //Statuszeile und
+                //Softscroller aktualisieren
                 draw_line();
                 soft_scroll();
 
@@ -2459,7 +2460,7 @@ function draw_frame() {
                     playAudio('Step');
                 }
                 ton_diamant = false;
-                ton_schritt = false;//Frame 1/2 <---> Frame 2/2
+                ton_schritt = false;
                 ton_stein = false;
 
                 //Vibration abspielen
@@ -2476,7 +2477,7 @@ function draw_frame() {
                 digger_start_left = false;
                 digger_start_right = false;
 
-            //Frame 2/2
+            //FRAME 2/2
             } else
                 //Frame 2/2 --> 1/2
                 digger_half_step = false;
