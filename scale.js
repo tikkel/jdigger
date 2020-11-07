@@ -2,15 +2,15 @@
 
 //     jdigger/Digger.JS
 //     Copyright (C) 2017  Marko Klingner
-// 
+//
 //     Dieses Programm ist freie Software. Sie können es unter den Bedingungen der GNU General Public License,
 //     wie von der Free Software Foundation veröffentlicht, weitergeben und/oder modifizieren, entweder gemäß
 //     Version 3 der Lizenz oder (nach Ihrer Option) jeder späteren Version.
-// 
+//
 //     Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen von Nutzen sein wird, aber
 //     OHNE IRGENDEINE GARANTIE, sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR
 //     EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License.
-// 
+//
 //     Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben.
 //     Falls nicht, siehe <http://www.gnu.org/licenses/>.
 
@@ -21,7 +21,7 @@ var LEBENMIN = 1;
 var FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 
 //allgem. Variablen
-var digger_version = '20.11.05';
+var digger_version = '20.11.07';
 var blink_tick = 3;
 var diamond_blink = 64;
 var zufall = 1;
