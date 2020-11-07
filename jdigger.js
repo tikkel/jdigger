@@ -2,15 +2,15 @@
 
 //     jdigger/Digger.JS
 //     Copyright (C) 2019  Marko Klingner
-// 
+//
 //     Dieses Programm ist freie Software. Sie können es unter den Bedingungen der GNU General Public License,
 //     wie von der Free Software Foundation veröffentlicht, weitergeben und/oder modifizieren, entweder gemäß
 //     Version 3 der Lizenz oder (nach Ihrer Option) jeder späteren Version.
-// 
+//
 //     Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen von Nutzen sein wird, aber
 //     OHNE IRGENDEINE GARANTIE, sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR
 //     EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License.
-// 
+//
 //     Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben.
 //     Falls nicht, siehe <http://www.gnu.org/licenses/>.
 
@@ -292,7 +292,7 @@ function touchDown(e) {
         }
     }
 
-    //1 Finger Tap    
+    //1 Finger Tap
     //im Spiel und tot
     else if ((state == 'play') && digger_death) {
         //Neustart
@@ -879,9 +879,9 @@ function init_room(level) {
     // Raum(level) initialisieren(idx[])
     // orig. NOTHING=0 STONE=1 GROUND=2 GHOST=0x3,0x7,0xB,0xF LDIGGER=4 DIAMOND=5 WALL=6 UVSTONE=9 DIGGER=10 EXIT=12 CHANGER=14 FSTODMD=15
     // meins NOTHING=1 STONE=7 GROUND=2 GHOST=43, 47, 51, 55  LDIGGER=  DIAMOND=3 WALL=4 UVSTONE=7 DIGGER=8  EXIT=6  CHANGER=5  FSTODMD=
-    // 1=room 2= 3= 4= 5= 
+    // 1=room 2= 3= 4= 5=
     // 6=diggerX 7=diggerY
-    // 8=diamonds 
+    // 8=diamonds
     // 9=ghost1_dir, ghost2_dir 10= 11= 12= 13= 14= 15= 16= // byteweise auslesen (9-16), initial Richtung des Geistes
     // orig. 0x0=down, 0x1=up, 0x2=right, 0x3=left  ausgelesener Parameter: Geister-Richtung
     // meins  43=down,  45=up,  44=right,  46=left  180
@@ -1026,7 +1026,7 @@ function soft_scroll() {
         else
             digger_y = 0;
     }
-    
+
     //links, Randabstand < 2 Spritebreiten?
     if (((digger_x + viewport_x) < (pre_abstand)) && (actual_marginLeft <= viewport_x) && (viewport_x != 0)) {
         //scroll nach rechts, -x..0
@@ -1132,7 +1132,7 @@ function draw_line() {
             sl = "0" + sl;
         drawText(sl, 7, 0);
     }
-    
+
     //refresh "Countdown"
     var sz = "" + score_zeit;
     while (sz.length < 4)
@@ -1201,7 +1201,7 @@ setpixelated(context_menuimg);
 function draw_frame() {
 
     if (state == 'look' || state == 'init' || state == 'play') {
-        
+
         //Spielfrequenz um die hälfte teilen
         if (takt_teiler == 1) {
 
@@ -1434,7 +1434,7 @@ function draw_frame() {
                 if (digger_step_down > 12)
                     digger_step_down = 11;
             }
-            
+
             //DIGGER TOETEN
             else if (digger_death && !digger_is_dead) {
                 draw_digger_death();
@@ -2463,6 +2463,19 @@ function draw_frame() {
                 }
             }
 
+            //Frame 1/2 <---> Frame 2/2
+            if (!digger_half_step) {
+                digger_half_step = true;
+                digger_start_up = false;
+                digger_start_down = false;
+                digger_start_left = false;
+                digger_start_right = false;
+                //Statuszeile aktualisieren und Softscroller
+                draw_line();
+                soft_scroll();
+            } else
+                digger_half_step = false;
+
             //LEVEL WECHSELN
             if (next_raum) {
                 score_raum++;
@@ -2482,27 +2495,11 @@ function draw_frame() {
                 init_room(score_raum);
             }
 
-            //Frame 1/2 <---> Frame 2/2
-            if (!digger_half_step) {
-                digger_half_step = true;
-                digger_start_up = false;
-                digger_start_down = false;
-                digger_start_left = false;
-                digger_start_right = false;
-            } else
-                digger_half_step = false;
-            
-            //Statuszeile aktualisieren und Softscroller
-            if (!digger_half_step) {
-                draw_line();
-                soft_scroll();
-            }
-
         }
-        
+
         //SPIELFELD REFRESHEN
         requestAnimationFrame(draw_field);
-        
+
         //Countdown
             if ((state == 'play') && !digger_death && !digger_half_step) {
                 score_zeit--;
@@ -2514,12 +2511,12 @@ function draw_frame() {
         diamond_blink += 1;
         if (diamond_blink > (64 + max_diamond_blink - 1))
             diamond_blink = 64;
-        
+
         //Verzoegerung fuer das EIN/AUSgangsblinken
         blink_tick++;
         if (blink_tick > 2)
             blink_tick = 0;
-        
+
     }
 
     //halbiert die Spielfrequenz
@@ -2527,7 +2524,7 @@ function draw_frame() {
         takt_teiler = 2;
     else if (takt_teiler == 2)
         takt_teiler = 1;
-        
+
     setTimeout(draw_frame, FPS);
 
 }
