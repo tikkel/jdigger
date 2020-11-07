@@ -2442,7 +2442,7 @@ function draw_frame() {
                 }
             }
 
-            
+
 
             //Frame 1/2 <---> Frame 2/2
             if (!digger_half_step) {
@@ -2455,7 +2455,7 @@ function draw_frame() {
                 //Statuszeile aktualisieren und Softscroller
                 draw_line();
                 soft_scroll();
-                
+
                 //Ton abspielen
                 if (ton_diamant) {
                     playAudio('Diamond');
@@ -2469,7 +2469,7 @@ function draw_frame() {
                 ton_schritt = false;
                 ton_stein = false;
 
-                //Vibration auf dem Handy
+                //Vibration abspielen
                 if (brumm) {
                     if (navigator.vibrate)
                         navigator.vibrate(48);
