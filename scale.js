@@ -22,7 +22,7 @@ var FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame,
 
 //allgem. Variablen
 var digger_version = '20.11.07';
-var blink_tick = 3;
+var exit_blink = 41.1;
 var diamond_blink = 64;
 var zufall = 1;
 var stone_l = false;

@@ -892,84 +892,83 @@ function init_room(level) {
     // meins  55=down,  57=up,  56=right,  58=left  90LR    zuletzt rechts abgebogen
     // meins  59=down,  61=up,  60=right,  62=left  90RL    zuletzt links abgebogen
 
-    if (state != 'menu' && state != 'highscore' && state != 'input') {
 
-        //zu sammelnde Diamanten (2 Byte auslesen, dezimal interpretiert)
-        score_dia = ((room[level - 1][139 + 8]) >> 0x04) * 10 + ((room[level - 1][139 + 8]) & 0x0F);
+    //zu sammelnde Diamanten (2 Byte auslesen, dezimal interpretiert)
+    score_dia = ((room[level - 1][139 + 8]) >> 0x04) * 10 + ((room[level - 1][139 + 8]) & 0x0F);
 
-        //Anzahl Geister
-        var geist_nr = 0;
-        var p = 'l'; //l, r
+    //Anzahl Geister
+    var geist_nr = 0;
+    var p = 'l'; //l, r
 
-        var j = 1;
-        for (var i = 0; i < 140; i++) {
-            //bit 5-8
-            trans = (room[level - 1][i]) >> 0x04;
-            if (trans == 0) trans = 1.1;
-            else if (trans == 1) trans = 7.1;
-            else if (trans == 2) trans = 2.1;
-            else if (trans == 3) trans = 43.1; // ghost_180
-            else if (trans == 5) trans = 3.1;
-            else if (trans == 6) trans = 4.1;
-            else if (trans == 7) trans = 47.1; // ghost_90left
-            else if (trans == 9) trans = 7.1;
-            else if (trans == 10) trans = 41.1;
-            else if (trans == 11) trans = 55.1; // ghost_90right
-            else if (trans == 12) trans = 6.1;
-            else if (trans == 14) trans = 5.1;
-            else if (trans == 15) trans = 51.1; // ghost_90leftright
-            // Geist-Richtung aus P9-P16 holen
-            if ((trans >= 43) && (trans < 63)) {
-                richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
-                if (richtung == 1) trans = trans + 2;
-                else if (richtung == 2) trans = trans + 1;
-                else if (richtung == 3) trans = trans + 3;
-                geist_nr++;
-                if (p == 'l') p = 'r';
-                else p = 'l';
-            }
-            idx[j] = trans;
-            j++;
-
-            //bit 1-4
-            trans = (room[level - 1][i]) & 0x0F;
-            if (trans == 0) trans = 1.1;
-            else if (trans == 1) trans = 7.1;
-            else if (trans == 2) trans = 2.1;
-            else if (trans == 3) trans = 43.1; // ghost_180
-            else if (trans == 5) trans = 3.1;
-            else if (trans == 6) trans = 4.1;
-            else if (trans == 7) trans = 47.1; // ghost_90left
-            else if (trans == 9) trans = 7.1;
-            else if (trans == 10) trans = 41.1;
-            else if (trans == 11) trans = 55.1; // ghost_90right
-            else if (trans == 12) trans = 6.1;
-            else if (trans == 14) trans = 5.1;
-            else if (trans == 15) trans = 51.1; // ghost_90leftright
-            // Geist-Richtung aus P9-P16 holen
-            if ((trans >= 43) && (trans < 63)) {
-                richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
-                if (richtung == 1) trans = trans + 2;
-                else if (richtung == 2) trans = trans + 1;
-                else if (richtung == 3) trans = trans + 3;
-                geist_nr++;
-                if (p == 'l') p = 'r';
-                else p = 'l';
-            }
-            idx[j] = trans;
-            j++;
+    var j = 1;
+    for (var i = 0; i < 140; i++) {
+        //bit 5-8
+        trans = (room[level - 1][i]) >> 0x04;
+        if (trans == 0) trans = 1.1;
+        else if (trans == 1) trans = 7.1;
+        else if (trans == 2) trans = 2.1;
+        else if (trans == 3) trans = 43.1; // ghost_180
+        else if (trans == 5) trans = 3.1;
+        else if (trans == 6) trans = 4.1;
+        else if (trans == 7) trans = 47.1; // ghost_90left
+        else if (trans == 9) trans = 7.1;
+        else if (trans == 10) trans = 41.1;
+        else if (trans == 11) trans = 55.1; // ghost_90right
+        else if (trans == 12) trans = 6.1;
+        else if (trans == 14) trans = 5.1;
+        else if (trans == 15) trans = 51.1; // ghost_90leftright
+        // Geist-Richtung aus P9-P16 holen
+        if ((trans >= 43) && (trans < 63)) {
+            richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
+            if (richtung == 1) trans = trans + 2;
+            else if (richtung == 2) trans = trans + 1;
+            else if (richtung == 3) trans = trans + 3;
+            geist_nr++;
+            if (p == 'l') p = 'r';
+            else p = 'l';
         }
-        console.log('gefundene Geister: ' + geist_nr);
+        idx[j] = trans;
+        j++;
 
-        //setze Digger an seine Position
-        idx[(room[level - 1][139 + 6] + 1) + (room[level - 1][139 + 7] - 2) * 20] = 41.1;
-
-        init_digger();
-        drawHeader();
-
-        //Menu-/Highscore-Bild unsichtbar
-        document.getElementById('menudiv').style.visibility = "hidden";
+        //bit 1-4
+        trans = (room[level - 1][i]) & 0x0F;
+        if (trans == 0) trans = 1.1;
+        else if (trans == 1) trans = 7.1;
+        else if (trans == 2) trans = 2.1;
+        else if (trans == 3) trans = 43.1; // ghost_180
+        else if (trans == 5) trans = 3.1;
+        else if (trans == 6) trans = 4.1;
+        else if (trans == 7) trans = 47.1; // ghost_90left
+        else if (trans == 9) trans = 7.1;
+        else if (trans == 10) trans = 41.1;
+        else if (trans == 11) trans = 55.1; // ghost_90right
+        else if (trans == 12) trans = 6.1;
+        else if (trans == 14) trans = 5.1;
+        else if (trans == 15) trans = 51.1; // ghost_90leftright
+        // Geist-Richtung aus P9-P16 holen
+        if ((trans >= 43) && (trans < 63)) {
+            richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
+            if (richtung == 1) trans = trans + 2;
+            else if (richtung == 2) trans = trans + 1;
+            else if (richtung == 3) trans = trans + 3;
+            geist_nr++;
+            if (p == 'l') p = 'r';
+            else p = 'l';
+        }
+        idx[j] = trans;
+        j++;
     }
+    console.log('gefundene Geister: ' + geist_nr);
+
+    //setze blinkenden Exit/Eingang an die Diggerposition
+    idx[(room[level - 1][139 + 6] + 1) + (room[level - 1][139 + 7] - 2) * 20] = 41.1;
+    exit_blink = 41; //Animationsanfang setzen
+
+    init_digger();
+    drawHeader();
+
+    //Menu-/Highscore-Bild unsichtbar
+    document.getElementById('menudiv').style.visibility = "hidden";
 
     // Spiel verzögert starten (wenn Status init)
     if (state == 'init')
@@ -1016,7 +1015,7 @@ function soft_scroll() {
 
     //hin- und herscrollen bei der Raumvorschau "look"
     if (state == 'look') {
-        duration = 25;
+        duration = 15; //sehr langsames (15) Scrollen
         if (viewport_x == 0)
             digger_x = field_width;
         else
@@ -1084,7 +1083,7 @@ function draw_field() {
         i = idx[l] << 0;
 
         // ICON darstellen, wenn mit Nachkommastelle (>i) oder Diamant (3)
-        if ((idx[l] > i) || (idx[l] == 3)) {
+        if ((idx[l] > i) || (idx[l] == 3) || (idx[l] == 41)) {
 
             // Drawflag (Nachkommastelle!=.0) löschen
             // Staub(0.1 - 0.6) und Geister(nn.2) sollen den Nachkommateil behalten.
@@ -1109,6 +1108,10 @@ function draw_field() {
                 i = (diamond_blink) + (z * 6) - (z * 6 / 10 << 0) * 10;
             if (i > 73)
                 i -= 10;
+
+            //Exit blinken lassen (41 exit, 42 wall)
+            if (i == 41)
+                i = exit_blink << 0;
 
             //Diggerposition im #diggerdiv bestimmen
             if (i > 7 && i < 41) {
@@ -1205,246 +1208,223 @@ function draw_frame() {
         //Spielfrequenz um die hälfte teilen
         if (takt_teiler == 1) {
 
-            //DIGGER HALT
-            if ((state == 'play') && !digger_death && !digger_idle && !digger_half_step && (digger_go == 'NONE')) {
-                // Animation zuruecksetzen
-                idx[d_idx] = 8.1;
-                digger_step_left = 13;
-                digger_step_up = 9;
-                digger_step_right = 19;
-                digger_step_down = 11;
-                digger_animation_left = false;
-                digger_animation_right = false;
-                digger_animation_up = false;
-                digger_animation_down = false;
-                digger_idle = true;
-            }
-
-            //DIGGER MOVE
-            if ((state == 'play') && !digger_death && !digger_idle) {
-                if (stone_l && (digger_go != 'LEFT'))
-                    stone_l = false;
-                if (stone_r && (digger_go != 'RIGHT'))
-                    stone_r = false;
-
-                // ? LINKS
-                if (digger_go == 'LEFT') {
-                    var pre_l = d_idx - 1;
-                    var pre_ll = d_idx - 2;
-                    // ? Diamant
-                    if ((idx[pre_l] == 3) && !digger_half_step) {
-                        score_ges++;
-                        score_punkte += 3;
-                        ton_diamant = true;
-                    }
-                    // ? Ausgang
-                    else if (((idx[pre_l] == 41) || (idx[pre_l] == 42)) && !digger_half_step) {
-                        score_punkte += 100;
-                        next_raum = true;
-                    }
-                    // ? Geist
-                    else if (((idx[pre_l] >= 43) && (idx[pre_l] < 63)) && !digger_half_step)
-                        digger_death = true;
-                    // ? Stein
-                    else if ((idx[pre_l] == 7) && !digger_half_step) {
-                        // ? Platz zum wegschieben
-                        if (idx[pre_ll] == 1) {
-                            // ! 2 Takte lang druecken
-                            if (stone_l) {
-                                idx[pre_ll] = 7.1;
-                                idx[pre_l] = 1.1;
-                                stone_l = false;
-                                brumm = true;
-                            } else {
-                                stone_l = true;
-                            }
-                        }
-                    }
-                    // ? Sand, Diamant oder Leer
-                    if ((idx[pre_l] < 4) && !digger_half_step) {
-                        idx[d_idx] = 1.1;
-                        d_idx--;
-                        ton_schritt = true;
-                    }
-                    //Animation aktivieren, Start ab Vollbild
-                    if ( (!digger_half_step) && (digger_step_left == 13) ) {
-                        digger_animation_left = true;
-                        digger_animation_right = false;
-                        digger_animation_up = false;
-                        digger_animation_down = false;
-                        //digger_step_left = 13;
-                        digger_step_up = 9;
-                        digger_step_right = 19;
-                        digger_step_down = 11;
-                    }
-                }
-
-                // ? HOCH
-                else if (digger_go == 'UP') {
-                    var pre_h = d_idx - 20;
-                    // ? Diamant
-                    if ((idx[pre_h] == 3) && !digger_half_step) {
-                        score_ges++;
-                        score_punkte += 3;
-                        ton_diamant = true;
-                    }
-                    // ? Ausgang
-                    else if (((idx[pre_h] == 41) || (idx[pre_h] == 42)) && !digger_half_step) {
-                        score_punkte += 100;
-                        next_raum = true;
-                    }
-                    // ? Geist
-                    else if (((idx[pre_h] >= 43) && (idx[pre_h] < 63)) && !digger_half_step)
-                        digger_death = true;
-                    // ? Sand, Diamant oder Leer
-                    if ((idx[pre_h] < 4) && !digger_half_step) {
-                        idx[d_idx] = 1.1;
-                        d_idx -= 20;
-                        ton_schritt = true;
-                    }
-                    //Animation aktivieren, beginnen ab Vollbild
-                    if ( (!digger_half_step) && (digger_step_up == 9) ) {
-                        digger_animation_left = false;
-                        digger_animation_right = false;
-                        digger_animation_up = true;
-                        digger_animation_down = false;
-                        digger_step_left = 13;
-                        //digger_step_up = 9;
-                        digger_step_right = 19;
-                        digger_step_down = 11;
-                    }
-                }
-
-                // ? RECHTS
-                else if (digger_go == 'RIGHT') {
-                    var pre_r = d_idx + 1;
-                    var pre_rr = d_idx + 2;
-                    // ? Diamant
-                    if ((idx[pre_r] == 3) && !digger_half_step) {
-                        score_ges++;
-                        score_punkte += 3;
-                        ton_diamant = true;
-                    }
-                    // ? Ausgang
-                    else if (((idx[pre_r] == 41) || (idx[pre_r] == 42)) && !digger_half_step) {
-                        score_punkte += 100;
-                        next_raum = true;
-                    }
-                    // ? Geist
-                    else if (((idx[pre_r] >= 43) && (idx[pre_r] < 63)) && !digger_half_step)
-                        digger_death = true;
-                    // ? Stein
-                    else if ((idx[pre_r] == 7) && !digger_half_step) {
-                        // ? Platz zum wegschieben
-                        if (idx[pre_rr] == 1) {
-                            // ! 2 Takte lang druecken
-                            if (stone_r) {
-                                idx[pre_rr] = 7.1;
-                                idx[pre_r] = 1.1;
-                                stone_r = false;
-                                brumm = true;
-                            } else {
-                                stone_r = true;
-                            }
-                        }
-                    }
-                    // ? Sand, Diamant oder Leer
-                    if ((idx[pre_r] < 4) && !digger_half_step) {
-                        idx[d_idx] = 1.1;
-                        d_idx++;
-                        ton_schritt = true;
-                    }
-                    //Animation aktivieren, Start ab Vollbild
-                    if ( (!digger_half_step) && (digger_step_right == 19) ) {
-                        digger_animation_left = false;
-                        digger_animation_right = true;
-                        digger_animation_up = false;
-                        digger_animation_down = false;
-                        digger_step_left = 13;
-                        digger_step_up = 9;
-                        //digger_step_right = 19;
-                        digger_step_down = 11;
-                    }
-                }
-
-                // ? RUNTER
-                else if (digger_go == 'DOWN') {
-                    var pre_d = d_idx + 20;
-                    // ? Diamant
-                    if ((idx[pre_d] == 3) && !digger_half_step) {
-                        score_ges++;
-                        score_punkte += 3;
-                        ton_diamant = true;
-                    }
-                    // ? Ausgang
-                    else if (((idx[pre_d] == 41) || (idx[pre_d] == 42)) && !digger_half_step) {
-                        score_punkte += 100;
-                        next_raum = true;
-                    }
-                    // ? Geist
-                    else if (((idx[pre_d] >= 43) && (idx[pre_d] < 63)) && !digger_half_step)
-                        digger_death = true;
-                    // ? Sand, Diamant oder Leer
-                    if ((idx[pre_d] < 4) && !digger_half_step) {
-                        idx[d_idx] = 1.1;
-                        d_idx += 20;
-                        ton_schritt = true;
-                    }
-                    //Animation aktivieren, Start ab Vollbild
-                    if ( (!digger_half_step) && (digger_step_down == 11) ) {
-                        digger_animation_left = false;
-                        digger_animation_right = false;
-                        digger_animation_up = false;
-                        digger_animation_down = true;
-                        digger_step_left = 13;
-                        digger_step_up = 9;
-                        digger_step_right = 19;
-                        //digger_step_down = 11;
-                    }
-                }
-            }
-
-            //DIGGER ANIMIEREN
-            //links (bei jedem Halbbild)
-            if (digger_animation_left) {
-                idx[d_idx] = digger_step_left + 0.1;
-                digger_step_left++;
-                if (digger_step_left > 18)
-                    digger_step_left = 13;
-            }
-            //hoch (nur bei jedem Vollbild)
-            if (digger_animation_up && !digger_half_step) {
-                idx[d_idx] = digger_step_up + 0.1;
-                digger_step_up++;
-                if (digger_step_up > 10)
-                    digger_step_up = 9;
-            }
-            //rechts (bei jedem Halbbild)
-            if (digger_animation_right) {
-                idx[d_idx] = digger_step_right + 0.1;
-                digger_step_right++;
-                if (digger_step_right > 24)
-                    digger_step_right = 19;
-            }
-            //runter (nur bei jedem Vollbild)
-            if (digger_animation_down && !digger_half_step) {
-                idx[d_idx] = digger_step_down + 0.1;
-                digger_step_down++;
-                if (digger_step_down > 12)
-                    digger_step_down = 11;
-            }
-
-            //DIGGER TOETEN
-            else if (digger_death && !digger_is_dead) {
-                draw_digger_death();
-                digger_go = 'NONE';
-                score_leben--;
-                //spielstand sichern
-                game_save();
-            }
-
             //FRAME 1/2
             if (!digger_half_step) {
+
+                //DIGGER HALT
+                if ((state == 'play') && !digger_death && !digger_idle && (digger_go == 'NONE')) {
+                    // Animation zuruecksetzen
+                    idx[d_idx] = 8.1;
+                    digger_step_left = 13;
+                    digger_step_up = 9;
+                    digger_step_right = 19;
+                    digger_step_down = 11;
+                    digger_animation_left = false;
+                    digger_animation_right = false;
+                    digger_animation_up = false;
+                    digger_animation_down = false;
+                    digger_idle = true;
+                }
+
+                //DIGGER MOVE
+                if ((state == 'play') && !digger_death && !digger_idle) {
+                    if (stone_l && (digger_go != 'LEFT'))
+                        stone_l = false;
+                    if (stone_r && (digger_go != 'RIGHT'))
+                        stone_r = false;
+
+                    // ? LINKS
+                    if (digger_go == 'LEFT') {
+                        var pre_l = d_idx - 1;
+                        var pre_ll = d_idx - 2;
+                        // ? Diamant
+                        if (idx[pre_l] == 3) {
+                            score_ges++;
+                            score_punkte += 3;
+                            ton_diamant = true;
+                        }
+                        // ? Ausgang
+                        else if (idx[pre_l] == 41) {
+                            score_punkte += 100;
+                            next_raum = true;
+                        }
+                        // ? Geist
+                        else if ((idx[pre_l] >= 43) && (idx[pre_l] < 63))
+                            digger_death = true;
+                        // ? Stein
+                        else if (idx[pre_l] == 7) {
+                            // ? Platz zum wegschieben
+                            if (idx[pre_ll] == 1) {
+                                // ! 2 Takte lang druecken
+                                if (stone_l) {
+                                    idx[pre_ll] = 7.1;
+                                    idx[pre_l] = 1.1;
+                                    stone_l = false;
+                                    brumm = true;
+                                } else {
+                                    stone_l = true;
+                                }
+                            }
+                        }
+                        // ? Sand, Diamant oder Leer
+                        if (idx[pre_l] < 4) {
+                            idx[d_idx] = 1.1;
+                            d_idx--;
+                            ton_schritt = true;
+                        }
+                        //Animation aktivieren, Start ab Vollbild
+                        if (digger_step_left == 13) {
+                            digger_animation_left = true;
+                            digger_animation_right = false;
+                            digger_animation_up = false;
+                            digger_animation_down = false;
+                            //digger_step_left = 13;
+                            digger_step_up = 9;
+                            digger_step_right = 19;
+                            digger_step_down = 11;
+                        }
+                    }
+
+                    // ? HOCH
+                    else if (digger_go == 'UP') {
+                        var pre_h = d_idx - 20;
+                        // ? Diamant
+                        if (idx[pre_h] == 3) {
+                            score_ges++;
+                            score_punkte += 3;
+                            ton_diamant = true;
+                        }
+                        // ? Ausgang
+                        else if (idx[pre_h] == 41) {
+                            score_punkte += 100;
+                            next_raum = true;
+                        }
+                        // ? Geist
+                        else if ((idx[pre_h] >= 43) && (idx[pre_h] < 63))
+                            digger_death = true;
+                        // ? Sand, Diamant oder Leer
+                        if (idx[pre_h] < 4) {
+                            idx[d_idx] = 1.1;
+                            d_idx -= 20;
+                            ton_schritt = true;
+                        }
+                        //Animation aktivieren, beginnen ab Vollbild
+                        if (digger_step_up == 9) {
+                            digger_animation_left = false;
+                            digger_animation_right = false;
+                            digger_animation_up = true;
+                            digger_animation_down = false;
+                            digger_step_left = 13;
+                            //digger_step_up = 9;
+                            digger_step_right = 19;
+                            digger_step_down = 11;
+                        }
+                    }
+
+                    // ? RECHTS
+                    else if (digger_go == 'RIGHT') {
+                        var pre_r = d_idx + 1;
+                        var pre_rr = d_idx + 2;
+                        // ? Diamant
+                        if (idx[pre_r] == 3) {
+                            score_ges++;
+                            score_punkte += 3;
+                            ton_diamant = true;
+                        }
+                        // ? Ausgang
+                        else if (idx[pre_r] == 41) {
+                            score_punkte += 100;
+                            next_raum = true;
+                        }
+                        // ? Geist
+                        else if ((idx[pre_r] >= 43) && (idx[pre_r] < 63))
+                            digger_death = true;
+                        // ? Stein
+                        else if (idx[pre_r] == 7) {
+                            // ? Platz zum wegschieben
+                            if (idx[pre_rr] == 1) {
+                                // ! 2 Takte lang druecken
+                                if (stone_r) {
+                                    idx[pre_rr] = 7.1;
+                                    idx[pre_r] = 1.1;
+                                    stone_r = false;
+                                    brumm = true;
+                                } else {
+                                    stone_r = true;
+                                }
+                            }
+                        }
+                        // ? Sand, Diamant oder Leer
+                        if (idx[pre_r] < 4) {
+                            idx[d_idx] = 1.1;
+                            d_idx++;
+                            ton_schritt = true;
+                        }
+                        //Animation aktivieren, Start ab Vollbild
+                        if (digger_step_right == 19) {
+                            digger_animation_left = false;
+                            digger_animation_right = true;
+                            digger_animation_up = false;
+                            digger_animation_down = false;
+                            digger_step_left = 13;
+                            digger_step_up = 9;
+                            //digger_step_right = 19;
+                            digger_step_down = 11;
+                        }
+                    }
+
+                    // ? RUNTER
+                    else if (digger_go == 'DOWN') {
+                        var pre_d = d_idx + 20;
+                        // ? Diamant
+                        if (idx[pre_d] == 3) {
+                            score_ges++;
+                            score_punkte += 3;
+                            ton_diamant = true;
+                        }
+                        // ? Ausgang
+                        else if (idx[pre_d] == 41) {
+                            score_punkte += 100;
+                            next_raum = true;
+                        }
+                        // ? Geist
+                        else if ((idx[pre_d] >= 43) && (idx[pre_d] < 63))
+                            digger_death = true;
+                        // ? Sand, Diamant oder Leer
+                        if (idx[pre_d] < 4) {
+                            idx[d_idx] = 1.1;
+                            d_idx += 20;
+                            ton_schritt = true;
+                        }
+                        //Animation aktivieren, Start ab Vollbild
+                        if (digger_step_down == 11) {
+                            digger_animation_left = false;
+                            digger_animation_right = false;
+                            digger_animation_up = false;
+                            digger_animation_down = true;
+                            digger_step_left = 13;
+                            digger_step_up = 9;
+                            digger_step_right = 19;
+                            //digger_step_down = 11;
+                        }
+                    }
+                }
+
+                //DIGGER ANIMIEREN
+                //hoch (nur bei jedem Vollbild)
+                if (digger_animation_up) {
+                    idx[d_idx] = digger_step_up + 0.1;
+                    digger_step_up++;
+                    if (digger_step_up > 10)
+                        digger_step_up = 9;
+                }
+                //runter (nur bei jedem Vollbild)
+                else if (digger_animation_down) {
+                    idx[d_idx] = digger_step_down + 0.1;
+                    digger_step_down++;
+                    if (digger_step_down > 12)
+                        digger_step_down = 11;
+                }
 
                 //SPIELFELD AKTIVITAETEN
                 if (state == 'play') {
@@ -2421,19 +2401,11 @@ function draw_frame() {
                             }
                         }
 
-                        //sichtbaren EXIT (41, 42) blinken lassen
-                        // 41 = exit, exit.gif
-                        // 42 = exit, wall.gif
-                        else if (blink_tick === 0) {
-                            if (idx[l] == 41)
-                                idx[l] = 42.1;
-                            else if (idx[l] == 42)
-                                idx[l] = 41.1;
-                        }
-
                         // mache den unsichtbaren/unbenutzbaren Ausgang (6) sichtbar (41), bei genuegent Diamanten
-                        else if ((idx[l] == 6) && (score_ges >= score_dia))
+                        else if ((idx[l] == 6) && (score_ges >= score_dia)) {
                             idx[l] = 41.1;
+                            exit_blink = 41; //Animationsanfang setzen
+                        }
 
                         // Staub (0.1) nach 3 Loops in Leere (1.1) aufloesen
                         else if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
@@ -2442,8 +2414,7 @@ function draw_frame() {
                                 idx[l] = 1.1;
                         }
                     }
-                } //Ende Spielfeld Aktivitäten
-
+                }
 
                 //Statuszeile und
                 //Softscroller aktualisieren
@@ -2470,6 +2441,15 @@ function draw_frame() {
                     brumm = false;
                 }
 
+                //DIGGER TOETEN
+                if (digger_death && !digger_is_dead) {
+                    draw_digger_death();
+                    digger_go = 'NONE';
+                    score_leben--;
+                    //spielstand sichern
+                    game_save();
+                }
+
                 //Frame 1/2 --> Frame 2/2
                 digger_half_step = true;
                 digger_start_up = false;
@@ -2478,50 +2458,71 @@ function draw_frame() {
                 digger_start_right = false;
 
             //FRAME 2/2
-            } else
+            } else {
+
+                //LEVEL WECHSELN
+                if (next_raum) {
+                    score_raum++;
+                    if (score_raum > room.length) {
+                        score_raum--;
+                        state = 'highscore';
+                        drawHighscore();
+                        score_raum = 1;
+                        score_leben = LEBENMAX;
+                        score_punkte = 0;
+                    } else
+                        state = 'init';
+                    next_raum = false;
+                    //spielstand sichern
+                    game_save();
+                    //neuen Level starten
+                    init_room(score_raum);
+                }
+
                 //Frame 2/2 --> 1/2
                 digger_half_step = false;
 
-            //LEVEL WECHSELN
-            if (next_raum) {
-                score_raum++;
-                if (score_raum > room.length) {
-                    score_raum--;
-                    state = 'highscore';
-                    drawHighscore();
-                    score_raum = 1;
-                    score_leben = LEBENMAX;
-                    score_punkte = 0;
-                } else
-                    state = 'init';
-                next_raum = false;
-                //spielstand sichern
-                game_save();
-                //neuen Level starten
-                init_room(score_raum);
             }
+
+            //FRAME 1&2
+
+                //DIGGER ANIMIEREN
+                //links (bei jedem Halbbild)
+                if (digger_animation_left) {
+                    idx[d_idx] = digger_step_left + 0.1;
+                    digger_step_left++;
+                    if (digger_step_left > 18)
+                        digger_step_left = 13;
+                }
+                //rechts (bei jedem Halbbild)
+                else if (digger_animation_right) {
+                    idx[d_idx] = digger_step_right + 0.1;
+                    digger_step_right++;
+                    if (digger_step_right > 24)
+                        digger_step_right = 19;
+                }
+
+                //Countdown
+                if ((state == 'play') && !digger_death) {
+                    score_zeit--;
+                    if (score_zeit <= 0)
+                        digger_death = true;
+                }
 
         }
 
         //SPIELFELD REFRESHEN
         requestAnimationFrame(draw_field);
 
-        //Countdown
-            if ((state == 'play') && !digger_death && !digger_half_step) {
-                score_zeit--;
-                if (score_zeit <= 0)
-                    digger_death = true;
-            }
-
-        //Diamant Blinksequenz (64 bis (max_diamond_blink-1))
-        diamond_blink += 1;
+        //Diamant Farbscrollsequenz (64 bis (max_diamond_blink-1))
+        diamond_blink++;
         if (diamond_blink > (64 + max_diamond_blink - 1))
             diamond_blink = 64;
 
-        //Verzoegerung fuer das EIN/AUSgangsblinken
-        blink_tick++;
-        if (blink_tick > 2)
-            blink_tick = 0;
+        //Exit Blinksequenz (41 exit <--> 42 wall)
+        exit_blink += 0.05;
+        if (exit_blink > 43)
+            exit_blink = 41;
 
     }
 
@@ -2535,20 +2536,8 @@ function draw_frame() {
 
 }
 
-function initDigger() {
-    // Raum(n) initialisieren
-    init_room(0);
-
-    // Engine starten
-    // - Berechnungen im Spielfeld
-    // - Spielfeld malen
-    draw_frame();
-
-    // starte Tastatur-/Mausabfrage
-    init_events();
-}
-
 // Los
 initAudio();
 reset_scale();
-initDigger();
+draw_frame(); //Gameloop
+init_events();
