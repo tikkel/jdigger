@@ -240,17 +240,19 @@ function mo_press(ev) {
 
         //im Spiel
         else if ((state == 'play') && digger_death) {
-            //Neustart
-            state = 'init';
+
             if (score_leben < LEBENMIN) {
                 state = 'highscore';
                 drawHighscore();
                 score_punkte = 0;
                 score_leben = LEBENMAX;
                 score_raum = 1;
+            } else {
+                state = 'init';
+                init_room(score_raum);
             }
             game_save(); //spielstand sichern
-            init_room(score_raum);
+
         }
 
         //im Highscore
@@ -295,8 +297,7 @@ function touchDown(e) {
     //1 Finger Tap
     //im Spiel und tot
     else if ((state == 'play') && digger_death) {
-        //Neustart
-        state = 'init';
+
         if (score_leben < LEBENMIN) {
             //virtuelle Tastatur einblenden
             document.body.removeEventListener('click', vkb_focus, false);
@@ -308,9 +309,12 @@ function touchDown(e) {
             score_punkte = 0;
             score_leben = LEBENMAX;
             score_raum = 1;
+        } else {
+            state = 'init';
+            init_room(score_raum);
         }
         game_save(); //spielstand sichern
-        init_room(score_raum);
+
     }
 
     //im Spiel
@@ -487,9 +491,13 @@ function exit_fullscreen() {
 }
 
 function idle_start() {
-    state = 'play';
-    idx[d_idx] = 8.1;
+    //EXIT(41) finden und Digger dort setzen (auch mehrfach, siehe Raum29/Level30)
+    for (var l = 1; l < 281; l++) {
+        if (idx[l] == 41)
+            idx[l] = 8.1;
+    }
     ton_diamant = true;
+    state = 'play';
 }
 
 function idle_stop() {
@@ -596,36 +604,22 @@ function kb_press(taste) {
                 break;
             //Enter
             case 13:
-                if ((state == 'play') && digger_death) {
-                    state = 'init';
-                    if (score_leben < LEBENMIN) {
-                        state = 'highscore';
-                        drawHighscore();
-                        score_punkte = 0;
-                        score_leben = LEBENMAX;
-                        score_raum = 1;
-                    }
-                    game_save(); //spielstand sichern
-                    init_room(score_raum);
-                } else if (state == 'highscore') {
-                    state = 'menu';
-                    drawMenu();
-                }
-                handled = true;
-                break;
             //Space
             case 32:
                 if ((state == 'play') && digger_death) {
-                    state = 'init';
-                    if (score_leben < LEBENMIN) {
-                        state = 'highscore';
-                        drawHighscore();
-                        score_punkte = 0;
-                        score_leben = LEBENMAX;
-                        score_raum = 1;
-                    }
-                    game_save(); //spielstand sichern
-                    init_room(score_raum);
+
+                  if (score_leben < LEBENMIN) {
+                      state = 'highscore';
+                      drawHighscore();
+                      score_punkte = 0;
+                      score_leben = LEBENMAX;
+                      score_raum = 1;
+                  } else {
+                      state = 'init';
+                      init_room(score_raum);
+                  }
+                  game_save(); //spielstand sichern
+
                 } else if (state == 'highscore') {
                     state = 'menu';
                     drawMenu();
@@ -840,26 +834,6 @@ function kb_unpress() {
     kb_release_right();
 }
 
-
-function init_digger() {
-    //Diggeranimation zurücksetzen
-    digger_animation_left = false;
-    digger_animation_right = false;
-    digger_animation_up = false;
-    digger_animation_down = false;
-    digger_step_left = 13;
-    digger_step_up = 9;
-    digger_step_right = 19;
-    digger_step_down = 11;
-    //EXIT(41) finden und Digger dort positionieren(d_idx)
-    for (var l = 1; l < 281; l++) {
-        if (idx[l] == 41.1) d_idx = l;
-    }
-    // bestimme die Malposition im Canvas
-    digger_y = (((d_idx - 1) / 20) << 0) * pre_icon_size;
-    digger_x = ((d_idx - 1) - ((((d_idx - 1) / 20) << 0) * 20)) * pre_icon_size;
-}
-
 function init_room(level) {
     console.log('Level: ' + level);
     digger_idle = true;
@@ -960,14 +934,32 @@ function init_room(level) {
     }
     console.log('gefundene Geister: ' + geist_nr);
 
-    //setze blinkenden Exit/Eingang an die Diggerposition
-    idx[(room[level - 1][139 + 6] + 1) + (room[level - 1][139 + 7] - 2) * 20] = 41.1;
-    exit_blink = 41; //Animationsanfang setzen
+    //Exitblinken zurücksetzen
+    exit_blink = 41;
 
-    init_digger();
+    //Digger initialisieren
+    //Schrittanimation zurücksetzen
+    digger_animation_left = false;
+    digger_animation_right = false;
+    digger_animation_up = false;
+    digger_animation_down = false;
+    digger_step_left = 13;
+    digger_step_up = 9;
+    digger_step_right = 19;
+    digger_step_down = 11;
+    //Diggerposition auslesen
+    var d_x = ((room[level - 1][139 + 6]) >> 0x04) * 10 + ((room[level - 1][139 + 6]) & 0x0F);
+    var d_y = (((room[level - 1][139 + 7]) >> 0x04) * 10 + ((room[level - 1][139 + 7]) & 0x0F) - 2);
+    // bestimme den Index (d_idx) im Feld
+    d_idx = (d_x + 1) + (d_y * 20);
+    // bestimme die Malposition im Canvas
+    digger_x = d_x * pre_icon_size;
+    digger_y = d_y * pre_icon_size;
+
+    //Statuszeile komplett berschreiben
     drawHeader();
 
-    //Menu-/Highscore-Bild unsichtbar
+    //Menu-Bild unsichtbar
     document.getElementById('menudiv').style.visibility = "hidden";
 
     // Spiel verzögert starten (wenn Status init)
@@ -1082,7 +1074,7 @@ function draw_field() {
         // icon auslesen und nachkommastelle abschneiden
         i = idx[l] << 0;
 
-        // ICON darstellen, wenn mit Nachkommastelle (>i) oder Diamant (3)
+        // ICON darstellen, wenn mit Nachkommastelle (>i), Diamant(3) oder Exit(41)
         if ((idx[l] > i) || (idx[l] == 3) || (idx[l] == 41)) {
 
             // Drawflag (Nachkommastelle!=.0) löschen
@@ -1410,15 +1402,30 @@ function draw_frame() {
                     }
                 }
 
+
                 //DIGGER ANIMIEREN
-                //hoch (nur bei jedem Vollbild)
+                //links (bei jedem Halbbild, also hier und in Frame2/2 nochmal)
+                if (digger_animation_left) {
+                    idx[d_idx] = digger_step_left + 0.1;
+                    digger_step_left++;
+                    if (digger_step_left > 18)
+                        digger_step_left = 13;
+                }
+                //rechts (bei jedem Halbbild, also hier und in Frame2/2 nochmal)
+                else if (digger_animation_right) {
+                    idx[d_idx] = digger_step_right + 0.1;
+                    digger_step_right++;
+                    if (digger_step_right > 24)
+                        digger_step_right = 19;
+                }
+                //hoch (nur bei jedem Vollbild, also nur hier in Frame1/2)
                 if (digger_animation_up) {
                     idx[d_idx] = digger_step_up + 0.1;
                     digger_step_up++;
                     if (digger_step_up > 10)
                         digger_step_up = 9;
                 }
-                //runter (nur bei jedem Vollbild)
+                //runter (nur bei jedem Vollbild, also nur hier in Frame1/2)
                 else if (digger_animation_down) {
                     idx[d_idx] = digger_step_down + 0.1;
                     digger_step_down++;
@@ -2363,7 +2370,7 @@ function draw_frame() {
                                             idx[pre_p40] = ((idx[pre_p40]) << 0) + 0.2;
                                     }
                                 }
-                                // ? Drunter: Stein, Diamant oder toter Digger
+                                // ? Drunter: Stein(7), Diamant(3) oder toter Digger(60)
                                 else if ((idx[pre_p20] == 7) || (idx[pre_p20] == 3) || (idx[pre_p20] == 60)) {
                                     //links plumpsen!
                                     if (((idx[pre_m1] == 1) || (idx[pre_m1] == 7.2) || (idx[pre_m1] == 3.2)) && (idx[pre_p19] == 1)) {
@@ -2460,23 +2467,41 @@ function draw_frame() {
             //FRAME 2/2
             } else {
 
+                //DIGGER ANIMIEREN
+                //links (bei jedem Halbbild, also hier und in Frame1/2 auch)
+                if (digger_animation_left) {
+                    idx[d_idx] = digger_step_left + 0.1;
+                    digger_step_left++;
+                    if (digger_step_left > 18)
+                        digger_step_left = 13;
+                }
+                //rechts (bei jedem Halbbild, also hier und in Frame1/2 auch)
+                else if (digger_animation_right) {
+                    idx[d_idx] = digger_step_right + 0.1;
+                    digger_step_right++;
+                    if (digger_step_right > 24)
+                        digger_step_right = 19;
+                }
+
                 //LEVEL WECHSELN
                 if (next_raum) {
-                    score_raum++;
-                    if (score_raum > room.length) {
+
+                    if (score_raum == room.length) {
                         score_raum--;
                         state = 'highscore';
                         drawHighscore();
                         score_raum = 1;
                         score_leben = LEBENMAX;
                         score_punkte = 0;
-                    } else
+                    } else {
+                        score_raum++;
                         state = 'init';
+                        init_room(score_raum);
+                    }
+
                     next_raum = false;
-                    //spielstand sichern
                     game_save();
-                    //neuen Level starten
-                    init_room(score_raum);
+
                 }
 
                 //Frame 2/2 --> 1/2
@@ -2486,21 +2511,7 @@ function draw_frame() {
 
             //FRAME 1&2
 
-                //DIGGER ANIMIEREN
-                //links (bei jedem Halbbild)
-                if (digger_animation_left) {
-                    idx[d_idx] = digger_step_left + 0.1;
-                    digger_step_left++;
-                    if (digger_step_left > 18)
-                        digger_step_left = 13;
-                }
-                //rechts (bei jedem Halbbild)
-                else if (digger_animation_right) {
-                    idx[d_idx] = digger_step_right + 0.1;
-                    digger_step_right++;
-                    if (digger_step_right > 24)
-                        digger_step_right = 19;
-                }
+
 
                 //Countdown
                 if ((state == 'play') && !digger_death) {

@@ -2,15 +2,15 @@
 
 //     jdigger/Digger.JS
 //     Copyright (C) 2019  Marko Klingner
-// 
+//
 //     Dieses Programm ist freie Software. Sie können es unter den Bedingungen der GNU General Public License,
 //     wie von der Free Software Foundation veröffentlicht, weitergeben und/oder modifizieren, entweder gemäß
 //     Version 3 der Lizenz oder (nach Ihrer Option) jeder späteren Version.
-// 
+//
 //     Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen von Nutzen sein wird, aber
 //     OHNE IRGENDEINE GARANTIE, sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR
 //     EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License.
-// 
+//
 //     Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben.
 //     Falls nicht, siehe <http://www.gnu.org/licenses/>.
 
@@ -269,7 +269,7 @@ function drawYesNo() {
             input_line = 0;
             input = undefined;
             rd_yn = false;
-            game_restore(); //spielstand restaurieren
+            //game_restore(); //spielstand restaurieren
             state = 'init';
             init_room(score_raum);
             handled = true;
@@ -286,12 +286,6 @@ function drawYesNo() {
             rd_yn = false;
             idle_stop();
             state = 'menu';
-            //spielstand resetten
-            score_punkte = 0;
-            score_leben = LEBENMAX;
-            score_raum = 1;
-            game_save(); //spielstand sichern
-            init_room(score_raum);
             drawMenu();
             handled = true;
             //virtuelle Tastatur ausblenden
@@ -424,7 +418,7 @@ menu_canvas.width = 320;
 menu_canvas.height = 240;
 
 //charset_canvas erzeugen
-// - offscreen-puffer fuer "charset" 
+// - offscreen-puffer fuer "charset"
 // - soll die korrekt vorscalierten Zeichen (mit KCB_ROT) fuer "canvas_scoreline" enthalten
 var charset_canvas = document.createElement('canvas');
 var charset_context = charset_canvas.getContext('2d', {
