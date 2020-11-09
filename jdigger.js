@@ -957,7 +957,7 @@ function init_room(level) {
     digger_y = d_y * pre_icon_size;
 
     //Statuszeile komplett berschreiben
-    drawHeader();
+    draw_header();
 
     //Menu-Bild unsichtbar
     document.getElementById('menudiv').style.visibility = "hidden";
@@ -1077,7 +1077,7 @@ function draw_field() {
         // ICON darstellen, wenn mit Nachkommastelle (>i), Diamant(3) oder Exit(41)
         if ((idx[l] > i) || (idx[l] == 3) || (idx[l] == 41)) {
 
-            // Drawflag (Nachkommastelle!=.0) löschen
+            // Drawflag (Nachkommastelle != .0) löschen
             // Staub(0.1 - 0.6) und Geister(nn.2) sollen den Nachkommateil behalten.
             if (
                 (i > 0) &&
@@ -1101,11 +1101,11 @@ function draw_field() {
             if (i > 73)
                 i -= 10;
 
-            //Exit blinken lassen (41 exit, 42 wall)
+            //Exit blinken lassen (41 exit <-> 42 wall)
             if (i == 41)
                 i = exit_blink << 0;
 
-            //Diggerposition im #diggerdiv bestimmen
+            //Diggerposition im #diggerdiv bestimmen (8 bis 40 gleich Digger)
             if (i > 7 && i < 41) {
                 digger_x = x;
                 digger_y = y;
@@ -1119,7 +1119,7 @@ function draw_field() {
     }
 }
 
-function draw_line() {
+function update_header() {
     //refresh "übrige Leben" wenn getötet
     if (digger_death) {
         var sl = "" + score_leben;
@@ -2425,7 +2425,7 @@ function draw_frame() {
 
                 //Statuszeile und
                 //Softscroller aktualisieren
-                draw_line();
+                update_header();
                 soft_scroll();
 
                 //Ton abspielen

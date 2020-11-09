@@ -2,15 +2,15 @@
 
 //     jdigger/Digger.JS
 //     Copyright (C) 2017  Marko Klingner
-// 
+//
 //     Dieses Programm ist freie Software. Sie können es unter den Bedingungen der GNU General Public License,
 //     wie von der Free Software Foundation veröffentlicht, weitergeben und/oder modifizieren, entweder gemäß
 //     Version 3 der Lizenz oder (nach Ihrer Option) jeder späteren Version.
-// 
+//
 //     Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen von Nutzen sein wird, aber
 //     OHNE IRGENDEINE GARANTIE, sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR
 //     EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License.
-// 
+//
 //     Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben.
 //     Falls nicht, siehe <http://www.gnu.org/licenses/>.
 
@@ -41,7 +41,7 @@ var TON_HIGH = 1;
 var TON_RATE = 44100; //default  44100 Hz webAudio-API-Samplefreq. (Halbwellen)
 
 function initAudio() {
-    
+
     // webAudio API: "Audio-Puffer"
     if (window.AudioContext || window.webkitAudioContext) {
 
@@ -86,7 +86,7 @@ function initAudio() {
         // TON_STEIN (ctc1 linker Lautsprecher)
         // Puffergrößenberechnung m.H "Gaußsche Summenformel", (n*n+n)/2
         audioBufferStone = audioContext.createBuffer(1, (TON_RATE / KC_CTC_FREQ_VT16 * (0x0ff + 0x100 + ((0x12 * 0x12 + 0x12) / 2)) << 0), TON_RATE);
-        buffer_tmp = audioBufferStone.getChannelData(0); //Zeiger auf Wellendatenpuffer 
+        buffer_tmp = audioBufferStone.getChannelData(0); //Zeiger auf Wellendatenpuffer
         augenblicklicherpeak = TON_LOW;
         for (i = 0, j = 0x0ff;; j++) {
             if (j > 256) j = 1;

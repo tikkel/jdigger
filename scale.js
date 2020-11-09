@@ -179,7 +179,7 @@ function reset_scale() {
     document.getElementById('scorelinediv').style.height = (scale) + 'px';
     document.getElementById('scoreline').width = body_width;
     document.getElementById('scoreline').height = scale;
-    drawHeader();
+    draw_header();
 
     // Spielfeld refreshen (idx[1-280]), alle Sprites neu zeichnen lassen (drawflag setzen)
     document.getElementById('diggerdiv').style.width = (body_width) + 'px';

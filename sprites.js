@@ -386,7 +386,7 @@ function drawText(s, x, y) {
 }
 
 // belege die ganze Scoreline vor
-function drawHeader() {
+function draw_header() {
     // Header darstellen
     var sr = "" + score_raum;
     var sl = "" + score_leben;
