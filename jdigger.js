@@ -2425,8 +2425,10 @@ function draw_frame() {
 
                 //Statuszeile und
                 //Softscroller aktualisieren
-                update_header();
-                soft_scroll();
+                requestAnimationFrame(function(){
+                    update_header();
+                    soft_scroll()
+                });
 
                 //Ton abspielen
                 if (ton_diamant) {
