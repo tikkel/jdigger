@@ -1510,15 +1510,8 @@ function draw_frame() {
                         pre_p40 = l + 40;
                         pre_p21 = l + 21;
 
-                        // Staub(0.1) nach 3 Loops in Leere(1.1) aufloesen
-                        if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
-                            idx[l] += 0.1;
-                            if (idx[l] == 0.4)
-                                idx[l] = 1.1;
-                        }
-
                         // GEISTER 180 (43-46)
-                        else if ((idx[l] >= 43) && (idx[l] < 47)) {
+                        if ((idx[l] >= 43) && (idx[l] < 47)) {
                             // Zum sterben markierte Geister(nn.2)?
                             if ((idx[l] == 43.2) || (idx[l] == 44.2) || (idx[l] == 45.2) || (idx[l] == 46.2)) {
                                 // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
@@ -2420,6 +2413,12 @@ function draw_frame() {
                             exit_blink = 41; //Animationsanfang setzen
                         }
 
+                        // Staub(0.1) nach 3 Loops in Leere(1.1) aufloesen
+                        else if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
+                            idx[l] += 0.1;
+                            if (idx[l] == 0.4)
+                                idx[l] = 1.1;
+                        }
                     }
                 }
 
