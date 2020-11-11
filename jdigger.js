@@ -2422,6 +2422,24 @@ function draw_frame() {
                     }
                 }
 
+                //LEVEL WECHSELN
+                if (next_raum) {
+                    if (score_raum == room.length) {
+                        score_raum--;
+                        state = 'highscore';
+                        drawHighscore();
+                        score_raum = 1;
+                        score_leben = LEBENMAX;
+                        score_punkte = 0;
+                    } else {
+                        score_raum++;
+                        state = 'init';
+                        init_room(score_raum);
+                    }
+                    next_raum = false;
+                    game_save();
+                }
+
                 //Statuszeile und
                 //Softscroller aktualisieren
                 update_header();
@@ -2463,7 +2481,7 @@ function draw_frame() {
                 digger_start_left = false;
                 digger_start_right = false;
 
-                //FRAME 2/2
+            //FRAME 2/2
             } else {
 
                 //DIGGER ANIMIEREN
@@ -2480,27 +2498,6 @@ function draw_frame() {
                     digger_step_right++;
                     if (digger_step_right > 24)
                         digger_step_right = 19;
-                }
-
-                //LEVEL WECHSELN
-                if (next_raum) {
-
-                    if (score_raum == room.length) {
-                        score_raum--;
-                        state = 'highscore';
-                        drawHighscore();
-                        score_raum = 1;
-                        score_leben = LEBENMAX;
-                        score_punkte = 0;
-                    } else {
-                        score_raum++;
-                        state = 'init';
-                        init_room(score_raum);
-                    }
-
-                    next_raum = false;
-                    game_save();
-
                 }
 
                 //Frame 2/2 --> 1/2
