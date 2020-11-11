@@ -2506,9 +2506,6 @@ function draw_frame() {
             }
 
             //FRAME 1&2
-
-
-
             //Countdown
             if ((state == 'play') && !digger_death) {
                 score_zeit--;
