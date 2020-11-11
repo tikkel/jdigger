@@ -1,5 +1,3 @@
-
-
 //     jdigger/Digger.JS
 //     Copyright (C) 2019  Marko Klingner
 //
@@ -515,10 +513,9 @@ function kb_input(taste) {
 //Highscore-ALIAS-Eingabe (Table, Handy, LG-SmartTV)
 function vkb_input() {
     if (state == 'input' && (virt_kbd_last_length < virt_kbd.value.length)) {
-            input = virt_kbd.value.charAt(virt_kbd.value.length - 1).replace(/[^a-zA-Z0-9!"#$%&()*+,./:;<=>?@\-\s]+/g, '');
-            virt_kbd_last_length = virt_kbd.value.length;
-        }
-    else {
+        input = virt_kbd.value.charAt(virt_kbd.value.length - 1).replace(/[^a-zA-Z0-9!"#$%&()*+,./:;<=>?@\-\s]+/g, '');
+        virt_kbd_last_length = virt_kbd.value.length;
+    } else {
         input = 'Backspace';
         virt_kbd_last_length = virt_kbd.value.length;
     }
@@ -561,7 +558,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-            //h Highscore
+                //h Highscore
             case 72:
                 if (state == 'menu') {
                     state = 'highscore';
@@ -569,12 +566,12 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-            //9
+                //9
             case 57:
                 cheat_tmp = '9' + cheat_tmp;
                 handled = true;
                 break;
-            //d
+                //d
             case 68:
                 cheat_tmp = cheat_tmp + 'd';
                 if (cheat_tmp == '99d') {
@@ -584,7 +581,7 @@ function kb_press(taste) {
                 cheat_tmp = '';
                 handled = true;
                 break;
-            //pos1
+                //pos1
             case 36:
                 if ((score_raum < room.length) && digger_cheat) {
                     idle_stop();
@@ -592,7 +589,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-            //Escape
+                //Escape
             case 27:
                 if (state == 'play')
                     digger_death = true;
@@ -602,23 +599,23 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-            //Enter
+                //Enter
             case 13:
-            //Space
+                //Space
             case 32:
                 if ((state == 'play') && digger_death) {
 
-                  if (score_leben < LEBENMIN) {
-                      state = 'highscore';
-                      drawHighscore();
-                      score_punkte = 0;
-                      score_leben = LEBENMAX;
-                      score_raum = 1;
-                  } else {
-                      state = 'init';
-                      init_room(score_raum);
-                  }
-                  game_save(); //spielstand sichern
+                    if (score_leben < LEBENMIN) {
+                        state = 'highscore';
+                        drawHighscore();
+                        score_punkte = 0;
+                        score_leben = LEBENMAX;
+                        score_raum = 1;
+                    } else {
+                        state = 'init';
+                        init_room(score_raum);
+                    }
+                    game_save(); //spielstand sichern
 
                 } else if (state == 'highscore') {
                     state = 'menu';
@@ -626,7 +623,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-            //p Play
+                //p Play
             case 80:
                 if (state == 'menu') {
                     game_restore(); //spielstand restaurieren
@@ -635,7 +632,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-            //l Look
+                //l Look
             case 76:
                 if (state == 'menu') {
                     state = 'look';
@@ -654,22 +651,22 @@ function kb_press(taste) {
                 handled = true;
                 break;
 
-            //oben
+                //oben
             case 38:
                 kb_press_up();
                 handled = true;
                 break;
-            //unten
+                //unten
             case 40:
                 kb_press_down();
                 handled = true;
                 break;
-            //links
+                //links
             case 37:
                 kb_press_left();
                 handled = true;
                 break;
-            //rechts
+                //rechts
             case 39:
                 kb_press_right();
                 handled = true;
@@ -1477,9 +1474,11 @@ function draw_frame() {
                     else if (digger_in_idle && !digger_death)
                         idx[d_idx] = digger_idle_eier + 0.1;
 
-                    //STONE DIAMOND GEISTER
-                    //- Steine und Diamanten fallen lassen
+                    //GEISTER STONE DIAMOND EXIT STAUB (280xloop)
                     //- Geister bewegen
+                    //- Steine und Diamanten fallen lassen
+                    //- Ausgang anzeigen, wenn genügend Diamanten gesammelte
+                    //- Staub langsam auflösen
                     var pre_m1;
                     var pre_m2;
                     var pre_m19;
@@ -1511,8 +1510,15 @@ function draw_frame() {
                         pre_p40 = l + 40;
                         pre_p21 = l + 21;
 
+                        // Staub(0.1) nach 3 Loops in Leere(1.1) aufloesen
+                        if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
+                            idx[l] += 0.1;
+                            if (idx[l] == 0.4)
+                                idx[l] = 1.1;
+                        }
+
                         // GEISTER 180 (43-46)
-                        if ((idx[l] >= 43) && (idx[l] < 47)) {
+                        else if ((idx[l] >= 43) && (idx[l] < 47)) {
                             // Zum sterben markierte Geister(nn.2)?
                             if ((idx[l] == 43.2) || (idx[l] == 44.2) || (idx[l] == 45.2) || (idx[l] == 46.2)) {
                                 // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
@@ -2414,21 +2420,13 @@ function draw_frame() {
                             exit_blink = 41; //Animationsanfang setzen
                         }
 
-                        // Staub (0.1) nach 3 Loops in Leere (1.1) aufloesen
-                        else if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
-                            idx[l] += 0.1;
-                            if (idx[l] == 0.4)
-                                idx[l] = 1.1;
-                        }
                     }
                 }
 
                 //Statuszeile und
                 //Softscroller aktualisieren
-                requestAnimationFrame(function(){
-                    update_header();
-                    soft_scroll()
-                });
+                update_header();
+                soft_scroll();
 
                 //Ton abspielen
                 if (ton_diamant) {
@@ -2466,7 +2464,7 @@ function draw_frame() {
                 digger_start_left = false;
                 digger_start_right = false;
 
-            //FRAME 2/2
+                //FRAME 2/2
             } else {
 
                 //DIGGER ANIMIEREN
@@ -2515,12 +2513,12 @@ function draw_frame() {
 
 
 
-                //Countdown
-                if ((state == 'play') && !digger_death) {
-                    score_zeit--;
-                    if (score_zeit <= 0)
-                        digger_death = true;
-                }
+            //Countdown
+            if ((state == 'play') && !digger_death) {
+                score_zeit--;
+                if (score_zeit <= 0)
+                    digger_death = true;
+            }
 
         }
 
