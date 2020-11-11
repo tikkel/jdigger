@@ -1,4 +1,5 @@
-https://github.com/tikkel/jdigger/blob/master/jdigger.html
+https://tikkel.de
+
 KC85-DIGGER - ein Spieleklassiker
 ---------------------------------
 
