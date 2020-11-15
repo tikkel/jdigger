@@ -13,6 +13,414 @@
 //     Falls nicht, siehe <http://www.gnu.org/licenses/>.
 
 
+//wenn möglich, schönen Pixelsalat zeichnen
+function setpixelated(ctx) {
+    ctx.imageSmoothingEnabled = false; /* standard */
+    //ctx.mozImageSmoothingEnabled = false; /* Firefox */
+    ctx.oImageSmoothingEnabled = false; /* Opera */
+    ctx.webkitImageSmoothingEnabled = false; /* Safari */
+    ctx.msImageSmoothingEnabled = false; /* IE */
+}
+
+
+function set_scale() {
+
+    //Screen Groesse ermitteln (body_width, body_height)
+    if (window.innerWidth) {
+        body_width = window.innerWidth;
+        body_height = window.innerHeight;
+    } else {
+        body_width = document.body.offsetHeight;
+        body_height = document.body.offsetHeight;
+    }
+    console.log('screensize: ' + body_width + 'x' + body_height);
+
+    //Sprite Groesse ermitteln (scale)
+    var scale_width = (body_width / 20) << 0;
+    var scale_height = (body_height / 15) << 0;
+    if (scale_width > scale_height)
+        scale = scale_width;
+    else
+        scale = scale_height;
+
+    //div container fuer canvas #digger, Groesse bestimmen
+    diggerdiv_width = body_width;
+    diggerdiv_height = body_height - scale;
+
+    //Viewport bestimmen, fuer soft_scroll() und draw_field()
+    pre_icon_size = scale;
+    pre_max_w_offset = -(pre_icon_size * 20 - diggerdiv_width);
+    pre_max_h_offset = -(pre_icon_size * 14 - diggerdiv_height);
+
+    //canvas field (#digger), Groesse bestimmen
+    field_width = pre_icon_size * 20;
+    field_height = pre_icon_size * 14;
+}
+
+function reset_scale() {
+
+    //Fullscreen wieder ermöglichen
+    fullscreen_flag = false;
+
+    // Scalierfaktor aktualisieren
+    set_scale();
+
+    // Puffer refreshen (Sprites and Chars)
+    scaleBuffer();
+    context_digger.scale(0.5, 0.5);
+
+    // Menu refreshen
+    document.getElementById('menudiv').style.width = (body_width) + 'px';
+    document.getElementById('menudiv').style.height = (body_height) + 'px';
+    document.getElementById('menuimg').width = body_width;
+    document.getElementById('menuimg').height = body_height;
+    if (state == 'menu')
+        drawMenu();
+    else if (state == 'highscore')
+        drawHighscore();
+    rd_in = false;
+    rd_yn = false;
+
+    // Scoreline refreshen
+    document.getElementById('scorelinediv').style.width = (body_width) + 'px';
+    document.getElementById('scorelinediv').style.height = (scale) + 'px';
+    document.getElementById('scoreline').width = body_width;
+    document.getElementById('scoreline').height = scale;
+    draw_header();
+
+    // Spielfeld refreshen (idx[1-280]), alle Sprites neu zeichnen lassen (drawflag setzen)
+    document.getElementById('diggerdiv').style.width = (body_width) + 'px';
+    document.getElementById('diggerdiv').style.height = (body_height - scale) + 'px';
+    document.getElementById('diggerdiv').style.top = (scale) + 'px';
+    document.getElementById('digger').width = field_width;
+    document.getElementById('digger').height = field_height;
+    var i;
+    for (var l = 1; l < 281; l++) {
+
+        // icon auslesen und nachkommastelle abschneiden
+        i = (idx[l] << 0);
+
+        // nachkommastelle (drawflag, +0.1) erzeugen, wenn nicht bereits vorhanden (idx[l] == i)
+        if (idx[l] == i) {
+            idx[l] += 0.1;
+        }
+
+    }
+
+}
+
+function drawHighscore() {
+
+    //Puffer mit Farbe löschen (copy)
+    menu_context.globalCompositeOperation = "copy";
+    menu_context.fillStyle = "#028965"; //KCB_TUERKIS
+    menu_context.fillRect(0, 0, 320, 240);
+
+    if (charset.complete) {
+
+        //schneide KCF_WEISS aus KCB_TUERKIS aus
+        //KCB_TUERKIS ist die Hintergrundfarbe und KCF_WEISS ist 100% transparent (destination-out)
+        //im Zielcanvas ist KCF_WEISS dann die vorher gefüllte Farbe
+        menu_context.globalCompositeOperation = "destination-out";
+
+        //die Überschrift ...
+        drawLine8("HIGHSCORE :", 8, 4);
+        drawLine8("\217\217\217\217\217\217\217\217\217\217\217", 8, 5);
+
+        //Higscore laden und eventl. aktualisieren
+        highscore_update();
+
+        //die Liste ... 20 Zeilen
+        for (var i = 0; i < 20; i++) {
+            //sprintf(entry, "%.6d  %s", highscore[i].score, highscore[i].name);
+            //var entry = "123456  1234567890";
+            drawLine8(highscore[i], 10, 7 + i);
+        }
+
+        //... wenn möglich, schönen Pixelsalat zeichnen
+        setpixelated(context_menuimg);
+
+        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
+        //Menu mit Farbe löschen (copy)
+        context_menuimg.globalCompositeOperation = "copy";
+        context_menuimg.fillStyle = "#E7E95D"; //KCF_GELB
+        context_menuimg.fillRect(0, 0, body_width, body_height);
+        //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
+        context_menuimg.globalCompositeOperation = "source-over";
+        context_menuimg.drawImage(menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+        document.getElementById('menudiv').style.visibility = "visible";
+
+        //eventl. neuen Alias abfragen
+        if (state == 'input')
+            setTimeout(drawInput, 50);
+
+    } else
+        setTimeout(drawMenu, 1000);
+
+}
+
+function drawInput() {
+    if (!rd_in) { //braucht nur 1x gemalt werden
+
+        //Loop Tastaturabfrage
+        menu_context.globalCompositeOperation = "destination-out";
+        drawLine8("...well done, please enter your name :", 1, 2);
+
+        //Zeile löschen
+        //Cursor(\177) und Zeichen
+        menu_context.globalCompositeOperation = "source-over";
+        menu_context.fillStyle = "#028965"; //KCB_TUERKIS
+        menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
+        menu_context.globalCompositeOperation = "destination-out";
+        drawLine8(input_alias + "\177", 17, 7 + input_line);
+
+        //... wenn möglich, schönen Pixelsalat zeichnen
+        setpixelated(context_menuimg);
+
+        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
+        //Menu mit Farbe löschen (copy)
+        context_menuimg.globalCompositeOperation = "copy";
+        context_menuimg.fillStyle = "#E7E95D"; //KCF_GELB
+        context_menuimg.fillRect(0, 0, body_width, body_height);
+        //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
+        context_menuimg.globalCompositeOperation = "source-over";
+        context_menuimg.drawImage(menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+
+        rd_in = true;
+    }
+
+    if (input != undefined) {
+        if (input == 'Enter') { //Enter -> 'weiter zu YesNo'
+            rd_in = false;
+            input = undefined;
+            handled = true;
+            highscore[input_line] = highscore[input_line] + "  " + input_alias; //"99999  alias678901234"
+            highscore_save();
+            setTimeout(drawYesNo, 100);
+            return;
+        } else if (input == 'Backspace') {
+            if (input_alias.length > 0) {
+                input_alias = input_alias.substr(0, input_alias.length - 1);
+                rd_in = false;
+            }
+            input = undefined;
+            handled = true;
+        } else { //if (input > 31 && input < 127) { //32-126
+            input_alias = input_alias + input; //String.fromCharCode(input);
+            rd_in = false;
+            input = undefined;
+            handled = true;
+            // max. 14 Zeichen -> 'weiter zu YesNo'
+            if (input_alias.length == 14) {
+                highscore[input_line] = highscore[input_line] + "  " + input_alias; //"99999  alias678901234"
+                highscore_save();
+                setTimeout(drawYesNo, 100);
+                return;
+            }
+        }
+    }
+
+    //keine Taste, weiter warten
+    setTimeout(drawInput, 50);
+}
+
+function drawYesNo() {
+    if (!rd_yn) { //braucht nur 1x gemalt werden
+        //Loop Tastaturabfrage Y/N (89/78)
+        menu_context.globalCompositeOperation = "destination-out";
+        drawLine8("NEW GAME ? (Y/N)", 12, 28);
+
+        //Zeile löschen
+        //Cursor(\177) und Zeichen
+        menu_context.globalCompositeOperation = "source-over";
+        menu_context.fillStyle = "#028965"; //KCB_TUERKIS
+        menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
+        menu_context.globalCompositeOperation = "destination-out";
+        drawLine8(input_alias, 17, 7 + input_line);
+
+        //... wenn möglich, schönen Pixelsalat zeichnen
+        setpixelated(context_menuimg);
+
+        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
+        //Menu mit Farbe löschen (copy)
+        context_menuimg.globalCompositeOperation = "copy";
+        context_menuimg.fillStyle = "#E7E95D"; //KCF_GELB
+        context_menuimg.fillRect(0, 0, body_width, body_height);
+        //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
+        context_menuimg.globalCompositeOperation = "source-over";
+        context_menuimg.drawImage(menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+
+        rd_yn = true;
+    }
+
+    switch (input) {
+        case 'y':
+        case 'Y':
+            input_alias = "";
+            input_line = 0;
+            input = undefined;
+            rd_yn = false;
+            //game_restore(); //spielstand restaurieren
+            state = 'init';
+            init_room(score_raum);
+            handled = true;
+            //virtuelle Tastatur ausblenden
+            document.body.removeEventListener('click', vkb_focus, false);
+            document.body.removeEventListener('input', vkb_input, false);
+            virt_kbd.blur();
+            return;
+        case 'n':
+        case 'N':
+            input_alias = "";
+            input_line = 0;
+            input = undefined;
+            rd_yn = false;
+            idle_stop();
+            state = 'menu';
+            drawMenu();
+            handled = true;
+            //virtuelle Tastatur ausblenden
+            document.body.removeEventListener('click', vkb_focus, false);
+            document.body.removeEventListener('input', vkb_input, false);
+            virt_kbd.blur();
+            return;
+    }
+
+    //keine Taste, weiter warten
+    setTimeout(drawYesNo, 50);
+}
+
+//schreibe zeilenweise die MENU-Grafik (in orig. Größe 320x240) in einen Canvas-Puffer (menu_canvas)
+function drawMenu() {
+
+    //Puffer mit Farbe löschen (copy)
+    menu_context.globalCompositeOperation = "copy";
+    menu_context.fillStyle = "#04028f"; //KCB_BLAU
+    menu_context.fillRect(0, 0, 320, 240);
+
+    if (charset.complete) {
+
+        //male KCF_WEISS auf die vorher KCB_BLAU gefüllte Fläche über
+        //KCB_BLAU ist die Hintergrundfarbe und KCF_WEISS ist 100% deckend (source-over)
+        //im Zielcanvas ist KCF_WEISS dann also normal KCF_WEISS
+        menu_context.globalCompositeOperation = "source-over";
+
+        //der Text ...
+        drawLine8("\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236", 0, 0);
+        drawLine8("\237\240\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\242\237", 0, 1);
+        drawLine8("\237\243\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236\251\237", 0, 2);
+        for (var i = 3; i < 27; i++) {
+            drawLine8("\237\243\237", 0, i);
+            drawLine8("\237\251\237", 37, i);
+        }
+        drawLine8("\200\201\202\203 \210 \211\212\213\214 \211\212\213\214 \200\201\215\215 \133\215\221\222", 7, 6);
+        drawLine8("\133 \206\207 \133 \133  \215 \133  \215 \133    \133 \223\224", 7, 7);
+        drawLine8("\133  \133 \133 \133 \244\216 \133 \244\216 \133\217\220  \133\225\226\227", 7, 8);
+        drawLine8("\133 \260\261 \133 \133 \316\133 \133 \316\133 \133    \133 \230\231", 7, 9);
+        drawLine8("\252\253\254\255 \262 \263\264\265\266 \263\264\265\266 \252\253\267\267 \133 \232\233", 7, 10);
+
+        drawLine8("WRITTEN BY  ALEXANDER LANG", 7, 13);
+        /* drawLine8("GRAPHIX BY  MARTIN    GUTH", 7, 15); */
+        drawLine8("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
+        drawLine8("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
+        drawLine8("         BERLIN         \247\250", 7, 18);
+        drawLine8("P: PLAY   H: HIGHSCORE", 9, 20);
+        drawLine8("L: A LOOK AT THE ROOMS", 9, 22);
+        drawLine8("JSv " + digger_version, 5, 25);
+        drawLine8("\140 1988", 29, 25);
+        drawLine8("by TIKKEL", 5, 26);
+        drawLine8("BERLIN", 29, 26);
+
+        drawLine8("\237\243\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310\251\237", 0, 27);
+        drawLine8("\237\312\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\314\237", 0, 28);
+        drawLine8("\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310", 0, 29);
+
+        //... wenn möglich, schönen Pixelsalat zeichnen
+        setpixelated(context_menuimg);
+
+        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
+        context_menuimg.drawImage(menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+        document.getElementById('menudiv').style.visibility = "visible";
+
+    } else
+        setTimeout(drawMenu, 1000);
+}
+
+// eine Zeile in den Menu-Puffer
+function drawLine8(s, x, y) {
+    var sx, sy, dx, dy;
+    var pre_w = 8;
+    var pre_h = 8;
+    for (var i = 0; i < s.length; i++) {
+        sx = 0;
+        sy = (s.charCodeAt(i) - 32) * 8;
+        dx = (x + i) * pre_w;
+        dy = y * pre_h;
+        //menu_context.globalCompositeOperation = "destination-out";
+        menu_context.drawImage(charset, sx, sy, 8, 8, dx, dy, pre_w, pre_h);
+
+    }
+}
+
+// SCORELINE
+// schreibe Zeichenweise in das Scoreline-Canvas (Leben, Counter, Diamanten ...)
+function drawText(s, x, y) {
+    var sx, sy, dx, dy;
+    for (var i = 0; i < s.length; i++) {
+        sx = 0;
+        sy = (s.charCodeAt(i) - 32) * pre_icon_size;
+        dx = (x + i) * charset_canvas.width;
+        dy = y * pre_icon_size;
+        //vorskalierte Zeichen aus "charset_canvas" ins sichtbare "canvas_scoreline" zeichnen
+        context_scoreline.drawImage(charset_canvas, sx, sy, charset_canvas.width, pre_icon_size, dx, dy, charset_canvas.width, pre_icon_size);
+    }
+}
+
+// belege die ganze Scoreline vor
+function draw_header() {
+    // Header darstellen
+    var sr = "" + score_raum;
+    var sl = "" + score_leben;
+    var sd = "" + score_dia;
+    while (sr.length < 2)
+        sr = "0" + sr;
+    while (sl.length < 2)
+        sl = "0" + sl;
+    while (sd.length < 2)
+        sd = "0" + sd;
+    // \324\325 --> Herz
+    // \326\327 --> Diamant
+    drawText("  " + sr + "   " + sl + "\324\325    5000" + "      \326\327" + sd + "    00000     ", 0, 0);
+}
+
+function scaleBuffer() {
+    // ? alle sprites und charset vorgeladen
+    if (spriteset.complete && charset.complete) {
+
+        //Sprites Puffer, 1x40 Sprites
+        buffer_canvas.width = pre_icon_size;
+        buffer_canvas.height = pre_icon_size * 40;
+        //kein Smoothing/Antialiasing
+        setpixelated(buffer_context);
+        // spriteset skalieren und in "buffer_canvas" schreiben
+        buffer_context.drawImage(spriteset, 0, 0, buffer_canvas.width, buffer_canvas.height);
+        console.log('buffersize sprites: ' + buffer_canvas.width + 'x' + buffer_canvas.height);
+
+        //Zeichen Puffer
+        charset_canvas.width = (body_width / 40) << 0;
+        charset_canvas.height = pre_icon_size * 184;
+        //kein Smoothing/Antialiasing
+        setpixelated(charset_context);
+        // charset skalieren und in "charset_canvas" schreiben (mit KCB_ROT #920205)
+        charset_context.fillStyle = "#920205";
+        charset_context.fillRect(0, 0, charset_canvas.width, charset_canvas.height);
+        charset_context.drawImage(charset, 0, 0, charset_canvas.width, charset_canvas.height);
+        console.log('buffersize chars: ' + charset_canvas.width + 'x' + charset_canvas.height);
+
+    } else
+        setTimeout(scaleBuffer, 1000);
+}
+
 function init_events() {
     //Touch aktivieren (Handy, Tablet)
     document.body.addEventListener('touchstart', touchDown, false);
@@ -119,6 +527,7 @@ function game_save() {
         console.log('game_save: nach Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
+
 //Spielstand restaurieren
 function game_restore() {
     var ca;
@@ -171,17 +580,6 @@ function game_restore() {
         console.log('game_restore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
-
-
-var direction = 'stop';
-var ldirection = 'stop';
-var touch_flag = false;
-var fullscreen_flag = false;
-var single_touch = 0;
-var mouseIsDown = false;
-var joyOn = false;
-var joyX = 0;
-var joyY = 0;
 
 //MAUS-Click
 function mo_press(ev) {
@@ -387,9 +785,6 @@ function touchUp(e) {
     single_touch = e.touches.length;
 }
 
-var touchX;
-var touchY;
-
 function touchXY(e) {
     e.preventDefault(); //iOS, scrollen verhindern
     touchX = e.targetTouches[0].pageX;
@@ -503,7 +898,6 @@ function idle_stop() {
 }
 
 // H I G H S C O R E   I N P U T
-var virt_kbd_last_length;
 //Highscore-ALIAS-Eingabe (PC)
 function kb_input(taste) {
     if (state == 'input')
@@ -531,8 +925,6 @@ function vkb_focus() {
 
 // K E Y   P R E S S
 //https://keycode.info/
-var handled = true;
-
 function kb_press(taste) {
     //Safari und Chrome. enable paused audioContext
     try {
@@ -721,7 +1113,6 @@ function kb_press_right() {
     }
 }
 
-
 //KEYRELEASE (nur für die Richtungssteuerung (37,38,39,40))
 function kb_release(taste) {
 
@@ -862,7 +1253,6 @@ function init_room(level) {
 
     // meins  55=down,  57=up,  56=right,  58=left  90LR    zuletzt rechts abgebogen
     // meins  59=down,  61=up,  60=right,  62=left  90RL    zuletzt links abgebogen
-
 
     //zu sammelnde Diamanten (2 Byte auslesen, dezimal interpretiert)
     score_dia = ((room[level - 1][139 + 8]) >> 0x04) * 10 + ((room[level - 1][139 + 8]) & 0x0F);
@@ -1147,33 +1537,6 @@ function update_header() {
         sp = "0" + sp;
     drawText(sp, 33, 0);
 }
-
-//wenn möglich, schönen Pixelsalat zeichnen
-function setpixelated(ctx) {
-    ctx.imageSmoothingEnabled = false; /* standard */
-    //ctx.mozImageSmoothingEnabled = false; /* Firefox */
-    ctx.oImageSmoothingEnabled = false; /* Opera */
-    ctx.webkitImageSmoothingEnabled = false; /* Safari */
-    ctx.msImageSmoothingEnabled = false; /* IE */
-}
-
-var canvas_scoreline = document.getElementById('scoreline');
-var canvas_digger = document.getElementById('digger');
-var canvas_menuimg = document.getElementById('menuimg');
-
-var context_scoreline = canvas_scoreline.getContext('2d', {
-    alpha: false
-});
-var context_digger = canvas_digger.getContext('2d', {
-    alpha: false
-});
-var context_menuimg = canvas_menuimg.getContext('2d', {
-    alpha: false
-});
-
-setpixelated(context_scoreline);
-setpixelated(context_digger);
-setpixelated(context_menuimg);
 
 // 0 Staub
 // 1 Nothing
@@ -2540,8 +2903,14 @@ function draw_frame() {
 
 }
 
-// Los
+//Pixelgrafik
+setpixelated(context_scoreline);
+setpixelated(context_digger);
+setpixelated(context_menuimg);
+//WebAudio und Wavebuffer
 initAudio();
+//Sprites Preskaling
 reset_scale();
-draw_frame(); //Gameloop
+//Gameloop
+draw_frame();
 init_events();
