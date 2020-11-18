@@ -21,7 +21,7 @@ var LEBENMIN = 1;
 var FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 
 //allgem. Variablen
-var digger_version = '20.11.15';
+var digger_version = '20.11.18';
 var exit_blink = 41.1;
 var diamond_blink = 64;
 var zufall = 1;
