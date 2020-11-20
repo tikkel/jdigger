@@ -958,7 +958,7 @@ function kb_press(taste) {
                 break;
             //pos1 (+shiftKey)
             case 36:
-                if (digger_cheat) {
+                if (digger_cheat && ((state == 'play') || (state == 'init'))) {
                     if (taste.shiftKey && (score_raum > 1)) {
                       idle_stop();
                       score_raum--;

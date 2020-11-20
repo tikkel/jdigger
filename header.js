@@ -183,7 +183,7 @@ var sprites = [
     37, //digger
 
     6, //41=Exit blinkender Ausgang
-    4, //42=Wall
+    1, //42=Nothing
 
     38, //43 down 180
     29, //44 right
