@@ -113,7 +113,7 @@ function drawHighscore() {
 
     //Puffer mit Farbe löschen (copy)
     menu_context.globalCompositeOperation = "copy";
-    menu_context.fillStyle = "#028965"; //KCB_TUERKIS
+    menu_context.fillStyle = KCB_TUERKIS;
     menu_context.fillRect(0, 0, 320, 240);
 
     if (charset.complete) {
@@ -143,7 +143,7 @@ function drawHighscore() {
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
         //Menu mit Farbe löschen (copy)
         context_menuimg.globalCompositeOperation = "copy";
-        context_menuimg.fillStyle = "#E7E95D"; //KCF_GELB
+        context_menuimg.fillStyle = KCF_GELB;
         context_menuimg.fillRect(0, 0, body_width, body_height);
         //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
         context_menuimg.globalCompositeOperation = "source-over";
@@ -169,7 +169,7 @@ function drawInput() {
         //Zeile löschen
         //Cursor(\177) und Zeichen
         menu_context.globalCompositeOperation = "source-over";
-        menu_context.fillStyle = "#028965"; //KCB_TUERKIS
+        menu_context.fillStyle = KCB_TUERKIS;
         menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
         menu_context.globalCompositeOperation = "destination-out";
         drawLine8(input_alias + "\177", 17, 7 + input_line);
@@ -180,7 +180,7 @@ function drawInput() {
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
         //Menu mit Farbe löschen (copy)
         context_menuimg.globalCompositeOperation = "copy";
-        context_menuimg.fillStyle = "#E7E95D"; //KCF_GELB
+        context_menuimg.fillStyle = KCF_GELB;
         context_menuimg.fillRect(0, 0, body_width, body_height);
         //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
         context_menuimg.globalCompositeOperation = "source-over";
@@ -233,7 +233,7 @@ function drawYesNo() {
         //Zeile löschen
         //Cursor(\177) und Zeichen
         menu_context.globalCompositeOperation = "source-over";
-        menu_context.fillStyle = "#028965"; //KCB_TUERKIS
+        menu_context.fillStyle = KCB_TUERKIS;
         menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
         menu_context.globalCompositeOperation = "destination-out";
         drawLine8(input_alias, 17, 7 + input_line);
@@ -244,7 +244,7 @@ function drawYesNo() {
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
         //Menu mit Farbe löschen (copy)
         context_menuimg.globalCompositeOperation = "copy";
-        context_menuimg.fillStyle = "#E7E95D"; //KCF_GELB
+        context_menuimg.fillStyle = KCF_GELB;
         context_menuimg.fillRect(0, 0, body_width, body_height);
         //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
         context_menuimg.globalCompositeOperation = "source-over";
@@ -295,7 +295,7 @@ function drawMenu() {
 
     //Puffer mit Farbe löschen (copy)
     menu_context.globalCompositeOperation = "copy";
-    menu_context.fillStyle = "#04028f"; //KCB_BLAU
+    menu_context.fillStyle = KCB_BLAU;
     menu_context.fillRect(0, 0, 320, 240);
 
     if (charset.complete) {
@@ -411,31 +411,14 @@ function scaleBuffer() {
         charset_canvas.height = pre_icon_size * 184;
         //kein Smoothing/Antialiasing
         setpixelated(charset_context);
-        // charset skalieren und in "charset_canvas" schreiben (mit KCB_ROT #920205)
-        charset_context.fillStyle = "#920205";
+        // charset skalieren und in "charset_canvas" schreiben
+        charset_context.fillStyle = KCB_ROT;
         charset_context.fillRect(0, 0, charset_canvas.width, charset_canvas.height);
         charset_context.drawImage(charset, 0, 0, charset_canvas.width, charset_canvas.height);
         console.log('buffersize chars: ' + charset_canvas.width + 'x' + charset_canvas.height);
 
     } else
         setTimeout(scaleBuffer, 1000);
-}
-
-function init_events() {
-    //Touch aktivieren (Handy, Tablet)
-    document.body.addEventListener('touchstart', touchDown, false);
-    document.body.addEventListener('touchmove', touchXY, true);
-    document.body.addEventListener('touchend', touchUp, false);
-    document.body.addEventListener('touchcancel', touchUp, false);
-
-    //Maus und Tastatur aktivieren (PC, LG-SmartTV)
-    document.body.addEventListener('click', mo_press, false);
-    document.body.addEventListener('keydown', kb_press, false);
-    document.body.addEventListener('keyup', kb_release, false);
-    document.body.addEventListener('keypress', kb_input, false);
-
-    //window.addEventListener('DOMContentLoaded', reset_scale, false);
-    window.addEventListener("resize", reset_scale, false);
 }
 
 //Highscore laden und aktualisieren
@@ -950,7 +933,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //h Highscore
+            //h Highscore
             case 72:
                 if (state == 'menu') {
                     state = 'highscore';
@@ -958,12 +941,12 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //9
+            //9
             case 57:
                 cheat_tmp = '9' + cheat_tmp;
                 handled = true;
                 break;
-                //d
+            //d
             case 68:
                 cheat_tmp = cheat_tmp + 'd';
                 if (cheat_tmp == '99d') {
@@ -973,15 +956,27 @@ function kb_press(taste) {
                 cheat_tmp = '';
                 handled = true;
                 break;
-                //pos1
+            //pos1 (+shiftKey)
             case 36:
-                if ((score_raum < room.length) && digger_cheat) {
-                    idle_stop();
-                    next_raum = true;
+                if (digger_cheat) {
+                    if (taste.shiftKey && (score_raum > 1)) {
+                      idle_stop();
+                      score_raum--;
+                      state = 'init';
+                      init_room(score_raum);
+                      game_save();
+                    }
+                    else if (!taste.shiftKey && (score_raum < room.length)) {
+                      idle_stop();
+                      score_raum++;
+                      state = 'init';
+                      init_room(score_raum);
+                      game_save();
+                    }
                 }
                 handled = true;
                 break;
-                //Escape
+            //Escape
             case 27:
                 if (state == 'play')
                     digger_death = true;
@@ -991,9 +986,9 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //Enter
+            //Enter
             case 13:
-                //Space
+            //Space
             case 32:
                 if ((state == 'play') && digger_death) {
 
@@ -1015,7 +1010,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //p Play
+            //p Play
             case 80:
                 if (state == 'menu') {
                     game_restore(); //spielstand restaurieren
@@ -1024,7 +1019,7 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
-                //l Look
+            //l Look
             case 76:
                 if (state == 'menu') {
                     state = 'look';
@@ -1043,22 +1038,22 @@ function kb_press(taste) {
                 handled = true;
                 break;
 
-                //oben
+            //oben
             case 38:
                 kb_press_up();
                 handled = true;
                 break;
-                //unten
+            //unten
             case 40:
                 kb_press_down();
                 handled = true;
                 break;
-                //links
+            //links
             case 37:
                 kb_press_left();
                 handled = true;
                 break;
-                //rechts
+            //rechts
             case 39:
                 kb_press_right();
                 handled = true;
@@ -1068,7 +1063,7 @@ function kb_press(taste) {
 
     } else {
         if (taste.key == 'Backspace')
-            //    input = 8;
+            //input = 8;
             input = taste.key;
     }
 
@@ -2399,7 +2394,7 @@ function draw_frame() {
                                         } else if ((idx[pre_p20] >= 8) && (idx[pre_p20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RUNTER down right left up
+                                    //RUNTER down right left up
                                     case 55:
                                         if ((idx[pre_p20] == 1) || (idx[pre_p20] == 1.1)) { // wenn drunter frei
                                             ti = pre_p20;
@@ -2434,7 +2429,7 @@ function draw_frame() {
                                         } else if ((idx[pre_m20] >= 8) && (idx[pre_m20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RECHTS right up down left
+                                    //RECHTS right up down left
                                     case 56:
                                         if ((idx[pre_p1] == 1) || (idx[pre_p1] == 1.1)) { // wenn rechts frei
                                             ti = pre_p1;
@@ -2788,7 +2783,7 @@ function draw_frame() {
                 //LEVEL WECHSELN
                 if (next_raum) {
                     if (score_raum == room.length) {
-                        score_raum--;
+                        //score_raum--;
                         state = 'highscore';
                         drawHighscore();
                         score_raum = 1;
@@ -2901,6 +2896,23 @@ function draw_frame() {
 
     setTimeout(draw_frame, FPS);
 
+}
+
+function init_events() {
+    //Touch aktivieren (Handy, Tablet)
+    document.body.addEventListener('touchstart', touchDown, false);
+    document.body.addEventListener('touchmove', touchXY, true);
+    document.body.addEventListener('touchend', touchUp, false);
+    document.body.addEventListener('touchcancel', touchUp, false);
+
+    //Maus und Tastatur aktivieren (PC, LG-SmartTV)
+    document.body.addEventListener('click', mo_press, false);
+    document.body.addEventListener('keydown', kb_press, false);
+    document.body.addEventListener('keyup', kb_release, false);
+    document.body.addEventListener('keypress', kb_input, false);
+
+    //window.addEventListener('DOMContentLoaded', reset_scale, false);
+    window.addEventListener("resize", reset_scale, false);
 }
 
 //Pixelgrafik

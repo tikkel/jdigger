@@ -109,6 +109,12 @@ var joyY = 0;
 var action = 0;
 var laction = 0;
 
+//KC-Farben
+var KCB_TUERKIS = "#028965";
+var KCF_GELB    = "#E7E95D";
+var KCB_BLAU    = "#04028f";
+var KCB_ROT     = "#920205";
+
 var diggerdiv_height = 14;
 var diggerdiv_width = 20;
 var scale = 1;
