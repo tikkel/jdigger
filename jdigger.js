@@ -390,7 +390,10 @@ function draw_header() {
         sd = "0" + sd;
     // \324\325 --> Herz
     // \326\327 --> Diamant
-    drawText("  " + sr + "   " + sl + "\324\325    5000" + "      \326\327" + sd + "    00000     ", 0, 0);
+    drawText("  " + sr + "   " + sl + "\324\325    5000" + "      \326\327" + sd + "              ", 0, 0);
+    //gesammelte Diamanten und Punkte-Refresh aktivieren,weil last_ != score_
+    last_ges = score_ges -1;
+    last_punkte = score_punkte -1;
 }
 
 function scaleBuffer() {
@@ -956,26 +959,6 @@ function kb_press(taste) {
                 cheat_tmp = '';
                 handled = true;
                 break;
-            //pos1 (+shiftKey)
-            case 36:
-                if (digger_cheat && ((state == 'play') || (state == 'init'))) {
-                    if (taste.shiftKey && (score_raum > 1)) {
-                      idle_stop();
-                      score_raum--;
-                      state = 'init';
-                      init_room(score_raum);
-                      game_save();
-                    }
-                    else if (!taste.shiftKey && (score_raum < room.length)) {
-                      idle_stop();
-                      score_raum++;
-                      state = 'init';
-                      init_room(score_raum);
-                      game_save();
-                    }
-                }
-                handled = true;
-                break;
             //Escape
             case 27:
                 if (state == 'play')
@@ -1019,21 +1002,40 @@ function kb_press(taste) {
                 }
                 handled = true;
                 break;
+            //pos1 (+shiftKey)
+            case 36:
+                if (digger_cheat && ((state == 'play') || (state == 'init'))) {
+                    if (!taste.shiftKey && (score_raum < room.length)) {
+                      idle_stop();
+                      score_raum++;
+                      state = 'init';
+                      init_room(score_raum);
+                      game_save();
+                    }
+                    else if (taste.shiftKey && (score_raum > 1)) {
+                      idle_stop();
+                      score_raum--;
+                      state = 'init';
+                      init_room(score_raum);
+                      game_save();
+                    }
+                }
+                handled = true;
+                break;
             //l Look
             case 76:
                 if (state == 'menu') {
                     state = 'look';
                     init_room(score_raum);
-                } else if ((score_raum < room.length) && (state == 'look')) {
-                    score_raum++;
-                    init_room(score_raum);
-                } else if ((score_raum >= room.length) && (state == 'look')) {
-                    state = 'menu';
-                    score_punkte = 0;
-                    score_leben = LEBENMAX;
-                    score_raum = 1;
-                    init_room(score_raum);
-                    drawMenu();
+                } else if (state == 'look') {
+                    if (!taste.shiftKey && (score_raum < room.length)) {
+                      score_raum++;
+                      init_room(score_raum);
+                    }
+                    else if (taste.shiftKey && (score_raum > 1)) {
+                      score_raum--;
+                      init_room(score_raum);
+                    }
                 }
                 handled = true;
                 break;
@@ -1229,6 +1231,7 @@ function init_room(level) {
     digger_down = false;
     digger_death = false;
     score_ges = 0;
+    last_ges = -1;
     score_zeit = 5000;
     var trans;
     var richtung;
@@ -1483,19 +1486,29 @@ function draw_field() {
             if (i > 73)
                 i -= 10;
 
-            //Exit blinken lassen (41 exit <-> 42 wall)
+            // Exit blinken lassen (41 exit <-> 42 wall)
             if (i == 41)
                 i = exit_blink << 0;
 
-            //Diggerposition im #diggerdiv bestimmen (8 bis 40 gleich Digger)
+            // Diggerposition im #diggerdiv bestimmen (8 bis 40 gleich Digger)
             if (i > 7 && i < 41) {
                 digger_x = x;
                 digger_y = y;
             }
 
-            //Diamanten (64-73) nur zeichnen, wenn im sichtbaren Bereich
-            if ((i < 64) || ((x + actual_marginLeft + pre_icon_size) >= 0) && ((x + actual_marginLeft) <= diggerdiv_width) && ((y + actual_marginTop + pre_icon_size) >= 0) && ((y + actual_marginTop) <= diggerdiv_height))
-                // vorskaliertes Icon aus "buffer_canvas" ins sichtbare Canvas zeichnen
+            // Clipping and Drawing
+            if (
+                // kein Diamant? --> dann zeichnen
+                (i < 64) ||  // ODER
+                // Diamant im sichtbaren Bereich? --> zeichnen
+                (
+                  ((x + actual_marginLeft + pre_icon_size) >= 0) &&
+                  ((x + actual_marginLeft) <= diggerdiv_width) &&
+                  ((y + actual_marginTop + pre_icon_size) >= 0) &&
+                  ((y + actual_marginTop) <= diggerdiv_height)
+                )
+              )
+                // vorskaliertes Sprite aus "buffer_canvas" in sichtbaren Canvas zeichnen
                 context_digger.drawImage(buffer_canvas, 0, sprites[i] * pre_icon_size, pre_icon_size, pre_icon_size, x, y, pre_icon_size, pre_icon_size);
         }
     }
@@ -1521,16 +1534,22 @@ function update_header() {
     drawText(sz, 15, 0);
 
     //refresh "gesammelte Diamanten"
-    var sg = "" + score_ges;
-    while (sg.length < 2)
-        sg = "0" + sg;
-    drawText(sg, 23, 0);
+    if (score_ges != last_ges) {
+      var sg = "" + score_ges;
+      while (sg.length < 2)
+          sg = "0" + sg;
+      drawText(sg, 23, 0);
+      last_ges = score_ges;
+    }
 
     //refresh "gesamte Punktanzahl"
-    var sp = "" + score_punkte;
-    while (sp.length < 5)
-        sp = "0" + sp;
-    drawText(sp, 33, 0);
+    if (score_punkte != last_punkte) {
+      var sp = "" + score_punkte;
+      while (sp.length < 5)
+          sp = "0" + sp;
+      drawText(sp, 33, 0);
+      last_punkte = score_punkte;
+    }
 }
 
 // 0 Staub
@@ -2727,8 +2746,8 @@ function draw_frame() {
                                             idx[pre_p40] = ((idx[pre_p40]) << 0) + 0.2;
                                     }
                                 }
-                                // ? Drunter: Stein(7), Diamant(3) oder toter Digger(60)
-                                else if ((idx[pre_p20] == 7) || (idx[pre_p20] == 3) || (idx[pre_p20] == 60)) {
+                                // ? Drunter: Stein(7), Diamant(3) oder toter Digger(63)
+                                else if ((idx[pre_p20] == 7) || (idx[pre_p20] == 3) || (idx[pre_p20] == 63)) {
                                     //links plumpsen!
                                     if (((idx[pre_m1] == 1) || (idx[pre_m1] == 7.2) || (idx[pre_m1] == 3.2)) && (idx[pre_p19] == 1)) {
                                         idx[pre_p19] = idx[l] + 0.2;
@@ -2783,7 +2802,6 @@ function draw_frame() {
                 //LEVEL WECHSELN
                 if (next_raum) {
                     if (score_raum == room.length) {
-                        //score_raum--;
                         state = 'highscore';
                         drawHighscore();
                         score_raum = 1;
