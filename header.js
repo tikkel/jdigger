@@ -34,9 +34,7 @@ var digger_step_down = 11;
 var digger_step_left = 13;
 var digger_step_right = 19;
 
-var ton_schritt = false;
-var ton_stein = false;
-var ton_diamant = false;
+var SFX = { STEP:false, STONE:false, DIAMOND:false, };
 var brumm = false;
 
 var next_raum = false;

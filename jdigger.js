@@ -875,7 +875,7 @@ function idle_start() {
         if (idx[l] == 41)
             idx[l] = 8.1;
     }
-    ton_diamant = true;
+    SFX.DIAMOND = true;
     state = 'play';
 }
 
@@ -1371,7 +1371,7 @@ function draw_digger_death() {
     if (score_ges > 7) idx[d_idx + 21] = 3.1;
     else idx[d_idx + 21] = 0.1;
     digger_is_dead = true;
-    ton_diamant = true;
+    SFX.DIAMOND = true;
     //Diggeranimation zurücksetzen
     digger_animation_left = false;
     digger_animation_right = false;
@@ -1607,7 +1607,7 @@ function draw_frame() {
                         if (idx[pre_l] == 3) {
                             score_ges++;
                             score_punkte += 3;
-                            ton_diamant = true;
+                            SFX.DIAMOND = true;
                         }
                         // ? Ausgang
                         else if (idx[pre_l] == 41) {
@@ -1636,7 +1636,7 @@ function draw_frame() {
                         if (idx[pre_l] < 4) {
                             idx[d_idx] = 1.1;
                             d_idx--;
-                            ton_schritt = true;
+                            SFX.STEP = true;
                         }
                         //Animation aktivieren, Start ab Vollbild
                         if (digger_step_left == 13) {
@@ -1658,7 +1658,7 @@ function draw_frame() {
                         if (idx[pre_h] == 3) {
                             score_ges++;
                             score_punkte += 3;
-                            ton_diamant = true;
+                            SFX.DIAMOND = true;
                         }
                         // ? Ausgang
                         else if (idx[pre_h] == 41) {
@@ -1672,7 +1672,7 @@ function draw_frame() {
                         if (idx[pre_h] < 4) {
                             idx[d_idx] = 1.1;
                             d_idx -= 20;
-                            ton_schritt = true;
+                            SFX.STEP = true;
                         }
                         //Animation aktivieren, beginnen ab Vollbild
                         if (digger_step_up == 9) {
@@ -1695,7 +1695,7 @@ function draw_frame() {
                         if (idx[pre_r] == 3) {
                             score_ges++;
                             score_punkte += 3;
-                            ton_diamant = true;
+                            SFX.DIAMOND = true;
                         }
                         // ? Ausgang
                         else if (idx[pre_r] == 41) {
@@ -1724,7 +1724,7 @@ function draw_frame() {
                         if (idx[pre_r] < 4) {
                             idx[d_idx] = 1.1;
                             d_idx++;
-                            ton_schritt = true;
+                            SFX.STEP = true;
                         }
                         //Animation aktivieren, Start ab Vollbild
                         if (digger_step_right == 19) {
@@ -1746,7 +1746,7 @@ function draw_frame() {
                         if (idx[pre_d] == 3) {
                             score_ges++;
                             score_punkte += 3;
-                            ton_diamant = true;
+                            SFX.DIAMOND = true;
                         }
                         // ? Ausgang
                         else if (idx[pre_d] == 41) {
@@ -1760,7 +1760,7 @@ function draw_frame() {
                         if (idx[pre_d] < 4) {
                             idx[d_idx] = 1.1;
                             d_idx += 20;
-                            ton_schritt = true;
+                            SFX.STEP = true;
                         }
                         //Animation aktivieren, Start ab Vollbild
                         if (digger_step_down == 11) {
@@ -1904,7 +1904,7 @@ function draw_frame() {
                                 idx[pre_p19] = 0.1;
                                 idx[pre_p20] = 0.1;
                                 idx[pre_p21] = 0.1;
-                                ton_stein = true;
+                                SFX.STONE = true;
                             }
                             //GEISTER hin und her (43-46)
                             else {
@@ -2022,7 +2022,7 @@ function draw_frame() {
                                 idx[pre_p19] = 0.1;
                                 idx[pre_p20] = 0.1;
                                 idx[pre_p21] = 0.1;
-                                ton_stein = true;
+                                SFX.STONE = true;
                             }
                             //Geister bewegen: 47=down,  49=up,  48=right,  50=left 90L
                             else {
@@ -2197,7 +2197,7 @@ function draw_frame() {
                                 idx[pre_p19] = 0.1;
                                 idx[pre_p20] = 0.1;
                                 idx[pre_p21] = 0.1;
-                                ton_stein = true;
+                                SFX.STONE = true;
                             }
                             //Geister bewegen: 51=down,  53=up,  52=right,  54=left 90R
                             else {
@@ -2372,7 +2372,7 @@ function draw_frame() {
                                 idx[pre_p19] = 0.1;
                                 idx[pre_p20] = 0.1;
                                 idx[pre_p21] = 0.1;
-                                ton_stein = true;
+                                SFX.STONE = true;
                             }
                             //Geister bewegen: 55=down,  57=up,  56=right,  58=left 90LR
                             else {
@@ -2547,7 +2547,7 @@ function draw_frame() {
                                 idx[pre_p19] = 0.1;
                                 idx[pre_p20] = 0.1;
                                 idx[pre_p21] = 0.1;
-                                ton_stein = true;
+                                SFX.STONE = true;
                             }
                             //Geister bewegen: 59=down,  61=up,  60=right,  62=left 90RL
                             else {
@@ -2718,7 +2718,7 @@ function draw_frame() {
                                 // trifft er auf einen Gegenstand?
                                 if (idx[pre_p60] > 1) {
                                     // Ja: Sound abspielen!
-                                    ton_stein = true;
+                                    SFX.STONE = true;
                                     // Digger: KILLEN!
                                     if ((idx[pre_p60] >= 8) && (idx[pre_p60] < 41))
                                         digger_death = true;
@@ -2737,7 +2737,7 @@ function draw_frame() {
                                     // trifft er auf einen Gegenstand
                                     if (idx[pre_p40] >= 2) {
                                         //Ja: Sound abspielen
-                                        ton_stein = true;
+                                        SFX.STONE = true;
                                         // Digger KILLEN
                                         if ((idx[pre_p40] >= 8) && (idx[pre_p40] < 41))
                                             digger_death = true;
@@ -2755,7 +2755,7 @@ function draw_frame() {
                                         // trifft er auf einen Gegenstand
                                         if (idx[pre_p39] >= 2) {
                                             //Ja: Sound abspielen
-                                            ton_stein = true;
+                                            SFX.STONE = true;
                                             // Digger KILLEN
                                             if ((idx[pre_p39] >= 8) && (idx[pre_p39] < 41))
                                                 digger_death = true;
@@ -2771,7 +2771,7 @@ function draw_frame() {
                                         // trifft er auf einen Gegenstand
                                         if (idx[pre_p41] >= 2) {
                                             //Ja: Sound abspielen
-                                            ton_stein = true;
+                                            SFX.STONE = true;
                                             // Digger KILLEN
                                             if ((idx[pre_p41] >= 8) && (idx[pre_p41] < 41))
                                                 digger_death = true;
@@ -2822,17 +2822,17 @@ function draw_frame() {
                 soft_scroll();
 
                 //Ton abspielen
-                if (ton_diamant) {
+                if (SFX.DIAMOND) {
                     playAudio('Diamond');
-                } else if (ton_stein) {
+                } else if (SFX.STONE) {
                     playAudio('Stone');
                     brumm = true;
-                } else if (ton_schritt) {
+                } else if (SFX.STEP) {
                     playAudio('Step');
                 }
-                ton_diamant = false;
-                ton_schritt = false;
-                ton_stein = false;
+                SFX.DIAMOND = false;
+                SFX.STEP = false;
+                SFX.STONE = false;
 
                 //Vibration abspielen
                 if (brumm) {
