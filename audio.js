@@ -44,7 +44,9 @@ function initAudio() {
     // webAudio API: "Audio-Puffer"
     if (window.AudioContext || window.webkitAudioContext) {
 
-        //buf > merger > gain > destination
+        // buf > merger > gain > destination
+
+        // create web audio api context
         var AudioContext = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContext();
 
