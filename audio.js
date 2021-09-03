@@ -18,8 +18,8 @@
 //aktiviere Vibrationen (Handys und Tablets)
 navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
 
-var soundType = 'no'; // erstmal 'no', bei Initialisierungserfolg dann 'api'
-var gainNode = null;
+var soundType  = 'no'; // erstmal 'no', bei Initialisierungserfolg dann 'api'
+var gainNode   = null;
 var mergerNode = null;
 
 // Variablen für Sound über AudioContext-Klasse (webAudio API)
@@ -31,14 +31,14 @@ var audioBufferDiamond;
 
 //original xdigger 58472Hz
 //[CPU-Takt] / [CTC-Vorteiler] = max. Samplefreq. (Halbwellen)
-var CPU_FREQ_KC85_2 = 1750000; //CPU-Takt KC85/2
-var CPU_FREQ_KC85_3 = 1750000; //CPU-Takt KC85/3
+var CPU_FREQ_KC85_2 = 1750000;   //CPU-Takt KC85/2
+var CPU_FREQ_KC85_3 = 1750000;   //CPU-Takt KC85/3
 var CPU_FREQ_KC85_4 = 1773447.5; //CPU-Takt KC85/4
-var KC_CTC_FREQ_VT16 = CPU_FREQ_KC85_3 / 16; //VT16  -> 109375Hz
+var KC_CTC_FREQ_VT16  = CPU_FREQ_KC85_3 / 16;  //VT16  -> 109375Hz
 var KC_CTC_FREQ_VT256 = CPU_FREQ_KC85_3 / 256; //VT256 -> 6835,9375Hz
-var TON_LOW = -1;
-var TON_HIGH = 1;
-var TON_RATE = 44100; //default  44100 Hz webAudio-API-Samplefreq. (Halbwellen)
+var TON_LOW  = -1;
+var TON_HIGH =  1;
+var TON_RATE =  44100; //default  44100 Hz webAudio-API-Samplefreq. (Halbwellen)
 
 function initAudio() {
     // webAudio API: "Audio-Puffer"
