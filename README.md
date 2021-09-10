@@ -1,3 +1,5 @@
+[![CodeQL](https://github.com/tikkel/jdigger/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/tikkel/jdigger/actions/workflows/codeql-analysis.yml)
+
 https://tikkel.de
 
 KC85-DIGGER - ein Spieleklassiker
