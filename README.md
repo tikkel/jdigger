@@ -1,4 +1,4 @@
-[![CodeQL](https://github.com/tikkel/jdigger/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/tikkel/jdigger/actions/workflows/codeql-analysis.yml)
+[![CodeQL](https://github.com/tikkel/jdigger/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/tikkel/jdigger/actions/workflows/codeql-analysis.yml) [![DeepScan grade](https://deepscan.io/api/teams/7012/projects/14436/branches/269007/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=7012&pid=14436&bid=269007)
 
 https://tikkel.de
 
