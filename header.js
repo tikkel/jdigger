@@ -1,5 +1,3 @@
-
-
 //     jdigger/Digger.JS
 //     Copyright (C) 2017  Marko Klingner
 //
@@ -129,8 +127,7 @@ var field_width;
 var field_height;
 
 var rescale = false;
-var spriteset; // Sprites
-var charset; // Zeichensatz
+
 var max_diamond_blink = 10;
 var sprites = [
     0, // 0=Explode
@@ -245,28 +242,28 @@ var context_menuimg = canvas_menuimg.getContext('2d', {alpha: false});
 
 //Offscreen-Buffer fuer "Menu/Highscore"
 // - wird den Vorgerenderten Titelscreen oder Highscore enthalten
-var menu_canvas = document.createElement('canvas');
-var menu_context = menu_canvas.getContext('2d', {alpha: true});
+var buffer_menuCanvas = document.createElement('canvas');
+var buffer_menuContext = buffer_menuCanvas.getContext('2d', {alpha: true});
 // - in original KC85/3/4-Auflösung
-menu_canvas.width = 320;
-menu_canvas.height = 240;
+buffer_menuCanvas.width = 320;
+buffer_menuCanvas.height = 240;
 
 //Offscreen-Buffer fuer "Zeichensatz"
 // - soll die korrekt vorskalierten Zeichen enthalten
 // - mit KCB_ROT als Hintergrundfarbe
-var charset_canvas = document.createElement('canvas');
-var charset_context = charset_canvas.getContext('2d', {alpha: true});
+var buffer_charsCanvas = document.createElement('canvas');
+var buffer_charsContext = buffer_charsCanvas.getContext('2d', {alpha: true});
 
 //Offscreen-Buffer fuer "Sprites"
 // - soll die korrekt vorskalierten Sprites enthalten
 // - um sie dann performanter im Spielfeld darzustellen
-var buffer_canvas = document.createElement('canvas');
-var buffer_context = buffer_canvas.getContext('2d', {alpha: false});
+var buffer_spritesCanvas = document.createElement('canvas');
+var buffer_spritesContext = buffer_spritesCanvas.getContext('2d', {alpha: false});
 
 //"Zeichensatz" laden
-charset = new Image();
-charset.src = 'charset.png';
+var charsImage = new Image();
+charsImage.src = 'chars.png';
 
 //"Sprites" laden
-spriteset = new Image();
-spriteset.src = 'spriteset.png';
+var spritesImage = new Image();
+spritesImage.src = 'sprites.png';
