@@ -530,10 +530,12 @@ function mo_press(ev) {
 
         //im Menu
         if (state == 'menu') {
-            //Safari und Chrome. enable paused audioContext
+            //Resume or Init audioContext
             try {
                 audioContext.resume();
-            } catch (e) { }
+            } catch (e) {
+                initAudio();
+            }
 
             //P: Play
             if (mausX >= 9 && mausX <= 15 && mausY == 20) {
@@ -660,10 +662,12 @@ function touchDown(e) {
 function touchUp(e) {
     //im Menu
     if (state == 'menu' && single_touch == 0) {
-        //Safari und Chrome. enable paused audioContext
+        //Resume or Init audioContext
         try {
             audioContext.resume();
-        } catch (e) { }
+        } catch (e) {
+            initAudio();
+        }
 
         //iOS, initiiere Sound von Benutzergeste aus
         playAudio('Leer');
@@ -824,7 +828,7 @@ function idle_start() {
         if (idx[l] == 41)
             idx[l] = 8.1;
     }
-    SFX.DIAMOND = true;
+    SFX.STEP = true;
     state = 'play';
 }
 
@@ -865,10 +869,12 @@ function vkb_focus() {
 // K E Y   P R E S S
 //https://keycode.info/
 function kb_press(taste) {
-    //Safari und Chrome. enable paused audioContext
+    //Resume or Init audioContext
     try {
         audioContext.resume();
-    } catch (e) { }
+    } catch (e) {
+        initAudio();
+    }
 
     handled = false;
     if (state != 'input') {
@@ -1536,7 +1542,7 @@ function scorelineUpdate() {
     if (autoscore > 0) {
         score_punkte += 5;
         autoscore -= 5;
-        SFX.DIAMOND = true;
+        SFX.STONE = true;
     }
     if (score_punkte != last_punkte) {
         var sp = "" + score_punkte;
@@ -1597,31 +1603,29 @@ function draw_frame() {
 
                     // ? LINKS
                     if (digger_go == 'LEFT') {
-                        var pre_l = d_idx - 1;
-                        var pre_ll = d_idx - 2;
                         // ? Diamant
-                        if (idx[pre_l] == 3) {
+                        if (idx[d_idx - 1] == 3) {
                             score_ges++;
                             score_punkte += 3;
                             SFX.DIAMOND = true;
                         }
                         // ? Ausgang
-                        else if (idx[pre_l] == 41) {
+                        else if (idx[d_idx - 1] == 41) {
                             autoscore = 100;
                             state = 'init';
                             verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
-                        else if ((idx[pre_l] >= 43) && (idx[pre_l] < 63))
+                        else if ((idx[d_idx - 1] >= 43) && (idx[d_idx - 1] < 63))
                             digger_death = true;
                         // ? Stein
-                        else if (idx[pre_l] == 7) {
+                        else if (idx[d_idx - 1] == 7) {
                             // ? Platz zum wegschieben
-                            if (idx[pre_ll] == 1) {
+                            if (idx[d_idx - 2] == 1) {
                                 // ! 2 Takte lang druecken
                                 if (stone_l) {
-                                    idx[pre_ll] = 7.1;
-                                    idx[pre_l] = 1.1;
+                                    idx[d_idx - 2] = 7.1;
+                                    idx[d_idx - 1] = 1.1;
                                     stone_l = false;
                                     brumm = true;
                                 } else {
@@ -1630,7 +1634,7 @@ function draw_frame() {
                             }
                         }
                         // ? Sand, Diamant oder Leer
-                        if ((idx[pre_l] < 4) || (idx[pre_l] == 41)) {
+                        if ((idx[d_idx - 1] < 4) || (idx[d_idx - 1] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx--;
                             SFX.STEP = true;
@@ -1650,24 +1654,23 @@ function draw_frame() {
 
                     // ? HOCH
                     else if (digger_go == 'UP') {
-                        var pre_h = d_idx - 20;
                         // ? Diamant
-                        if (idx[pre_h] == 3) {
+                        if (idx[d_idx - 20] == 3) {
                             score_ges++;
                             score_punkte += 3;
                             SFX.DIAMOND = true;
                         }
                         // ? Ausgang
-                        else if (idx[pre_h] == 41) {
+                        else if (idx[d_idx - 20] == 41) {
                             autoscore = 100;
                             state = 'init';
                             verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
-                        else if ((idx[pre_h] >= 43) && (idx[pre_h] < 63))
+                        else if ((idx[d_idx - 20] >= 43) && (idx[d_idx - 20] < 63))
                             digger_death = true;
                         // ? Sand, Diamant oder Leer
-                        if ((idx[pre_h] < 4) || (idx[pre_h] == 41)) {
+                        if ((idx[d_idx - 20] < 4) || (idx[d_idx - 20] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx -= 20;
                             SFX.STEP = true;
@@ -1687,31 +1690,29 @@ function draw_frame() {
 
                     // ? RECHTS
                     else if (digger_go == 'RIGHT') {
-                        var pre_r = d_idx + 1;
-                        var pre_rr = d_idx + 2;
                         // ? Diamant
-                        if (idx[pre_r] == 3) {
+                        if (idx[d_idx + 1] == 3) {
                             score_ges++;
                             score_punkte += 3;
                             SFX.DIAMOND = true;
                         }
                         // ? Ausgang
-                        else if (idx[pre_r] == 41) {
+                        else if (idx[d_idx + 1] == 41) {
                             autoscore = 100;
                             state = 'init';
                             verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
-                        else if ((idx[pre_r] >= 43) && (idx[pre_r] < 63))
+                        else if ((idx[d_idx + 1] >= 43) && (idx[d_idx + 1] < 63))
                             digger_death = true;
                         // ? Stein
-                        else if (idx[pre_r] == 7) {
+                        else if (idx[d_idx + 1] == 7) {
                             // ? Platz zum wegschieben
-                            if (idx[pre_rr] == 1) {
+                            if (idx[d_idx + 2] == 1) {
                                 // ! 2 Takte lang druecken
                                 if (stone_r) {
-                                    idx[pre_rr] = 7.1;
-                                    idx[pre_r] = 1.1;
+                                    idx[d_idx + 2] = 7.1;
+                                    idx[d_idx + 1] = 1.1;
                                     stone_r = false;
                                     brumm = true;
                                 } else {
@@ -1720,7 +1721,7 @@ function draw_frame() {
                             }
                         }
                         // ? Sand, Diamant oder Leer
-                        if ((idx[pre_r] < 4) || (idx[pre_r] == 41)) {
+                        if ((idx[d_idx + 1] < 4) || (idx[d_idx + 1] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx++;
                             SFX.STEP = true;
@@ -1740,24 +1741,23 @@ function draw_frame() {
 
                     // ? RUNTER
                     else if (digger_go == 'DOWN') {
-                        var pre_d = d_idx + 20;
                         // ? Diamant
-                        if (idx[pre_d] == 3) {
+                        if (idx[d_idx + 20] == 3) {
                             score_ges++;
                             score_punkte += 3;
                             SFX.DIAMOND = true;
                         }
                         // ? Ausgang
-                        else if (idx[pre_d] == 41) {
+                        else if (idx[d_idx + 20] == 41) {
                             autoscore = 100;
                             state = 'init';
                             verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
-                        else if ((idx[pre_d] >= 43) && (idx[pre_d] < 63))
+                        else if ((idx[d_idx + 20] >= 43) && (idx[d_idx + 20] < 63))
                             digger_death = true;
                         // ? Sand, Diamant oder Leer
-                        if ((idx[pre_d] < 4) || (idx[pre_d] == 41)) {
+                        if ((idx[d_idx + 20] < 4) || (idx[d_idx + 20] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx += 20;
                             SFX.STEP = true;
@@ -2895,8 +2895,6 @@ function init_events() {
     window.addEventListener("resize", scaleReload, false);
 }
 
-//WebAudio und Wavebuffer
-initAudio();
 
 //Bildschirm und Buffer neu skalieren
 scaleReload();
