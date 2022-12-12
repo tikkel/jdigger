@@ -19,7 +19,7 @@ var LEBENMIN = 1;
 var FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 
 //allgem. Variablen
-var digger_version = '20.11.21';
+var digger_version = '12.12.22';
 var exit_blink = 41.1;
 var diamond_blink = 64;
 var zufall = 1;
@@ -32,7 +32,7 @@ var digger_step_down = 11;
 var digger_step_left = 13;
 var digger_step_right = 19;
 
-var SFX = { STEP:false, STONE:false, DIAMOND:false, };
+var SFX = { STEP: false, STONE: false, DIAMOND: false, };
 var brumm = false;
 
 var next_raum = false;
@@ -45,6 +45,7 @@ var score_raum = 1;
 var score_leben = LEBENMAX;
 var score_zeit = 1500;
 var score_punkte = 0;
+var autoscore = 0;
 var last_punkte = 0;
 var score_dia = 0;
 var score_ges = 0;
@@ -109,9 +110,9 @@ var laction = 0;
 
 //KC-Farben
 var KCB_TUERKIS = "#028965";
-var KCF_GELB    = "#E7E95D";
-var KCB_BLAU    = "#04028f";
-var KCB_ROT     = "#920205";
+var KCF_GELB = "#E7E95D";
+var KCB_BLAU = "#04028f";
+var KCB_ROT = "#920205";
 
 var diggerdiv_height = 14;
 var diggerdiv_width = 20;
@@ -232,18 +233,18 @@ var duration_x = 0;
 var duration_y = 0;
 
 var canvas_scoreline = document.getElementById('scoreline');
-var context_scoreline = canvas_scoreline.getContext('2d', {alpha: false});
+var context_scoreline = canvas_scoreline.getContext('2d', { alpha: false });
 
 var canvas_digger = document.getElementById('digger');
-var context_digger = canvas_digger.getContext('2d', {alpha: false});
+var context_digger = canvas_digger.getContext('2d', { alpha: false });
 
 var canvas_menuimg = document.getElementById('menuimg');
-var context_menuimg = canvas_menuimg.getContext('2d', {alpha: false});
+var context_menuimg = canvas_menuimg.getContext('2d', { alpha: false });
 
 //Offscreen-Buffer fuer "Menu/Highscore"
 // - wird den Vorgerenderten Titelscreen oder Highscore enthalten
 var buffer_menuCanvas = document.createElement('canvas');
-var buffer_menuContext = buffer_menuCanvas.getContext('2d', {alpha: true});
+var buffer_menuContext = buffer_menuCanvas.getContext('2d', { alpha: true });
 // - in original KC85/3/4-Auflösung
 buffer_menuCanvas.width = 320;
 buffer_menuCanvas.height = 240;
@@ -252,13 +253,13 @@ buffer_menuCanvas.height = 240;
 // - soll die korrekt vorskalierten Zeichen enthalten
 // - mit KCB_ROT als Hintergrundfarbe
 var buffer_charsCanvas = document.createElement('canvas');
-var buffer_charsContext = buffer_charsCanvas.getContext('2d', {alpha: true});
+var buffer_charsContext = buffer_charsCanvas.getContext('2d', { alpha: true });
 
 //Offscreen-Buffer fuer "Sprites"
 // - soll die korrekt vorskalierten Sprites enthalten
 // - um sie dann performanter im Spielfeld darzustellen
 var buffer_spritesCanvas = document.createElement('canvas');
-var buffer_spritesContext = buffer_spritesCanvas.getContext('2d', {alpha: false});
+var buffer_spritesContext = buffer_spritesCanvas.getContext('2d', { alpha: false });
 
 //"Zeichensatz" laden
 var charsImage = new Image();

@@ -60,7 +60,6 @@ function scaleInit() {
 function scaleBuffer() {
     // ? spritesImage und charsImage vorgeladen
     if (spritesImage.complete && charsImage.complete) {
-
         //Sprites Puffer-Canvas, 1x40 Sprites
         buffer_spritesCanvas.width = pre_icon_size;
         buffer_spritesCanvas.height = pre_icon_size * 40;
@@ -80,7 +79,6 @@ function scaleBuffer() {
         buffer_charsContext.fillRect(0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
         buffer_charsContext.drawImage(charsImage, 0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
         console.log('buffersize chars: ' + buffer_charsCanvas.width + 'x' + buffer_charsCanvas.height);
-
     } else
         setTimeout(scaleBuffer, 1000);
 }
@@ -103,9 +101,9 @@ function scaleReload() {
     document.getElementById('menuimg').height = body_height;
     scalePixelated(context_menuimg); //Pixelgrafik, no dithering
     if (state == 'menu')
-        drawMenu();
+        menuDraw();
     else if (state == 'highscore')
-        drawHighscore();
+        highscoreDraw();
     rd_in = false;
     rd_yn = false;
 
@@ -114,7 +112,7 @@ function scaleReload() {
     document.getElementById('scorelinediv').style.height = (scale) + 'px';
     document.getElementById('scoreline').width = body_width;
     document.getElementById('scoreline').height = scale;
-    draw_header();
+    scorelinePrewrite();
 
     // Spielfeld refreshen (idx[1-280]), alle Sprites neu zeichnen lassen (drawflag setzen)
     document.getElementById('diggerdiv').style.width = (body_width) + 'px';
@@ -128,36 +126,35 @@ function scaleReload() {
         i = (idx[l] << 0);
         // nachkommastelle (drawflag, +0.1) erzeugen, wenn nicht bereits vorhanden (idx[l] == i)
         if (idx[l] == i)
-          idx[l] += 0.1;
+            idx[l] += 0.1;
     }
 }
 
 
-function drawHighscore() {
+function highscoreDraw() {
     //Puffer mit Farbe löschen (copy)
     buffer_menuContext.globalCompositeOperation = "copy";
     buffer_menuContext.fillStyle = KCB_TUERKIS;
     buffer_menuContext.fillRect(0, 0, 320, 240);
 
     if (charsImage.complete) {
-
         //schneide KCF_WEISS aus KCB_TUERKIS aus
         //KCB_TUERKIS ist die Hintergrundfarbe und KCF_WEISS ist 100% transparent (destination-out)
         //im Zielcanvas ist KCF_WEISS dann die vorher gefüllte Farbe
         buffer_menuContext.globalCompositeOperation = "destination-out";
 
         //die Überschrift ...
-        drawLine8("HIGHSCORE :", 8, 4);
-        drawLine8("\217\217\217\217\217\217\217\217\217\217\217", 8, 5);
+        menuLine("HIGHSCORE :", 8, 4);
+        menuLine("\217\217\217\217\217\217\217\217\217\217\217", 8, 5);
 
         //Higscore laden und eventl. aktualisieren
-        highscore_update();
+        storageHighscoreUpdate();
 
         //die Liste ... 20 Zeilen
         for (var i = 0; i < 20; i++) {
             //sprintf(entry, "%.6d  %s", highscore[i].score, highscore[i].name);
             //var entry = "123456  1234567890";
-            drawLine8(highscore[i], 10, 7 + i);
+            menuLine(highscore[i], 10, 7 + i);
         }
 
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
@@ -172,19 +169,17 @@ function drawHighscore() {
 
         //eventl. neuen Alias abfragen
         if (state == 'input')
-            setTimeout(drawInput, 50);
-
+            setTimeout(highscoreInput, 50);
     } else
-        setTimeout(drawMenu, 1000);
+        setTimeout(menuDraw, 1000);
 }
 
 
-function drawInput() {
+function highscoreInput() {
     if (!rd_in) { //braucht nur 1x gemalt werden
-
         //Loop Tastaturabfrage
         buffer_menuContext.globalCompositeOperation = "destination-out";
-        drawLine8("...well done, please enter your name :", 1, 2);
+        menuLine("...well done, please enter your name :", 1, 2);
 
         //Zeile löschen
         //Cursor(\177) und Zeichen
@@ -192,7 +187,7 @@ function drawInput() {
         buffer_menuContext.fillStyle = KCB_TUERKIS;
         buffer_menuContext.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
         buffer_menuContext.globalCompositeOperation = "destination-out";
-        drawLine8(input_alias + "\177", 17, 7 + input_line);
+        menuLine(input_alias + "\177", 17, 7 + input_line);
 
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
         //Menu mit Farbe löschen (copy)
@@ -212,8 +207,8 @@ function drawInput() {
             input = undefined;
             handled = true;
             highscore[input_line] = highscore[input_line] + "  " + input_alias; //"99999  alias678901234"
-            highscore_save();
-            setTimeout(drawYesNo, 100);
+            storageHighscoreSave();
+            setTimeout(highscoreYesNo, 100);
             return;
         } else if (input == 'Backspace') {
             if (input_alias.length > 0) {
@@ -230,23 +225,23 @@ function drawInput() {
             // max. 14 Zeichen -> 'weiter zu YesNo'
             if (input_alias.length == 14) {
                 highscore[input_line] = highscore[input_line] + "  " + input_alias; //"99999  alias678901234"
-                highscore_save();
-                setTimeout(drawYesNo, 100);
+                storageHighscoreSave();
+                setTimeout(highscoreYesNo, 100);
                 return;
             }
         }
     }
 
     //keine Taste, weiter warten
-    setTimeout(drawInput, 50);
+    setTimeout(highscoreInput, 50);
 }
 
 
-function drawYesNo() {
+function highscoreYesNo() {
     if (!rd_yn) { //braucht nur 1x gemalt werden
         //Loop Tastaturabfrage Y/N (89/78)
         buffer_menuContext.globalCompositeOperation = "destination-out";
-        drawLine8("NEW GAME ? (Y/N)", 12, 28);
+        menuLine("NEW GAME ? (Y/N)", 12, 28);
 
         //Zeile löschen
         //Cursor(\177) und Zeichen
@@ -254,7 +249,7 @@ function drawYesNo() {
         buffer_menuContext.fillStyle = KCB_TUERKIS;
         buffer_menuContext.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
         buffer_menuContext.globalCompositeOperation = "destination-out";
-        drawLine8(input_alias, 17, 7 + input_line);
+        menuLine(input_alias, 17, 7 + input_line);
 
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
         //Menu mit Farbe löschen (copy)
@@ -275,7 +270,7 @@ function drawYesNo() {
             input_line = 0;
             input = undefined;
             rd_yn = false;
-            //game_restore(); //spielstand restaurieren
+            //storageGameRestore(); //spielstand restaurieren
             state = 'init';
             init_room(score_raum);
             handled = true;
@@ -292,7 +287,7 @@ function drawYesNo() {
             rd_yn = false;
             idle_stop();
             state = 'menu';
-            drawMenu();
+            menuDraw();
             handled = true;
             //virtuelle Tastatur ausblenden
             document.body.removeEventListener('click', vkb_focus, false);
@@ -302,66 +297,63 @@ function drawYesNo() {
     }
 
     //keine Taste, weiter warten
-    setTimeout(drawYesNo, 50);
+    setTimeout(highscoreYesNo, 50);
 }
 
 
-//schreibe zeilenweise die MENU-Grafik (in orig. Größe 320x240) in einen Canvas-Puffer (buffer_menuCanvas)
-function drawMenu() {
-
+//schreibe zeilenweise die MENU-Grafik (in orig. Größe 320x240) in den Canvas-Puffer (buffer_menuCanvas)
+function menuDraw() {
     //Puffer mit Farbe löschen (copy)
     buffer_menuContext.globalCompositeOperation = "copy";
     buffer_menuContext.fillStyle = KCB_BLAU;
     buffer_menuContext.fillRect(0, 0, 320, 240);
 
     if (charsImage.complete) {
-
         //male KCF_WEISS auf die vorher KCB_BLAU gefüllte Fläche über
         //KCB_BLAU ist die Hintergrundfarbe und KCF_WEISS ist 100% deckend (source-over)
         //im Zielcanvas ist KCF_WEISS dann also normal KCF_WEISS
         buffer_menuContext.globalCompositeOperation = "source-over";
 
         //der Text ...
-        drawLine8("\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236", 0, 0);
-        drawLine8("\237\240\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\242\237", 0, 1);
-        drawLine8("\237\243\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236\251\237", 0, 2);
+        menuLine("\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236", 0, 0);
+        menuLine("\237\240\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\242\237", 0, 1);
+        menuLine("\237\243\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236\251\237", 0, 2);
         for (var i = 3; i < 27; i++) {
-            drawLine8("\237\243\237", 0, i);
-            drawLine8("\237\251\237", 37, i);
+            menuLine("\237\243\237", 0, i);
+            menuLine("\237\251\237", 37, i);
         }
-        drawLine8("\200\201\202\203 \210 \211\212\213\214 \211\212\213\214 \200\201\215\215 \133\215\221\222", 7, 6);
-        drawLine8("\133 \206\207 \133 \133  \215 \133  \215 \133    \133 \223\224", 7, 7);
-        drawLine8("\133  \133 \133 \133 \244\216 \133 \244\216 \133\217\220  \133\225\226\227", 7, 8);
-        drawLine8("\133 \260\261 \133 \133 \316\133 \133 \316\133 \133    \133 \230\231", 7, 9);
-        drawLine8("\252\253\254\255 \262 \263\264\265\266 \263\264\265\266 \252\253\267\267 \133 \232\233", 7, 10);
+        menuLine("\200\201\202\203 \210 \211\212\213\214 \211\212\213\214 \200\201\215\215 \133\215\221\222", 7, 6);
+        menuLine("\133 \206\207 \133 \133  \215 \133  \215 \133    \133 \223\224", 7, 7);
+        menuLine("\133  \133 \133 \133 \244\216 \133 \244\216 \133\217\220  \133\225\226\227", 7, 8);
+        menuLine("\133 \260\261 \133 \133 \316\133 \133 \316\133 \133    \133 \230\231", 7, 9);
+        menuLine("\252\253\254\255 \262 \263\264\265\266 \263\264\265\266 \252\253\267\267 \133 \232\233", 7, 10);
 
-        drawLine8("WRITTEN BY  ALEXANDER LANG", 7, 13);
-        /* drawLine8("GRAPHIX BY  MARTIN    GUTH", 7, 15); */
-        drawLine8("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
-        drawLine8("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
-        drawLine8("         BERLIN         \247\250", 7, 18);
-        drawLine8("P: PLAY   H: HIGHSCORE", 9, 20);
-        drawLine8("L: A LOOK AT THE ROOMS", 9, 22);
-        drawLine8("JSv " + digger_version, 5, 25);
-        drawLine8("\140 1988", 29, 25);
-        drawLine8("by TIKKEL", 5, 26);
-        drawLine8("BERLIN", 29, 26);
+        menuLine("WRITTEN BY  ALEXANDER LANG", 7, 13);
+        /* menuLine("GRAPHIX BY  MARTIN    GUTH", 7, 15); */
+        menuLine("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
+        menuLine("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
+        menuLine("         BERLIN         \247\250", 7, 18);
+        menuLine("P: PLAY   H: HIGHSCORE", 9, 20);
+        menuLine("L: A LOOK AT THE ROOMS", 9, 22);
+        menuLine("JSv " + digger_version, 5, 25);
+        menuLine("\140 1988", 29, 25);
+        menuLine("by TIKKEL", 5, 26);
+        menuLine("BERLIN", 29, 26);
 
-        drawLine8("\237\243\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310\251\237", 0, 27);
-        drawLine8("\237\312\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\314\237", 0, 28);
-        drawLine8("\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310", 0, 29);
+        menuLine("\237\243\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310\251\237", 0, 27);
+        menuLine("\237\312\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\314\237", 0, 28);
+        menuLine("\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310", 0, 29);
 
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
         context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
         document.getElementById('menudiv').style.visibility = "visible";
-
     } else
-        setTimeout(drawMenu, 1000);
+        setTimeout(menuDraw, 1000);
 }
 
 
-// eine Zeile in den Menu-Puffer
-function drawLine8(s, x, y) {
+//eine Zeile in den Menu-Puffer
+function menuLine(s, x, y) {
     var sx, sy, dx, dy;
     var pre_w = 8;
     var pre_h = 8;
@@ -376,44 +368,9 @@ function drawLine8(s, x, y) {
     }
 }
 
-// SCORELINE
-// schreibe Zeichenweise in das Scoreline-Canvas (Leben, Counter, Diamanten ...)
-function drawText(s, x, y) {
-    var sx, sy, dx, dy;
-    for (var i = 0; i < s.length; i++) {
-        sx = 0;
-        sy = (s.charCodeAt(i) - 32) * pre_icon_size;
-        dx = (x + i) * buffer_charsCanvas.width;
-        dy = y * pre_icon_size;
-        //vorskalierte Zeichen aus "buffer_charsCanvas" ins sichtbare "canvas_scoreline" zeichnen
-        context_scoreline.drawImage(buffer_charsCanvas, sx, sy, buffer_charsCanvas.width, pre_icon_size, dx, dy, buffer_charsCanvas.width, pre_icon_size);
-    }
-}
-
-
-// belege die ganze Scoreline vor
-function draw_header() {
-    // Header darstellen
-    var sr = "" + score_raum;
-    var sl = "" + score_leben;
-    var sd = "" + score_dia;
-    while (sr.length < 2)
-        sr = "0" + sr;
-    while (sl.length < 2)
-        sl = "0" + sl;
-    while (sd.length < 2)
-        sd = "0" + sd;
-    // \324\325 --> Herz
-    // \326\327 --> Diamant
-    drawText("  " + sr + "   " + sl + "\324\325    5000" + "      \326\327" + sd + "              ", 0, 0);
-    //gesammelte Diamanten und Punkte-Refresh aktivieren,weil last_ != score_
-    last_ges = score_ges -1;
-    last_punkte = score_punkte -1;
-}
-
 
 //Highscore laden und aktualisieren
-function highscore_update() {
+function storageHighscoreUpdate() {
     //lade Array
     var h;
     try { //wird localStorage unterstützt?
@@ -435,7 +392,7 @@ function highscore_update() {
 
     //highscore[] vorbelegen
     if (highscore[0] == undefined) {
-        console.log('highscore_update: generiere Default-Highscore');
+        console.log('storageHighscoreUpdate: generiere Default-Highscore');
         highscore[0] = "10000  --------------";
         highscore[1] = "09000  Digger";
         highscore[2] = "08000  (c) 1988 by";
@@ -451,7 +408,7 @@ function highscore_update() {
         //aktueller score > als aktueller Highscore-Eintrag
         if (score_punkte > Number(highscore[h].substring(0, 5))) {
 
-            //Zeile merken für drawInput()
+            //Zeile merken für highscoreInput()
             input_line = h;
 
             //Array bis zum aktuellen Eintrag nach unten verschieben
@@ -471,8 +428,9 @@ function highscore_update() {
     }
 }
 
+
 //Highscore sichern
-function highscore_save() {
+function storageHighscoreSave() {
     //schreibe Array
     try { //wird localStorage unterstützt?
         localStorage.setItem("highscore", JSON.stringify(highscore));
@@ -484,13 +442,14 @@ function highscore_save() {
     }
 }
 
+
 //Spielstand sichern
-function game_save() {
+function storageGameSave() {
     try { //wird localStorage unterstützt?
         localStorage.setItem("level", score_raum);
         localStorage.setItem("lives", score_leben);
         localStorage.setItem("score", score_punkte);
-        console.log('game_save: nach localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storageGameSave: nach localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     } catch (e) { //ansonsten Cookies benutzen
         var d = new Date();
         d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
@@ -498,12 +457,13 @@ function game_save() {
         document.cookie = "level=" + score_raum + "; " + expires;
         document.cookie = "lives=" + score_leben + "; " + expires;
         document.cookie = "score=" + score_punkte + "; " + expires;
-        console.log('game_save: nach Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storageGameSave: nach Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
 
+
 //Spielstand restaurieren
-function game_restore() {
+function storageGameRestore() {
     var ca;
     var i;
     var c;
@@ -514,7 +474,7 @@ function game_restore() {
             score_leben = Number(localStorage.getItem("lives"));
         if (localStorage.getItem("score"))
             score_punkte = Number(localStorage.getItem("score"));
-        console.log('game_restore: von localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storageGameRestore: von localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     } catch (e) { //ansonsten Cookies benutzen
         var name = "level=";
         ca = document.cookie.split(';');
@@ -551,9 +511,10 @@ function game_restore() {
             }
         }
 
-        console.log('game_restore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storageGameRestore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
+
 
 //MAUS-Click
 function mo_press(ev) {
@@ -572,18 +533,18 @@ function mo_press(ev) {
             //Safari und Chrome. enable paused audioContext
             try {
                 audioContext.resume();
-            } catch (e) {}
+            } catch (e) { }
 
             //P: Play
             if (mausX >= 9 && mausX <= 15 && mausY == 20) {
-                game_restore(); //spielstand restaurieren
+                storageGameRestore(); //spielstand restaurieren
                 state = 'init';
                 init_room(score_raum);
             }
             //H: Highscore
             else if (mausX >= 19 && mausX <= 30 && mausY == 20) {
                 state = 'highscore';
-                drawHighscore();
+                highscoreDraw();
             }
             //L: Look at the rooms
             else if (mausX >= 9 && mausX <= 30 && mausY == 22) {
@@ -605,7 +566,7 @@ function mo_press(ev) {
             score_leben = LEBENMAX;
             score_raum = 1;
             init_room(score_raum);
-            drawMenu();
+            menuDraw();
         }
 
         //im Spiel
@@ -613,7 +574,7 @@ function mo_press(ev) {
 
             if (score_leben < LEBENMIN) {
                 state = 'highscore';
-                drawHighscore();
+                highscoreDraw();
                 score_punkte = 0;
                 score_leben = LEBENMAX;
                 score_raum = 1;
@@ -621,14 +582,14 @@ function mo_press(ev) {
                 state = 'init';
                 init_room(score_raum);
             }
-            game_save(); //spielstand sichern
+            storageGameSave(); //spielstand sichern
 
         }
 
         //im Highscore
         else if (state == 'highscore') {
             state = 'menu';
-            drawMenu();
+            menuDraw();
         }
     } else
         touch_flag = false;
@@ -647,9 +608,9 @@ function touchDown(e) {
             score_punkte = 0;
             score_leben = LEBENMAX;
             score_raum = 1;
-            game_save(); //spielstand sichern
+            storageGameSave(); //spielstand sichern
             init_room(score_raum);
-            drawMenu();
+            menuDraw();
         }
     }
 
@@ -660,7 +621,7 @@ function touchDown(e) {
             digger_death = true;
         else if (state == 'highscore' || state == 'look') {
             state = 'menu';
-            drawMenu();
+            menuDraw();
         }
     }
 
@@ -675,7 +636,7 @@ function touchDown(e) {
             document.body.removeEventListener('input', vkb_input, false);
             document.body.addEventListener('input', vkb_input, false);
             state = 'highscore';
-            drawHighscore();
+            highscoreDraw();
             score_punkte = 0;
             score_leben = LEBENMAX;
             score_raum = 1;
@@ -683,7 +644,7 @@ function touchDown(e) {
             state = 'init';
             init_room(score_raum);
         }
-        game_save(); //spielstand sichern
+        storageGameSave(); //spielstand sichern
 
     }
 
@@ -702,7 +663,7 @@ function touchUp(e) {
         //Safari und Chrome. enable paused audioContext
         try {
             audioContext.resume();
-        } catch (e) {}
+        } catch (e) { }
 
         //iOS, initiiere Sound von Benutzergeste aus
         playAudio('Leer');
@@ -712,14 +673,14 @@ function touchUp(e) {
 
         //P: Play
         if (touchS >= 9 && touchS <= 15 && touchZ == 20) {
-            game_restore(); //spielstand restaurieren
+            storageGameRestore(); //spielstand restaurieren
             state = 'init';
             init_room(score_raum);
         }
         //H: Highscore
         else if (touchS >= 19 && touchS <= 30 && touchZ == 20) {
             state = 'highscore';
-            drawHighscore();
+            highscoreDraw();
         }
         //L: Look at the rooms
         else if (touchS >= 9 && touchS <= 30 && touchZ == 22) {
@@ -741,13 +702,13 @@ function touchUp(e) {
         score_leben = LEBENMAX;
         score_raum = 1;
         init_room(score_raum);
-        drawMenu();
+        menuDraw();
     }
 
     //im Highscore
     else if (state == 'highscore') {
         state = 'menu';
-        drawMenu();
+        menuDraw();
     }
 
     //im Spiel
@@ -867,6 +828,10 @@ function idle_start() {
     state = 'play';
 }
 
+function idle_exit() {
+    next_raum = true;
+}
+
 function idle_stop() {
     window.clearTimeout(verz);
 }
@@ -903,7 +868,7 @@ function kb_press(taste) {
     //Safari und Chrome. enable paused audioContext
     try {
         audioContext.resume();
-    } catch (e) {}
+    } catch (e) { }
 
     handled = false;
     if (state != 'input') {
@@ -918,9 +883,9 @@ function kb_press(taste) {
                     score_punkte = 0;
                     score_leben = LEBENMAX;
                     score_raum = 1;
-                    game_save(); //spielstand sichern
+                    storageGameSave(); //spielstand sichern
                     init_room(score_raum);
-                    drawMenu();
+                    menuDraw();
                 }
                 handled = true;
                 break;
@@ -928,7 +893,7 @@ function kb_press(taste) {
             case 72:
                 if (state == 'menu') {
                     state = 'highscore';
-                    drawHighscore();
+                    highscoreDraw();
                 }
                 handled = true;
                 break;
@@ -953,7 +918,7 @@ function kb_press(taste) {
                     digger_death = true;
                 else if (state == 'highscore' || state == 'look') {
                     state = 'menu';
-                    drawMenu();
+                    menuDraw();
                 }
                 handled = true;
                 break;
@@ -965,7 +930,7 @@ function kb_press(taste) {
 
                     if (score_leben < LEBENMIN) {
                         state = 'highscore';
-                        drawHighscore();
+                        highscoreDraw();
                         score_punkte = 0;
                         score_leben = LEBENMAX;
                         score_raum = 1;
@@ -973,18 +938,18 @@ function kb_press(taste) {
                         state = 'init';
                         init_room(score_raum);
                     }
-                    game_save(); //spielstand sichern
+                    storageGameSave(); //spielstand sichern
 
                 } else if (state == 'highscore') {
                     state = 'menu';
-                    drawMenu();
+                    menuDraw();
                 }
                 handled = true;
                 break;
             //p Play
             case 80:
                 if (state == 'menu') {
-                    game_restore(); //spielstand restaurieren
+                    storageGameRestore(); //spielstand restaurieren
                     state = 'init';
                     init_room(score_raum);
                 }
@@ -994,18 +959,18 @@ function kb_press(taste) {
             case 36:
                 if (digger_cheat && ((state == 'play') || (state == 'init'))) {
                     if (!taste.shiftKey && (score_raum < room.length)) {
-                      idle_stop();
-                      score_raum++;
-                      state = 'init';
-                      init_room(score_raum);
-                      game_save();
+                        idle_stop();
+                        score_raum++;
+                        state = 'init';
+                        init_room(score_raum);
+                        storageGameSave();
                     }
                     else if (taste.shiftKey && (score_raum > 1)) {
-                      idle_stop();
-                      score_raum--;
-                      state = 'init';
-                      init_room(score_raum);
-                      game_save();
+                        idle_stop();
+                        score_raum--;
+                        state = 'init';
+                        init_room(score_raum);
+                        storageGameSave();
                     }
                 }
                 handled = true;
@@ -1017,12 +982,12 @@ function kb_press(taste) {
                     init_room(score_raum);
                 } else if (state == 'look') {
                     if (!taste.shiftKey && (score_raum < room.length)) {
-                      score_raum++;
-                      init_room(score_raum);
+                        score_raum++;
+                        init_room(score_raum);
                     }
                     else if (taste.shiftKey && (score_raum > 1)) {
-                      score_raum--;
-                      init_room(score_raum);
+                        score_raum--;
+                        init_room(score_raum);
                     }
                 }
                 handled = true;
@@ -1110,17 +1075,17 @@ function kb_release(taste) {
                 kb_release_up();
                 handled = true;
                 break;
-                //unten
+            //unten
             case 40:
                 kb_release_down();
                 handled = true;
                 break;
-                //links
+            //links
             case 37:
                 kb_release_left();
                 handled = true;
                 break;
-                //rechts
+            //rechts
             case 39:
                 kb_release_right();
                 handled = true;
@@ -1329,8 +1294,8 @@ function init_room(level) {
     digger_x = d_x * pre_icon_size;
     digger_y = d_y * pre_icon_size;
 
-    //Statuszeile komplett berschreiben
-    draw_header();
+    //Statuszeile komplett überschreiben
+    scorelinePrewrite();
 
     //Menu-Bild unsichtbar
     document.getElementById('menudiv').style.visibility = "hidden";
@@ -1490,25 +1455,62 @@ function draw_field() {
                 (i < 64) ||  // ODER
                 // Diamant im sichtbaren Bereich? --> zeichnen
                 (
-                  ((x + actual_marginLeft + pre_icon_size) >= 0) &&
-                  ((x + actual_marginLeft) <= diggerdiv_width) &&
-                  ((y + actual_marginTop + pre_icon_size) >= 0) &&
-                  ((y + actual_marginTop) <= diggerdiv_height)
+                    ((x + actual_marginLeft + pre_icon_size) >= 0) &&
+                    ((x + actual_marginLeft) <= diggerdiv_width) &&
+                    ((y + actual_marginTop + pre_icon_size) >= 0) &&
+                    ((y + actual_marginTop) <= diggerdiv_height)
                 )
-              )
+            )
                 // vorskaliertes Sprite aus "buffer_spritesCanvas" in sichtbaren Canvas zeichnen
                 context_digger.drawImage(buffer_spritesCanvas, 0, sprites[i] * pre_icon_size, pre_icon_size, pre_icon_size, x, y, pre_icon_size, pre_icon_size);
         }
     }
 }
 
-function update_header() {
+
+// SCORELINE
+// schreibe Zeichenweise in das Scoreline-Canvas (Leben, Counter, Diamanten ...)
+function scorelineChar(s, x, y) {
+    var sx, sy, dx, dy;
+    for (var i = 0; i < s.length; i++) {
+        sx = 0;
+        sy = (s.charCodeAt(i) - 32) * pre_icon_size;
+        dx = (x + i) * buffer_charsCanvas.width;
+        dy = y * pre_icon_size;
+        //vorskalierte Zeichen aus "buffer_charsCanvas" ins sichtbare "canvas_scoreline" zeichnen
+        context_scoreline.drawImage(buffer_charsCanvas, sx, sy, buffer_charsCanvas.width, pre_icon_size, dx, dy, buffer_charsCanvas.width, pre_icon_size);
+    }
+}
+
+
+// belege die ganze Scoreline vor
+function scorelinePrewrite() {
+    // Header darstellen
+    var sr = "" + score_raum;
+    var sl = "" + score_leben;
+    var sd = "" + score_dia;
+    while (sr.length < 2)
+        sr = "0" + sr;
+    while (sl.length < 2)
+        sl = "0" + sl;
+    while (sd.length < 2)
+        sd = "0" + sd;
+    // \324\325 --> Herz
+    // \326\327 --> Diamant
+    scorelineChar("  " + sr + "   " + sl + "\324\325    5000" + "      \326\327" + sd + "              ", 0, 0);
+    //gesammelte Diamanten und Punkte-Refresh aktivieren,weil last_ != score_
+    last_ges = score_ges - 1;
+    last_punkte = score_punkte - 1;
+}
+
+
+function scorelineUpdate() {
     //refresh "übrige Leben" wenn getötet
     if (digger_death) {
         var sl = "" + score_leben;
         while (sl.length < 2)
             sl = "0" + sl;
-        drawText(sl, 7, 0);
+        scorelineChar(sl, 7, 0);
     }
 
     //refresh "Countdown"
@@ -1519,26 +1521,32 @@ function update_header() {
     if ((score_zeit < 1000) && ((score_zeit % 4) <= 1) && (score_zeit != 0)) {
         sz = "    ";
     }
-    drawText(sz, 15, 0);
+    scorelineChar(sz, 15, 0);
 
     //refresh "gesammelte Diamanten"
     if (score_ges != last_ges) {
-      var sg = "" + score_ges;
-      while (sg.length < 2)
-          sg = "0" + sg;
-      drawText(sg, 23, 0);
-      last_ges = score_ges;
+        var sg = "" + score_ges;
+        while (sg.length < 2)
+            sg = "0" + sg;
+        scorelineChar(sg, 23, 0);
+        last_ges = score_ges;
     }
 
     //refresh "gesamte Punktanzahl"
+    if (autoscore > 0) {
+        score_punkte += 5;
+        autoscore -= 5;
+        SFX.DIAMOND = true;
+    }
     if (score_punkte != last_punkte) {
-      var sp = "" + score_punkte;
-      while (sp.length < 5)
-          sp = "0" + sp;
-      drawText(sp, 33, 0);
-      last_punkte = score_punkte;
+        var sp = "" + score_punkte;
+        while (sp.length < 5)
+            sp = "0" + sp;
+        scorelineChar(sp, 33, 0);
+        last_punkte = score_punkte;
     }
 }
+
 
 // 0 Staub
 // 1 Nothing
@@ -1599,8 +1607,9 @@ function draw_frame() {
                         }
                         // ? Ausgang
                         else if (idx[pre_l] == 41) {
-                            score_punkte += 100;
-                            next_raum = true;
+                            autoscore = 100;
+                            state = 'init';
+                            verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
                         else if ((idx[pre_l] >= 43) && (idx[pre_l] < 63))
@@ -1621,7 +1630,7 @@ function draw_frame() {
                             }
                         }
                         // ? Sand, Diamant oder Leer
-                        if (idx[pre_l] < 4) {
+                        if ((idx[pre_l] < 4) || (idx[pre_l] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx--;
                             SFX.STEP = true;
@@ -1650,14 +1659,15 @@ function draw_frame() {
                         }
                         // ? Ausgang
                         else if (idx[pre_h] == 41) {
-                            score_punkte += 100;
-                            next_raum = true;
+                            autoscore = 100;
+                            state = 'init';
+                            verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
                         else if ((idx[pre_h] >= 43) && (idx[pre_h] < 63))
                             digger_death = true;
                         // ? Sand, Diamant oder Leer
-                        if (idx[pre_h] < 4) {
+                        if ((idx[pre_h] < 4) || (idx[pre_h] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx -= 20;
                             SFX.STEP = true;
@@ -1687,8 +1697,9 @@ function draw_frame() {
                         }
                         // ? Ausgang
                         else if (idx[pre_r] == 41) {
-                            score_punkte += 100;
-                            next_raum = true;
+                            autoscore = 100;
+                            state = 'init';
+                            verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
                         else if ((idx[pre_r] >= 43) && (idx[pre_r] < 63))
@@ -1709,7 +1720,7 @@ function draw_frame() {
                             }
                         }
                         // ? Sand, Diamant oder Leer
-                        if (idx[pre_r] < 4) {
+                        if ((idx[pre_r] < 4) || (idx[pre_r] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx++;
                             SFX.STEP = true;
@@ -1738,14 +1749,15 @@ function draw_frame() {
                         }
                         // ? Ausgang
                         else if (idx[pre_d] == 41) {
-                            score_punkte += 100;
-                            next_raum = true;
+                            autoscore = 100;
+                            state = 'init';
+                            verz = window.setTimeout(idle_exit, 3000);
                         }
                         // ? Geist
                         else if ((idx[pre_d] >= 43) && (idx[pre_d] < 63))
                             digger_death = true;
                         // ? Sand, Diamant oder Leer
-                        if (idx[pre_d] < 4) {
+                        if ((idx[pre_d] < 4) || (idx[pre_d] == 41)) {
                             idx[d_idx] = 1.1;
                             d_idx += 20;
                             SFX.STEP = true;
@@ -1894,7 +1906,7 @@ function draw_frame() {
                                         else if ((idx[l + 20] >= 8) && (idx[l + 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RUNTER
+                                    //RUNTER
                                     case 43:
                                         // wenn drunter NOTHING 1
                                         if ((idx[l + 20] == 1) || (idx[l + 20] == 1.1)) {
@@ -1914,7 +1926,7 @@ function draw_frame() {
                                         } else if ((idx[l - 20] >= 8) && (idx[l - 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RECHTS
+                                    //RECHTS
                                     case 44:
                                         if ((idx[l + 1] == 1) || (idx[l + 1] == 1.1)) { // wenn rechts frei
                                             ti = l + 1;
@@ -1933,7 +1945,7 @@ function draw_frame() {
                                         } else if ((idx[l - 1] >= 8) && (idx[l - 1] < 41))
                                             digger_death = true;
                                         break;
-                                        //LINKS
+                                    //LINKS
                                     case 46:
                                         if ((idx[l - 1] == 1) || (idx[l - 1] == 1.1)) { // wenn links frei
                                             ti = l - 1;
@@ -2021,7 +2033,7 @@ function draw_frame() {
                                         } else if ((idx[l + 20] >= 8) && (idx[l + 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RUNTER down right left up
+                                    //RUNTER down right left up
                                     case 47:
                                         if ((idx[l + 20] == 1) || (idx[l + 20] == 1.1)) { // wenn drunter frei
                                             ti = l + 20;
@@ -2056,7 +2068,7 @@ function draw_frame() {
                                         } else if ((idx[l - 20] >= 8) && (idx[l - 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RECHTS right up down left
+                                    //RECHTS right up down left
                                     case 48:
                                         if ((idx[l + 1] == 1) || (idx[l + 1] == 1.1)) { // wenn rechts frei
                                             ti = l + 1;
@@ -2091,7 +2103,7 @@ function draw_frame() {
                                         } else if ((idx[l - 1] >= 8) && (idx[l - 1] < 41))
                                             digger_death = true;
                                         break;
-                                        //LINKS left down up right
+                                    //LINKS left down up right
                                     case 50:
                                         if ((idx[l - 1] == 1) || (idx[l - 1] == 1.1)) { // wenn links frei
                                             ti = l - 1;
@@ -2195,7 +2207,7 @@ function draw_frame() {
                                         } else if ((idx[l + 20] >= 8) && (idx[l + 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RUNTER down left right up
+                                    //RUNTER down left right up
                                     case 51:
                                         if ((idx[l + 20] == 1) || (idx[l + 20] == 1.1)) { // wenn drunter frei
                                             ti = l + 20;
@@ -2230,7 +2242,7 @@ function draw_frame() {
                                         } else if ((idx[l - 20] >= 8) && (idx[l - 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RECHTS right down up left
+                                    //RECHTS right down up left
                                     case 52:
                                         if ((idx[l + 1] == 1) || (idx[l + 1] == 1.1)) { // wenn rechts frei
                                             ti = l + 1;
@@ -2265,7 +2277,7 @@ function draw_frame() {
                                         } else if ((idx[l - 1] >= 8) && (idx[l - 1] < 41))
                                             digger_death = true;
                                         break;
-                                        //LINKS left up down right
+                                    //LINKS left up down right
                                     case 54:
                                         if ((idx[l - 1] == 1) || (idx[l - 1] == 1.1)) { // wenn links frei
                                             ti = l - 1;
@@ -2439,7 +2451,7 @@ function draw_frame() {
                                         } else if ((idx[l - 1] >= 8) && (idx[l - 1] < 41))
                                             digger_death = true;
                                         break;
-                                        //LINKS left down up right
+                                    //LINKS left down up right
                                     case 58:
                                         if ((idx[l - 1] == 1) || (idx[l - 1] == 1.1)) { // wenn links frei
                                             ti = l - 1;
@@ -2543,7 +2555,7 @@ function draw_frame() {
                                         } else if ((idx[l + 20] >= 8) && (idx[l + 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RUNTER down left right up
+                                    //RUNTER down left right up
                                     case 59:
                                         if ((idx[l + 20] == 1) || (idx[l + 20] == 1.1)) { // wenn drunter frei
                                             ti = l + 20;
@@ -2578,7 +2590,7 @@ function draw_frame() {
                                         } else if ((idx[l - 20] >= 8) && (idx[l - 20] < 41))
                                             digger_death = true;
                                         break;
-                                        //RECHTS right down up left
+                                    //RECHTS right down up left
                                     case 60:
                                         if ((idx[l + 1] == 1) || (idx[l + 1] == 1.1)) { // wenn rechts frei
                                             ti = l + 1;
@@ -2613,7 +2625,7 @@ function draw_frame() {
                                         } else if ((idx[l - 1] >= 8) && (idx[l - 1] < 41))
                                             digger_death = true;
                                         break;
-                                        //LINKS left up down right
+                                    //LINKS left up down right
                                     case 62:
                                         if ((idx[l - 1] == 1) || (idx[l - 1] == 1.1)) { // wenn links frei
                                             ti = l - 1;
@@ -2753,7 +2765,7 @@ function draw_frame() {
                 if (next_raum) {
                     if (score_raum == room.length) {
                         state = 'highscore';
-                        drawHighscore();
+                        highscoreDraw();
                         score_raum = 1;
                         score_leben = LEBENMAX;
                         score_punkte = 0;
@@ -2763,12 +2775,12 @@ function draw_frame() {
                         init_room(score_raum);
                     }
                     next_raum = false;
-                    game_save();
+                    storageGameSave();
                 }
 
                 //Statuszeile und
                 //Softscroller aktualisieren
-                update_header();
+                scorelineUpdate();
                 soft_scroll();
 
                 //Ton abspielen
@@ -2797,7 +2809,7 @@ function draw_frame() {
                     digger_go = 'NONE';
                     score_leben--;
                     //spielstand sichern
-                    game_save();
+                    storageGameSave();
                 }
 
                 //Frame 1/2 --> Frame 2/2
@@ -2807,7 +2819,7 @@ function draw_frame() {
                 digger_start_left = false;
                 digger_start_right = false;
 
-            //FRAME 2/2
+                //FRAME 2/2
             } else {
 
                 //DIGGER ANIMIEREN
@@ -2831,7 +2843,7 @@ function draw_frame() {
 
             }
 
-            //FRAME 1&2
+            //FRAME 1und2
             //Countdown
             if ((state == 'play') && !digger_death) {
                 score_zeit--;
