@@ -60,6 +60,7 @@ function scaleInit() {
 function scaleBuffer() {
     // ? spritesImage und charsImage vorgeladen
     if (spritesImage.complete && charsImage.complete) {
+
         //Sprites Puffer-Canvas, 1x40 Sprites
         buffer_spritesCanvas.width = pre_icon_size;
         buffer_spritesCanvas.height = pre_icon_size * 40;
@@ -71,7 +72,7 @@ function scaleBuffer() {
 
         //Zeichen Puffer-Canvas
         buffer_charsCanvas.width = (body_width / 40) << 0;
-        buffer_charsCanvas.height = pre_icon_size * 184;
+        buffer_charsCanvas.height = pre_icon_size * 192;
         //Pixelgrafik, no dithering
         scalePixelated(buffer_charsContext);
         //Charset skaliert in "buffer_charsCanvas" schreiben/puffern
@@ -79,6 +80,7 @@ function scaleBuffer() {
         buffer_charsContext.fillRect(0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
         buffer_charsContext.drawImage(charsImage, 0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
         console.log('buffersize chars: ' + buffer_charsCanvas.width + 'x' + buffer_charsCanvas.height);
+
     } else
         setTimeout(scaleBuffer, 1000);
 }
@@ -333,8 +335,20 @@ function menuDraw() {
         menuLine("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
         menuLine("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
         menuLine("         BERLIN         \247\250", 7, 18);
-        menuLine("P: PLAY   H: HIGHSCORE", 9, 20);
-        menuLine("L: A LOOK AT THE ROOMS", 9, 22);
+        if (gamepadBrand == 'sony') {
+            // X:\330 O:\331 Q:\332 D:\333
+            menuLine("\330: PLAY   \333: HIGHSCORE", 9, 20);
+            menuLine("\332: A LOOK AT THE ROOMS", 9, 22);
+        }
+        else if (gamepadBrand == 'xbox') {
+            // A:\334 B:\335 X:\336 Y:\337
+            menuLine("\334: PLAY   \337: HIGHSCORE", 9, 20);
+            menuLine("\336: A LOOK AT THE ROOMS", 9, 22);
+        }
+        else { 
+            menuLine("P: PLAY   H: HIGHSCORE", 9, 20);
+            menuLine("L: A LOOK AT THE ROOMS", 9, 22);
+        }
         menuLine("JSv " + digger_version, 5, 25);
         menuLine("\140 1988", 29, 25);
         menuLine("by TIKKEL", 5, 26);
@@ -1571,6 +1585,9 @@ function scorelineUpdate() {
 // 63 Kreuz
 function draw_frame() {
 
+    //Gamepad#0 abfragen
+    gamepadUpdate()
+
     if (state == 'look' || state == 'init' || state == 'play') {
 
         //Spielfrequenz um die hälfte teilen
@@ -2796,9 +2813,15 @@ function draw_frame() {
                 SFX.STEP = false;
                 SFX.STONE = false;
 
-                //Vibration abspielen
+                //Vibration (Gamepad/Handy/Tablet)
                 if (brumm) {
-                    if (navigator.vibrate)
+                    //Gamepad
+                    if (gamepadDualrumble)
+                        navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {startDelay:0,duration:48,weakMagnitude:1.0,strongMagnitude:0.0})
+                    //Handy/Tablet
+                    //  navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+                    //  if (navigator.vibrate)
+                    else
                         navigator.vibrate(48);
                     brumm = false;
                 }
@@ -2892,7 +2915,13 @@ function init_events() {
     document.body.addEventListener('keypress', kb_input, false);
 
     //Bildschirm und Buffer neu skalieren
-    window.addEventListener("resize", scaleReload, false);
+    window.addEventListener('resize', scaleReload, false);
+
+    //Gamepad verbunden|abgesteckt
+    if (navigator.getGamepads) {
+        window.addEventListener('gamepadconnected', gamepadConnect, false);
+        window.addEventListener('gamepaddisconnected', gamepadDisconnect, false);
+    }
 }
 
 

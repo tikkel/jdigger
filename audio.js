@@ -1,5 +1,3 @@
-
-
 //     jdigger/Digger.JS
 //     Copyright (C) 2017  Marko Klingner
 //
@@ -14,9 +12,6 @@
 //     Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben.
 //     Falls nicht, siehe <http://www.gnu.org/licenses/>.
 
-
-//aktiviere Vibrationen (Handys und Tablets)
-navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
 
 var soundType  = 'no'; // erstmal 'no', bei Initialisierungserfolg dann 'api'
 var gainNode   = null;
