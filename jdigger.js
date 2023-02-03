@@ -804,8 +804,6 @@ function setPos() {
 
 //FULLSCREEN
 function fullscreen() {
-    if (navigator.vibrate)
-        navigator.vibrate(1);
     var i = document.getElementById('body');
     // go full-screen
     if (i.requestFullscreen) {
@@ -2818,11 +2816,9 @@ function draw_frame() {
                     //Gamepad
                     if (gamepadDualrumble)
                         navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {startDelay:0,duration:48,weakMagnitude:1.0,strongMagnitude:0.0})
-                    //Handy/Tablet
-                    //  navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
-                    //  if (navigator.vibrate)
                     else
-                        navigator.vibrate(48);
+                        if (canVibrate)
+                            window.navigator.vibrate(48);
                     brumm = false;
                 }
 

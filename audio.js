@@ -12,6 +12,8 @@
 //     Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben.
 //     Falls nicht, siehe <http://www.gnu.org/licenses/>.
 
+// Check vibrate()
+const canVibrate = window.navigator.vibrate
 
 var soundType  = 'no'; // erstmal 'no', bei Initialisierungserfolg dann 'api'
 var gainNode   = null;
