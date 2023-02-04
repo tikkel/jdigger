@@ -2817,8 +2817,8 @@ function draw_frame() {
                     if (gamepadDualrumble)
                         navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {startDelay:0,duration:48,weakMagnitude:1.0,strongMagnitude:0.0})
                     else
-                        if (canVibrate)
-                            window.navigator.vibrate(48);
+                        if (navigator.vibrate)
+                            navigator.vibrate(48);
                     brumm = false;
                 }
 
