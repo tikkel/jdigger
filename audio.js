@@ -1,122 +1,74 @@
-//     jdigger/Digger.JS
-//     Copyright (C) 2017  Marko Klingner
-//     GNU General Public License v3 - http://www.gnu.org/licenses/
+// jdigger/Digger.JS - KC85 Soundemulation per WebAudio
+// Copyright (C) 2017–2025  Marko Klingner
+// GNU GPL v3 - http://www.gnu.org/licenses/
 
-// Vibration support
-navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+navigator.vibrate=navigator.vibrate||navigator.webkitVibrate||navigator.mozVibrate||navigator.msVibrate;
 
-// Audio variables
-var soundType = 'no';
-var gainNode = null;
-var mergerNode = null;
-var audioContext, audioBufferLeer, audioBufferStep, audioBufferStone, audioBufferDiamond;
+let soundType='no',gainNode,mergerNode,audioContext,audioBuffers={};
 
-// KC85 system constants
-//original xdigger 58472Hz
-//[CPU-Takt] / [CTC-Vorteiler] = max. Samplefreq. (Halbwellen)
-var CPU_FREQ_KC85_2 = 1750000;   //CPU-Takt KC85/2
-var CPU_FREQ_KC85_3 = 1750000;   //CPU-Takt KC85/3
-var CPU_FREQ_KC85_4 = 1773447.5; //CPU-Takt KC85/4
-var KC_CTC_FREQ_VT16  = CPU_FREQ_KC85_3 / 16;  //VT16  -> 109375Hz
-var KC_CTC_FREQ_VT256 = CPU_FREQ_KC85_3 / 256; //VT256 -> 6835,9375Hz
-var TON_LOW  = -1;
-var TON_HIGH =  1;
-var TON_RATE =  44100; //default  44100 Hz webAudio-API-Samplefreq. (Halbwellen)
+// KC85 System Konstanten
+const CPU_FREQ_KC85_2=1750000,   //CPU-Takt KC85/2
+      CPU_FREQ_KC85_3=1750000,   //CPU-Takt KC85/3
+      CPU_FREQ_KC85_4=1773447.5, //CPU-Takt KC85/4
+      //max. Samplefreq. (Halbwellen)[CPU-Takt] / [CTC-Vorteiler]
+      KC_CTC_FREQ_VT16=CPU_FREQ_KC85_3/16,  //VT16  -> 109375Hz
+      KC_CTC_FREQ_VT256=CPU_FREQ_KC85_3/256, //VT256 -> 6835,9375Hz
+      TON_LOW=-1,
+      TON_HIGH=1,
+      TON_RATE=44100; //default 44100Hz webAudio-API-Samplefreq. (Halbwellen)
 
-function initAudio() {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    // Setup audio chain: buffer > merger > gain > destination
-    audioContext = new AudioContextClass();
+function initAudio(){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
     
-    gainNode = audioContext.createGain();
-    gainNode.gain.value = 0.2;
+    audioContext=new AC();
+    gainNode=audioContext.createGain();
+    gainNode.gain.value=.2;
     gainNode.connect(audioContext.destination);
-    
-    mergerNode = audioContext.createChannelMerger(2);
+    mergerNode=audioContext.createChannelMerger(2);
     mergerNode.connect(gainNode);
-
-    // Empty buffer for iOS activation
-    audioBufferLeer = audioContext.createBuffer(1, 1, TON_RATE);
-
-    // Generate procedural KC85 sound buffers
-    createStepSound();
-    createStoneSound();
-    createDiamondSound();
     
-    soundType = 'api';
-    console.log('webAudio: ' + soundType + ': Initialisierung abgeschlossen');
+    // leerer Buffer
+    audioBuffers.Leer=audioContext.createBuffer(1,1,TON_RATE);
+    
+    // generiere Step-, Stone- und Diamond-Buffer
+    audioBuffers.Step=createToneBuffer([{tc:0x40,count:2,freq:KC_CTC_FREQ_VT256}]);
+    console.log('tonsynthese: schritt buffer: '+audioBuffers.Step.length);
+    
+    audioBuffers.Stone=createToneBuffer(Array.from({length:0x14},(v,i)=>({tc:((0xFF+i)&0xFF)||256,count:1,freq:KC_CTC_FREQ_VT16})));
+    console.log('tonsynthese: stein buffer: '+audioBuffers.Stone.length);
+    
+    audioBuffers.Diamond=createToneBuffer(Array.from({length:0x40},(v,i)=>({tc:0x40-i,count:1,freq:KC_CTC_FREQ_VT16})));
+    console.log('tonsynthese: diamant buffer: '+audioBuffers.Diamond.length);
+    
+    soundType='api';
+    console.log('webAudio: '+soundType+': Initialisierung abgeschlossen');
 }
 
-function createStepSound() {
-    // Original: (TON_RATE / KC_CTC_FREQ_VT256 * (0x40 + 0x40) << 0)
-    audioBufferStep = audioContext.createBuffer(1, (TON_RATE / KC_CTC_FREQ_VT256 * (0x40 + 0x40) << 0), TON_RATE);
-    const buffer = audioBufferStep.getChannelData(0);
-    let peak = TON_LOW;
+// berechne CTC-Rechteck-Wellenformen
+function createToneBuffer(tones){
+    const totalSamples=tones.reduce((sum,{tc,count,freq})=>sum+count*2*Math.floor(TON_RATE/freq*tc),0);
+    const buffer=audioContext.createBuffer(1,totalSamples,TON_RATE);
+    const data=buffer.getChannelData(0);
     
-    for (let i = 0, j = 2; j > 0; j--) {
-        for (let k = 0; k < 0x40; k++) {
-            for (let n = 0; n <= (TON_RATE / KC_CTC_FREQ_VT256 << 0); n++)
-                buffer[(TON_RATE * i / KC_CTC_FREQ_VT256 << 0) + n] = peak;
-            i++;
+    let pos=0,peak=TON_LOW;
+    tones.forEach(({tc,count,freq})=>{
+        const samples=Math.floor(TON_RATE/freq*tc);
+        for(let i=0;i<count;i++){
+            for(let k=0;k<samples;k++)data[pos++]=peak;
+            peak=TON_LOW+TON_HIGH-peak;
+            for(let k=0;k<samples;k++)data[pos++]=peak;
+            peak=TON_LOW+TON_HIGH-peak;
         }
-        peak = TON_LOW + TON_HIGH - peak;
-    }
-    console.log('tonsynthese: schritt buffer: ' + (TON_RATE / KC_CTC_FREQ_VT256 * (0x40 + 0x40) << 0));
+    });
+    return buffer;
 }
 
-function createStoneSound() {
-    // Original: (TON_RATE / KC_CTC_FREQ_VT16 * (0x0ff + 0x100 + ((0x12 * 0x12 + 0x12) / 2)) << 0)
-    audioBufferStone = audioContext.createBuffer(1, (TON_RATE / KC_CTC_FREQ_VT16 * (0x0ff + 0x100 + ((0x12 * 0x12 + 0x12) / 2)) << 0), TON_RATE);
-    const buffer = audioBufferStone.getChannelData(0);
-    let peak = TON_LOW;
+function playAudio(ton){
+    if(soundType!=='api'||!audioBuffers[ton])return;
     
-    for (let i = 0, j = 0x0ff;; j++) {
-        if (j > 256) j = 1;
-        if (j == 0x12) break; // j^TC-Reihe: 255,256,1...18 (^0x14 loops)
-        for (let k = 0; k < j; k++) {
-            for (let n = 0; n <= (TON_RATE / KC_CTC_FREQ_VT16 << 0); n++)
-                buffer[(TON_RATE * i / KC_CTC_FREQ_VT16 << 0) + n] = peak;
-            i++;
-        }
-        peak = TON_LOW + TON_HIGH - peak;
-    }
-    console.log('tonsynthese: stein buffer: ' + (TON_RATE / KC_CTC_FREQ_VT16 * (0x0ff + 0x100 + ((0x12 * 0x12 + 0x12) / 2)) << 0));
-}
-
-function createDiamondSound() {
-    // Original: (TON_RATE / KC_CTC_FREQ_VT16 * ((0x40 * 0x40 + 0x40) / 2) << 0)
-    audioBufferDiamond = audioContext.createBuffer(1, (TON_RATE / KC_CTC_FREQ_VT16 * ((0x40 * 0x40 + 0x40) / 2) << 0), TON_RATE);
-    const buffer = audioBufferDiamond.getChannelData(0);
-    let peak = TON_LOW;
-    
-    for (let i = 0, j = 0x40; j > 0; j--) {
-        for (let k = 0; k < j; k++) {
-            for (let n = 0; n <= (TON_RATE / KC_CTC_FREQ_VT16 << 0); n++)
-                buffer[(TON_RATE * i / KC_CTC_FREQ_VT16 << 0) + n] = peak;
-            i++;
-        }
-        peak = TON_LOW + TON_HIGH - peak;
-    }
-    console.log('tonsynthese: diamant buffer: ' + (TON_RATE / KC_CTC_FREQ_VT16 * ((0x40 * 0x40 + 0x40) / 2) << 0));
-}
-
-function playAudio(ton) {
-    if (soundType !== 'api') return;
-    
-    const source = audioContext.createBufferSource();
-    const soundMap = {
-        'Step': { buffer: audioBufferStep, channel: 1 },    // rechts
-        'Stone': { buffer: audioBufferStone, channel: 0 },  // links  
-        'Diamond': { buffer: audioBufferDiamond, channel: 1 }, // rechts
-        'Leer': { buffer: audioBufferLeer, channel: 0 }     // links
-    };
-    
-    const sound = soundMap[ton];
-    if (sound) {
-        source.buffer = sound.buffer;
-        source.connect(mergerNode, 0, sound.channel);
-        source.start(0);
-    }
+    const source=audioContext.createBufferSource();
+    source.buffer=audioBuffers[ton];
+    source.connect(mergerNode,0,ton==='Step'||ton==='Diamond'?1:0);
+    source.start(0);
 }
