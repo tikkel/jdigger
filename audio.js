@@ -2,8 +2,6 @@
 // Copyright (C) 2017–2025  Marko Klingner
 // GNU GPL v3 - http://www.gnu.org/licenses/
 
-navigator.vibrate=navigator.vibrate||navigator.webkitVibrate||navigator.mozVibrate||navigator.msVibrate;
-
 let soundType='no',gainNode,mergerNode,audioContext,audioBuffers={};
 
 // KC85 System Konstanten
