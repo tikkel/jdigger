@@ -881,12 +881,6 @@ function vkb_focus() {
 // K E Y   P R E S S
 //https://keycode.info/
 function kb_press(taste) {
-    //Resume or Init audioContext
-    try {
-        audioContext.resume();
-    } catch (e) {
-        initAudio();
-    }
 
     handled = false;
     if (state != 'input') {
@@ -967,6 +961,12 @@ function kb_press(taste) {
             //p Play
             case 80:
                 if (state == 'menu') {
+                    //Resume or Init audioContext
+                    try {
+                        audioContext.resume();
+                    } catch (e) {
+                        initAudio();
+                    }
                     storageGameRestore(); //spielstand restaurieren
                     state = 'init';
                     init_room(score_raum);

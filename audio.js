@@ -1,6 +1,7 @@
 // jdigger/Digger.JS - KC85 Soundemulation per WebAudio
 // Copyright (C) 2017–2025  Marko Klingner
-// GNU GPL v3 - http://www.gnu.org/licenses/
+// GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
+
 
 let soundType='no',gainNode,mergerNode,audioContext,audioBuffers={};
 
