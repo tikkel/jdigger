@@ -345,6 +345,11 @@ function menuDraw() {
             menuLine("\334: PLAY   \337: HIGHSCORE", 9, 20);
             menuLine("\336: A LOOK AT THE ROOMS", 9, 22);
         }
+        else if (gamepadBrand == 'nintendo') {
+            // A:\334 B:\335 X:\336 Y:\337
+            menuLine("\334: PLAY   \337: HIGHSCORE", 9, 20);
+            menuLine("\336: A LOOK AT THE ROOMS", 9, 22);
+        }
         else { 
             menuLine("P: PLAY   H: HIGHSCORE", 9, 20);
             menuLine("L: A LOOK AT THE ROOMS", 9, 22);

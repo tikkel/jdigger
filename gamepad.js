@@ -1,226 +1,338 @@
-// jdigger/Digger.JS - Gamepad support
+// jdigger/Digger.JS - Gamepad support (Optimiert)
 // Copyright (C) 2022–2025  Marko Klingner
 // GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 
-
 // Gamepad State Variablen
-var gamepadConnected=false,gamepadType='none',gamepadBrand='keyboard',gamepadDualrumble=false;
-// Previous frame states
-var prevLeft=false,prevRight=false,prevUp=false,prevDown=false,prevA=false,prevB=false,prevX=false,prevY=false,prevL1=false,prevR1=false;
-// Current frame states  
-var currLeft=false,currRight=false,currUp=false,currDown=false,currA=false,currB=false,currX=false,currY=false,currL1=false,currR1=false;
+var gamepadConnected = false;
+var gamepadType = 'none';
+var gamepadBrand = 'keyboard';
+var gamepadDualrumble = false;
+var gamepadIndex = 0; // Welcher Gamepad-Slot verwendet wird
 
-function gamepadGetDirections(gp){
-    var left=false,right=false,up=false,down=false;
-    if(gamepadType=='8axes'){
-        left=gp.axes[0]<-0.5||gp.axes[3]<-0.5||gp.axes[6]<-0.5;
-        right=gp.axes[0]>0.5||gp.axes[3]>0.5||gp.axes[6]>0.5;
-        up=gp.axes[1]<-0.5||gp.axes[4]<-0.5||gp.axes[7]<-0.5;
-        down=gp.axes[1]>0.5||gp.axes[4]>0.5||gp.axes[7]>0.5;
-    }else if(gamepadType=='4axes'){
-        left=gp.buttons[14].value==1||gp.axes[0]<-0.5||gp.axes[2]<-0.5;
-        right=gp.buttons[15].value==1||gp.axes[0]>0.5||gp.axes[2]>0.5;
-        up=gp.buttons[12].value==1||gp.axes[1]<-0.5||gp.axes[3]<-0.5;
-        down=gp.buttons[13].value==1||gp.axes[1]>0.5||gp.axes[3]>0.5;
-    }else if(gamepadType=='2axes'){
-        left=gp.axes[0]<-0.5;
-        right=gp.axes[0]>0.5;
-        up=gp.axes[1]<-0.5;
-        down=gp.axes[1]>0.5;
+// Button States - kombiniert in Arrays für einfachere Verwaltung
+var prevButtons = {
+    left: false, right: false, up: false, down: false,
+    A: false, B: false, X: false, Y: false, L1: false, R1: false
+};
+var currButtons = {
+    left: false, right: false, up: false, down: false,
+    A: false, B: false, X: false, Y: false, L1: false, R1: false
+};
+
+// Optimiertes Button-Mapping mit besserer Struktur
+var CONTROLLER_TYPES = {
+    xbox: {
+        name: 'Xbox',
+        patterns: ['xbox', '045e', 'microsoft'],
+        buttons: { action: 1, back: 0, option1: 3, option2: 2, shoulder_l: 4, shoulder_r: 5 }
+    },
+    sony: {
+        name: 'PlayStation',
+        patterns: ['054c', 'sony', 'playstation', 'dualshock', 'dualsense'],
+        buttons: { action: 1, back: 0, option1: 2, option2: 3, shoulder_l: 4, shoulder_r: 5 }
+    },
+    nintendo: {
+        name: 'Nintendo',
+        patterns: ['nintendo', 'switch', 'joy-con', '057e'],
+        buttons: { action: 1, back: 0, option1: 3, option2: 2, shoulder_l: 4, shoulder_r: 5 }
+    },
+    generic: {
+        name: 'Generic',
+        patterns: ['generic', 'unknown'],
+        buttons: { action: 0, back: 1, option1: 3, option2: 2, shoulder_l: 4, shoulder_r: 5 }
     }
-    return [left,right,up,down];
-}
+};
 
-function gamepadHandleMovement(){
-    // Links
-    if(currLeft&&!prevLeft)kb_press_left();
-    else if(!currLeft&&prevLeft)kb_release_left();
-    // Rechts  
-    if(currRight&&!prevRight)kb_press_right();
-    else if(!currRight&&prevRight)kb_release_right();
-    // Oben
-    if(currUp&&!prevUp)kb_press_up();
-    else if(!currUp&&prevUp)kb_release_up();
-    // Unten
-    if(currDown&&!prevDown)kb_press_down();
-    else if(!currDown&&prevDown)kb_release_down();
-}
+var currentController = CONTROLLER_TYPES.xbox;
 
-function gamepadHandlePlayActions(){
-    // B Button - Digger wiederbeleben/töten
-    if(currB&&!prevB){
-        if(digger_death){
-            if(score_leben<LEBENMIN){
-                state='highscore';
-                highscoreDraw();
-                score_punkte=0;
-                score_leben=LEBENMAX;
-                score_raum=1;
-            }else{
-                state='init';
-                init_room(score_raum);
+// Optimierte Richtungserkennung mit weniger Code-Duplikation
+function gamepadGetDirections(gp) {
+    var left = false, right = false, up = false, down = false;
+    
+    switch(gamepadType) {
+        case '8axes':
+            // Prüfe alle 3 möglichen Achsenpaare
+            for(let i = 0; i < 6; i += 3) {
+                left = left || gp.axes[i] < -0.5;
+                right = right || gp.axes[i] > 0.5;
+                up = up || gp.axes[i + 1] < -0.5;
+                down = down || gp.axes[i + 1] > 0.5;
             }
-            storageGameSave();
-        }else{
-            digger_death=true;
-        }
+            break;
+            
+        case '4axes':
+            // D-Pad Buttons + Analoge Sticks
+            left = gp.buttons[14]?.pressed || gp.axes[0] < -0.5 || gp.axes[2] < -0.5;
+            right = gp.buttons[15]?.pressed || gp.axes[0] > 0.5 || gp.axes[2] > 0.5;
+            up = gp.buttons[12]?.pressed || gp.axes[1] < -0.5 || gp.axes[3] < -0.5;
+            down = gp.buttons[13]?.pressed || gp.axes[1] > 0.5 || gp.axes[3] > 0.5;
+            break;
+            
+        case '2axes':
+            left = gp.axes[0] < -0.5;
+            right = gp.axes[0] > 0.5;
+            up = gp.axes[1] < -0.5;
+            down = gp.axes[1] > 0.5;
+            break;
     }
-    // A Button - Quit/Back to Menu
-    if(currA&&!prevA){
-        idle_stop();
-        state='menu';
-        score_punkte=0;
-        score_leben=LEBENMAX;
-        score_raum=1;
-        storageGameSave();
-        init_room(score_raum);
-        menuDraw();
-    }
+    
+    return { left, right, up, down };
 }
 
-function gamepadHandleInitActions(){
-    // A Button - Quit/Back to Menu
-    if(currA&&!prevA){
-        idle_stop();
-        state='menu';
-        score_punkte=0;
-        score_leben=LEBENMAX;
-        score_raum=1;
-        storageGameSave();
-        init_room(score_raum);
-        menuDraw();
-    }
+// Vereinfachte Button-Prüfung
+function isButtonPressed(gamepad, buttonFunction) {
+    const buttonIndex = currentController.buttons[buttonFunction];
+    return gamepad.buttons[buttonIndex]?.pressed || gamepad.buttons[buttonIndex]?.value > 0.5;
 }
 
-function gamepadHandleMenuActions(){
-    // B Button - Play
-    if(currB&&!prevB){
-        storageGameRestore();
-        state='init';
-        init_room(score_raum);
-    }
-    // X Button - Highscore
-    if(currX&&!prevX){
-        state='highscore';
-        highscoreDraw();
-    }
-    // Y Button - Look
-    if(currY&&!prevY){
-        state='look';
-        init_room(score_raum);
-    }
+// Optimierte State-Verwaltung
+function updateButtonStates() {
+    // Previous State kopieren
+    Object.assign(prevButtons, currButtons);
 }
 
-function gamepadHandleLookActions(){
-    // Y Button - Raum+
-    if(currY&&!prevY&&score_raum<room.length){
-        score_raum++;
-        init_room(score_raum);
-    }
-    // R1 Button - Raum+
-    if(currR1&&!prevR1&&score_raum<room.length){
-        score_raum++;
-        init_room(score_raum);
-    }
-    // L1 Button - Raum-
-    if(currL1&&!prevL1&&score_raum>1){
-        score_raum--;
-        init_room(score_raum);
-    }
-    // A Button - Abbruch Look
-    if(currA&&!prevA){
-        state='menu';
-        menuDraw();
-    }
+function checkButtonPress(button) {
+    return currButtons[button] && !prevButtons[button];
 }
 
-function gamepadHandleHighscoreActions(){
-    // A Button - Abbruch Highscore
-    if(currA&&!prevA){
-        state='menu';
-        menuDraw();
-    }
+function checkButtonRelease(button) {
+    return !currButtons[button] && prevButtons[button];
 }
 
-function gamepadStorePreviousState(){
-    prevLeft=currLeft;prevRight=currRight;prevUp=currUp;prevDown=currDown;
-    prevA=currA;prevB=currB;prevX=currX;prevY=currY;prevL1=currL1;prevR1=currR1;
+// Kompakte Movement-Behandlung
+function gamepadHandleMovement() {
+    const movements = [
+        { curr: 'left', prev: 'left', press: kb_press_left, release: kb_release_left },
+        { curr: 'right', prev: 'right', press: kb_press_right, release: kb_release_right },
+        { curr: 'up', prev: 'up', press: kb_press_up, release: kb_release_up },
+        { curr: 'down', prev: 'down', press: kb_press_down, release: kb_release_down }
+    ];
+    
+    movements.forEach(({ curr, prev, press, release }) => {
+        if (currButtons[curr] && !prevButtons[prev]) press();
+        else if (!currButtons[curr] && prevButtons[prev]) release();
+    });
 }
 
-function gamepadConnect(e){
-    gamepadConnected=true;
-
-    // Resume or Init audioContext
-    try {
-        audioContext.resume();
-    } catch (e) {
-        initAudio();
-    }
-    
-    // Dualrumble Test
-    if(!gamepadDualrumble){
-        try{
-            const gamepad=navigator.getGamepads()[0];
-            gamepad.vibrationActuator.playEffect("dual-rumble",{startDelay:0,duration:100,weakMagnitude:1.0,strongMagnitude:1.0});
-            gamepadDualrumble=true;
-        }catch(error){
-            gamepadDualrumble=false;
-        }
-    }
-    
-    // Type detection
-    gamepadType=e.gamepad.axes.length>=8?'8axes':(e.gamepad.buttons.length>=16&&e.gamepad.axes.length==4)?'4axes':(e.gamepad.buttons.length>=6&&e.gamepad.axes.length==2)?'2axes':'none';
-    
-    // Brand detection  
-    gamepadBrand=e.gamepad.id.includes('054c')?'sony':'xbox';
-    
-    // Reset button states - erste Eingabe abfangen
-    prevA=prevB=prevX=prevY=currA=currB=currX=currY=true;
-    
-    if(state=='menu')menuDraw();
-    console.log('Gamepad#%d connect"%s" buttons#%d axes#%d mapping"%s" typ"%s" brand"%s"',e.gamepad.index,e.gamepad.id,e.gamepad.buttons.length,e.gamepad.axes.length,e.gamepad.mapping,gamepadType,gamepadBrand);
-}
-
-function gamepadDisconnect(e){
-    gamepadConnected=false;
-    gamepadDualrumble=false;
-    gamepadBrand='keyboard';
-    if(state=='menu')menuDraw();
-    console.log('Gamepad#%d lost"%s" brand"%s"',e.gamepad.index,e.gamepad.id,gamepadBrand);
-}
-
-function gamepadUpdate(){
-    if(!gamepadConnected||state=='input')return;
-    
-    const gp=navigator.getGamepads()[0];
-    if(!gp)return;
-    
-    // Previous state speichern
-    gamepadStorePreviousState();
-    
-    // Directional input lesen
-    var dirs=gamepadGetDirections(gp);
-    currLeft=dirs[0];currRight=dirs[1];currUp=dirs[2];currDown=dirs[3];
-    
-    // Button input lesen
-    currA=gp.buttons[1].value>0.5;  // A=1
-    currB=gp.buttons[0].value>0.5;  // B=0  
-    currX=gp.buttons[3].value>0.5;  // X=3
-    currY=gp.buttons[2].value>0.5;  // Y=2
-    currL1=gp.buttons[4].value>0.5; // L1=4
-    currR1=gp.buttons[5].value>0.5; // R1=5
-    
-    // State-spezifische Behandlung
-    if(state=='play'){
+// Vereinfachte Action-Handler mit weniger Code-Duplikation
+var ACTION_HANDLERS = {
+    play: function() {
         gamepadHandleMovement();
-        gamepadHandlePlayActions();
-    }else if(state=='init'){
-        gamepadHandleInitActions();
-    }else if(state=='menu'){
-        gamepadHandleMenuActions();
-    }else if(state=='look'){
-        gamepadHandleLookActions();
-    }else if(state=='highscore'){
-        gamepadHandleHighscoreActions();
+        
+        if (checkButtonPress('B')) {
+            if (digger_death) {
+                if (score_leben < LEBENMIN) {
+                    state = 'highscore';
+                    highscoreDraw();
+                    score_punkte = 0;
+                    score_leben = LEBENMAX;
+                    score_raum = 1;
+                } else {
+                    state = 'init';
+                    init_room(score_raum);
+                }
+                storageGameSave();
+            } else {
+                digger_death = true;
+            }
+        }
+        
+        if (checkButtonPress('A')) {
+            gamepadBackToMenu();
+        }
+    },
+    
+    init: function() {
+        if (checkButtonPress('A')) {
+            gamepadBackToMenu();
+        }
+    },
+    
+    menu: function() {
+        if (checkButtonPress('B')) {
+            storageGameRestore();
+            state = 'init';
+            init_room(score_raum);
+        }
+        if (checkButtonPress('X')) {
+            state = 'highscore';
+            highscoreDraw();
+        }
+        if (checkButtonPress('Y')) {
+            state = 'look';
+            init_room(score_raum);
+        }
+    },
+    
+    look: function() {
+        if ((checkButtonPress('Y') || checkButtonPress('R1')) && score_raum < room.length) {
+            score_raum++;
+            init_room(score_raum);
+        }
+        if (checkButtonPress('L1') && score_raum > 1) {
+            score_raum--;
+            init_room(score_raum);
+        }
+        if (checkButtonPress('A')) {
+            state = 'menu';
+            menuDraw();
+        }
+    },
+    
+    highscore: function() {
+        if (checkButtonPress('A')) {
+            state = 'menu';
+            menuDraw();
+        }
+    }
+};
+
+// Hilfsfunktion für Menu-Rückkehr
+function gamepadBackToMenu() {
+    idle_stop();
+    state = 'menu';
+    score_punkte = 0;
+    score_leben = LEBENMAX;
+    score_raum = 1;
+    storageGameSave();
+    init_room(score_raum);
+    menuDraw();
+}
+
+// Optimierte Controller-Erkennung
+function detectControllerType(gamepad) {
+    const id = gamepad.id.toLowerCase();
+    
+    // Durchsuche alle Controller-Typen nach Mustern
+    for (const [type, config] of Object.entries(CONTROLLER_TYPES)) {
+        if (config.patterns.some(pattern => id.includes(pattern))) {
+            return config;
+        }
+    }
+    
+    // Fallback zu Xbox
+    return CONTROLLER_TYPES.xbox;
+}
+
+// Optimierte Gamepad-Typ-Detection
+function detectGamepadType(gamepad) {
+    const axesCount = gamepad.axes.length;
+    const buttonCount = gamepad.buttons.length;
+    
+    if (axesCount >= 8) return '8axes';
+    if (buttonCount >= 16 && axesCount === 4) return '4axes';
+    if (buttonCount >= 6 && axesCount === 2) return '2axes';
+    return 'none';
+}
+
+// Vereinfachtes Audio-Init (Firefox-Workaround)
+function tryInitAudio() {
+    try {
+        if (typeof audioContext !== 'undefined' && audioContext.state === 'suspended') {
+            audioContext.resume();
+        } else if (typeof initAudio === 'function') {
+            initAudio();
+        }
+    } catch (e) {
+        console.log('Audio-Initialisierung fehlgeschlagen:', e);
+        
+        // Firefox-Workaround: Simuliere Keyboard-Event
+        try {
+            const keyEvent = new KeyboardEvent('keydown', {
+                key: 'a', code: 'KeyA', keyCode: 65, which: 65,
+                bubbles: true, cancelable: true
+            });
+            document.dispatchEvent(keyEvent);
+        } catch (err) {
+            console.log('Keyboard-Event-Simulation fehlgeschlagen:', err);
+        }
     }
 }
+
+// Optimierte Connect-Funktion
+function gamepadConnect(e) {
+    gamepadConnected = true;
+    gamepadIndex = e.gamepad.index;
+    
+    // Audio initialisieren
+    tryInitAudio();
+    
+    // Controller-Typ erkennen
+    currentController = detectControllerType(e.gamepad);
+    gamepadBrand = currentController.name.toLowerCase();
+    gamepadType = detectGamepadType(e.gamepad);
+    
+    // Vibration testen (sicher)
+    if (!gamepadDualrumble) {
+        try {
+            if (e.gamepad.vibrationActuator && 
+                typeof e.gamepad.vibrationActuator.playEffect === 'function') {
+                e.gamepad.vibrationActuator.playEffect("dual-rumble", {
+                    startDelay: 0, duration: 100, 
+                    weakMagnitude: 1.0, strongMagnitude: 1.0
+                });
+                gamepadDualrumble = true;
+            } else {
+                gamepadDualrumble = false;
+            }
+        } catch (error) {
+            gamepadDualrumble = false;
+            console.log('Vibration nicht unterstützt:', error.message);
+        }
+    }
+    
+    // Button States zurücksetzen (erste Eingabe abfangen)
+    Object.keys(currButtons).forEach(key => {
+        if (key !== 'left' && key !== 'right' && key !== 'up' && key !== 'down') {
+            prevButtons[key] = currButtons[key] = true;
+        }
+    });
+    
+    if (state === 'menu') menuDraw();
+    
+    console.log('Gamepad #%d verbunden: "%s" | Buttons: %d, Achsen: %d, Typ: %s, Marke: %s', 
+        e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, 
+        e.gamepad.axes.length, gamepadType, currentController.name);
+}
+
+function gamepadDisconnect(e) {
+    gamepadConnected = false;
+    gamepadDualrumble = false;
+    gamepadBrand = 'keyboard';
+    gamepadIndex = 0;
+    
+    if (state === 'menu') menuDraw();
+    console.log('Gamepad #%d getrennt: "%s"', e.gamepad.index, e.gamepad.id);
+}
+
+// Hauptupdate-Funktion optimiert
+function gamepadUpdate() {
+    if (!gamepadConnected || state === 'input') return;
+    
+    const gp = navigator.getGamepads()[gamepadIndex];
+    if (!gp || !gp.connected) return;
+    
+    // Previous state sichern
+    updateButtonStates();
+    
+    // Richtungen lesen
+    const directions = gamepadGetDirections(gp);
+    Object.assign(currButtons, directions);
+    
+    // Action-Buttons lesen
+    currButtons.A = isButtonPressed(gp, 'back');
+    currButtons.B = isButtonPressed(gp, 'action');
+    currButtons.X = isButtonPressed(gp, 'option2');
+    currButtons.Y = isButtonPressed(gp, 'option1');
+    currButtons.L1 = isButtonPressed(gp, 'shoulder_l');
+    currButtons.R1 = isButtonPressed(gp, 'shoulder_r');
+    
+    // State-Handler aufrufen
+    if (ACTION_HANDLERS[state]) {
+        ACTION_HANDLERS[state]();
+    }
+}
+
+// Event Listeners
+window.addEventListener('gamepadconnected', gamepadConnect);
+window.addEventListener('gamepaddisconnected', gamepadDisconnect);
