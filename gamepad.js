@@ -1,6 +1,7 @@
-// jdigger/Digger.JS - Gamepad support (Optimiert)
+// jdigger/Digger.JS - Gamepad support
 // Copyright (C) 2022–2025  Marko Klingner
 // GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
+
 
 // Gamepad State Variablen
 var gamepadConnected = false;
