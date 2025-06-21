@@ -226,37 +226,17 @@ function detectGamepadType(gamepad) {
     return 'none';
 }
 
-// Vereinfachtes Audio-Init (Firefox-Workaround)
-function tryInitAudio() {
-    try {
-        if (typeof audioContext !== 'undefined' && audioContext.state === 'suspended') {
-            audioContext.resume();
-        } else if (typeof initAudio === 'function') {
-            initAudio();
-        }
-    } catch (e) {
-        console.log('Audio-Initialisierung fehlgeschlagen:', e);
-        
-        // Firefox-Workaround: Simuliere Keyboard-Event
-        try {
-            const keyEvent = new KeyboardEvent('keydown', {
-                key: 'a', code: 'KeyA', keyCode: 65, which: 65,
-                bubbles: true, cancelable: true
-            });
-            document.dispatchEvent(keyEvent);
-        } catch (err) {
-            console.log('Keyboard-Event-Simulation fehlgeschlagen:', err);
-        }
-    }
-}
-
 // Optimierte Connect-Funktion
 function gamepadConnect(e) {
     gamepadConnected = true;
     gamepadIndex = e.gamepad.index;
     
-    // Audio initialisieren
-    tryInitAudio();
+    // Resume or Init audioContext
+    try {
+        audioContext.resume();
+    } catch (e) {
+        initAudio();
+    }
     
     // Controller-Typ erkennen
     currentController = detectControllerType(e.gamepad);
