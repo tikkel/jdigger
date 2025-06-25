@@ -1197,20 +1197,14 @@ function kb_unpress() {
 
 function init_room(level) {
     console.log('Level: ' + level);
-    digger_idle = true;
-    digger_half_step = false;
-    digger_go = 'NONE';
-    digger_is_dead = false;
-    digger_left = false;
-    digger_up = false;
-    digger_right = false;
-    digger_down = false;
-    digger_death = false;
-    score_ges = 0;
-    last_ges = -1;
-    score_zeit = 5000;
-    var trans;
-    var richtung;
+    
+    // Digger-Zustand initialisieren
+    digger_idle = true; digger_half_step = false; digger_go = 'NONE';
+    digger_is_dead = false; digger_left = false; digger_up = false;
+    digger_right = false; digger_down = false; digger_death = false;
+    
+    // Spielstand initialisieren
+    score_ges = 0; last_ges = -1; score_zeit = 5000;
 
     // Raum(level) initialisieren(idx[])
     // orig. NOTHING=0 STONE=1 GROUND=2 GHOST=0x3,0x7,0xB,0xF LDIGGER=4 DIAMOND=5 WALL=6 UVSTONE=9 DIGGER=10 EXIT=12 CHANGER=14 FSTODMD=15
@@ -1224,139 +1218,100 @@ function init_room(level) {
     // meins  47=down,  49=up,  48=right,  50=left  90L
     // meins  51=down,  53=up,  52=right,  54=left  90R
     // trans       +0,     +2,        +1,       +3  Geisttyp und Richtung errechnen
-
     // meins  55=down,  57=up,  56=right,  58=left  90LR    zuletzt rechts abgebogen
     // meins  59=down,  61=up,  60=right,  62=left  90RL    zuletzt links abgebogen
 
-    //zu sammelnde Diamanten (2 Byte auslesen, dezimal interpretiert)
-    score_dia = ((room[level - 1][139 + 8]) >> 0x04) * 10 + ((room[level - 1][139 + 8]) & 0x0F);
-
-    //Anzahl Geister
+    var room_data = room[level - 1];
+    
+    // Lookup-Table für Transformationen (viel schneller als if-else-Ketten)
+    var trans_map = {0:1.1, 1:7.1, 2:2.1, 3:43.1, 5:3.1, 6:4.1, 7:47.1, 9:7.1, 10:41.1, 11:55.1, 12:6.1, 14:5.1, 15:51.1};
+    var bcd = function(b) { return ((b >> 4) * 10) + (b & 15); };
+    
+    // Zu sammelnde Diamanten (2 Byte auslesen, dezimal interpretiert)
+    score_dia = bcd(room_data[139 + 8]);
+    
+    // Anzahl Geister - Optimierte Version ohne neue Funktionen
     var geist_nr = 0;
-    var p = 'l'; //l, r
-
+    var p = 0; // 0 = left, 1 = right
     var j = 1;
+    
+    // Room-Data verarbeiten für bessere Performance
     for (var i = 0; i < 140; i++) {
-        //bit 5-8
-        trans = (room[level - 1][i]) >> 0x04;
-        if (trans == 0) trans = 1.1;
-        else if (trans == 1) trans = 7.1;
-        else if (trans == 2) trans = 2.1;
-        else if (trans == 3) trans = 43.1; // ghost_180
-        else if (trans == 5) trans = 3.1;
-        else if (trans == 6) trans = 4.1;
-        else if (trans == 7) trans = 47.1; // ghost_90left
-        else if (trans == 9) trans = 7.1;
-        else if (trans == 10) trans = 41.1;
-        else if (trans == 11) trans = 55.1; // ghost_90right
-        else if (trans == 12) trans = 6.1;
-        else if (trans == 14) trans = 5.1;
-        else if (trans == 15) trans = 51.1; // ghost_90leftright
-        // Geist-Richtung aus P9-P16 holen
-        if ((trans >= 43) && (trans < 63)) {
-            richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
-            if (richtung == 1) trans = trans + 2;
-            else if (richtung == 2) trans = trans + 1;
-            else if (richtung == 3) trans = trans + 3;
-            geist_nr++;
-            if (p == 'l') p = 'r';
-            else p = 'l';
+        var byte_value = room_data[i]; // Byte nur einmal lesen
+        var nibbles = [byte_value >> 4, byte_value & 15];
+        
+        for (var n = 0; n < 2; n++) {
+            // Bit 5-8 bzw. 1-4 (obere/untere 4 Bits)
+            var trans = trans_map[nibbles[n]] !== undefined ? trans_map[nibbles[n]] : nibbles[n];
+            
+            // Geist-Richtung verarbeiten
+            if (trans >= 43 && trans < 63) {
+                var ghost_data_idx = 0x94 + (geist_nr >> 1);
+                var richtung = p ? (room_data[ghost_data_idx] & 0x0F) : (room_data[ghost_data_idx] >> 0x04);
+                
+                // Richtungsoffsets: 0=+0, 1=+2, 2=+1, 3=+3
+                var offsets = [0, 2, 1, 3];
+                trans += offsets[richtung] || 0;
+                
+                geist_nr++;
+                p = 1 - p; // Toggle zwischen left/right
+            }
+            idx[j++] = trans;
         }
-        idx[j] = trans;
-        j++;
-
-        //bit 1-4
-        trans = (room[level - 1][i]) & 0x0F;
-        if (trans == 0) trans = 1.1;
-        else if (trans == 1) trans = 7.1;
-        else if (trans == 2) trans = 2.1;
-        else if (trans == 3) trans = 43.1; // ghost_180
-        else if (trans == 5) trans = 3.1;
-        else if (trans == 6) trans = 4.1;
-        else if (trans == 7) trans = 47.1; // ghost_90left
-        else if (trans == 9) trans = 7.1;
-        else if (trans == 10) trans = 41.1;
-        else if (trans == 11) trans = 55.1; // ghost_90right
-        else if (trans == 12) trans = 6.1;
-        else if (trans == 14) trans = 5.1;
-        else if (trans == 15) trans = 51.1; // ghost_90leftright
-        // Geist-Richtung aus P9-P16 holen
-        if ((trans >= 43) && (trans < 63)) {
-            richtung = (p == 'l') ? (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) >> 0x04 : (room[level - 1][0x94 + ((geist_nr / 2) << 0)]) & 0x0F;
-            if (richtung == 1) trans = trans + 2;
-            else if (richtung == 2) trans = trans + 1;
-            else if (richtung == 3) trans = trans + 3;
-            geist_nr++;
-            if (p == 'l') p = 'r';
-            else p = 'l';
-        }
-        idx[j] = trans;
-        j++;
     }
+    
     console.log('gefundene Geister: ' + geist_nr);
 
-    //Exitblinken zurücksetzen
+    // Exitblinken zurücksetzen
     exit_blink = 41;
 
-    //Digger initialisieren
-    //Schrittanimation zurücksetzen
-    digger_animation_left = false;
-    digger_animation_right = false;
-    digger_animation_up = false;
-    digger_animation_down = false;
-    digger_step_left = 13;
-    digger_step_up = 9;
-    digger_step_right = 19;
-    digger_step_down = 11;
-    //Diggerposition auslesen
-    var d_x = ((room[level - 1][139 + 6]) >> 0x04) * 10 + ((room[level - 1][139 + 6]) & 0x0F);
-    var d_y = (((room[level - 1][139 + 7]) >> 0x04) * 10 + ((room[level - 1][139 + 7]) & 0x0F) - 2);
-    // bestimme den Index (d_idx) im Feld
+    // Digger initialisieren
+    // Schrittanimation zurücksetzen
+    digger_animation_left = false; digger_animation_right = false;
+    digger_animation_up = false; digger_animation_down = false;
+    digger_step_left = 13; digger_step_up = 9;
+    digger_step_right = 19; digger_step_down = 11;
+    
+    // Diggerposition auslesen
+    var d_x = bcd(room_data[139 + 6]);
+    var d_y = bcd(room_data[139 + 7]) - 2;
+    
+    // Bestimme den Index (d_idx) im Feld
     d_idx = (d_x + 1) + (d_y * 20);
-    // bestimme die Malposition im Canvas
+    
+    // Bestimme die Malposition im Canvas
     digger_x = d_x * pre_icon_size;
     digger_y = d_y * pre_icon_size;
 
-    //Statuszeile komplett überschreiben
+    // Statuszeile komplett überschreiben
     scorelinePrewrite();
 
-    //Menu-Bild unsichtbar
+    // Menu-Bild unsichtbar
     document.getElementById('menudiv').style.visibility = "hidden";
 
     // Spiel verzögert starten (wenn Status init)
-    if (state == 'init')
-        verz = window.setTimeout(idle_start, 3000);
+    if (state == 'init') {
+        verz = setTimeout(idle_start, 3000);
+    }
 }
 
 function draw_digger_death() {
-    if (score_ges > 1) idx[d_idx - 21] = 3.1;
-    else idx[d_idx - 21] = 0.1;
-    if (score_ges > 0) idx[d_idx - 20] = 3.1;
-    else idx[d_idx - 20] = 0.1;
-    if (score_ges > 2) idx[d_idx - 19] = 3.1;
-    else idx[d_idx - 19] = 0.1;
-    if (score_ges > 3) idx[d_idx - 1] = 3.1;
-    else idx[d_idx - 1] = 0.1;
+    var positions = [-21, -20, -19, -1, 0, 1, 19, 20, 21];
+    var diamondIndices = [0, 1, 2, 3, 4, 5, 6, 7];
+
+    for (var i = 0; i < positions.length; i++) {
+        idx[d_idx + positions[i]] = (diamondIndices.indexOf(i) !== -1 && score_ges > i) ? 3.1 : 0.1;
+    }
+
     idx[d_idx] = 63.1;
-    if (score_ges > 4) idx[d_idx + 1] = 3.1;
-    else idx[d_idx + 1] = 0.1;
-    if (score_ges > 6) idx[d_idx + 19] = 3.1;
-    else idx[d_idx + 19] = 0.1;
-    if (score_ges > 5) idx[d_idx + 20] = 3.1;
-    else idx[d_idx + 20] = 0.1;
-    if (score_ges > 7) idx[d_idx + 21] = 3.1;
-    else idx[d_idx + 21] = 0.1;
     digger_is_dead = true;
     SFX.DIAMOND = true;
-    //Diggeranimation zurücksetzen
-    digger_animation_left = false;
-    digger_animation_right = false;
-    digger_animation_up = false;
-    digger_animation_down = false;
-    digger_step_left = 13;
-    digger_step_up = 9;
-    digger_step_right = 19;
-    digger_step_down = 11;
+
+    // Diggeranimation zurücksetzen
+    digger_animation_left = false; digger_animation_right = false;
+    digger_animation_up = false; digger_animation_down = false;
+    digger_step_left = 13; digger_step_up = 9;
+    digger_step_right = 19; digger_step_down = 11;
 }
 
 //Softscroller
