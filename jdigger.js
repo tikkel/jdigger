@@ -1139,77 +1139,81 @@ function draw_field() {
 // SCORELINE
 // schreibe Zeichenweise in das Scoreline-Canvas (Leben, Counter, Diamanten ...)
 function scorelineChar(s, x, y) {
-    var sx, sy, dx, dy;
-    for (var i = 0; i < s.length; i++) {
-        sx = 0;
-        sy = (s.charCodeAt(i) - 32) * pre_icon_size;
-        dx = (x + i) * buffer_charsCanvas.width;
-        dy = y * pre_icon_size;
-        //vorskalierte Zeichen aus "buffer_charsCanvas" ins sichtbare "canvas_scoreline" zeichnen
-        context_scoreline.drawImage(buffer_charsCanvas, sx, sy, buffer_charsCanvas.width, pre_icon_size, dx, dy, buffer_charsCanvas.width, pre_icon_size);
+    for (let i = 0; i < s.length; i++) {
+        const sx = 0;
+        const sy = (s.charCodeAt(i) - 32) * pre_icon_size;
+        const dx = (x + i) * buffer_charsCanvas.width;
+        const dy = y * pre_icon_size;
+
+        // vorskalierte Zeichen aus "buffer_charsCanvas" ins sichtbare "canvas_scoreline" zeichnen
+        context_scoreline.drawImage(
+            buffer_charsCanvas,
+            sx, sy,
+            buffer_charsCanvas.width, pre_icon_size,
+            dx, dy,
+            buffer_charsCanvas.width, pre_icon_size
+        );
     }
 }
 
 
 // belege die ganze Scoreline vor
 function scorelinePrewrite() {
+    const PADDING = 2;
+    const SCORE_LENGTH = 5;
+    const LIFE_LENGTH = 2;
+    const DIAMOND_LENGTH = 2;
+
     // Header darstellen
-    var sr = "" + score_raum;
-    var sl = "" + score_leben;
-    var sd = "" + score_dia;
-    while (sr.length < 2)
-        sr = "0" + sr;
-    while (sl.length < 2)
-        sl = "0" + sl;
-    while (sd.length < 2)
-        sd = "0" + sd;
+    let sr = score_raum.toString().padStart(LIFE_LENGTH, '0');
+    let sl = score_leben.toString().padStart(LIFE_LENGTH, '0');
+    let sd = score_dia.toString().padStart(DIAMOND_LENGTH, '0');
+
     // \324\325 --> Herz
     // \326\327 --> Diamant
     scorelineChar("  " + sr + "   " + sl + "\324\325    5000" + "      \326\327" + sd + "              ", 0, 0);
-    //gesammelte Diamanten und Punkte-Refresh aktivieren,weil last_ != score_
+    
+    // gesammelte Diamanten und Punkte-Refresh aktivieren, weil last_ != score_
     last_ges = score_ges - 1;
     last_punkte = score_punkte - 1;
 }
 
 
 function scorelineUpdate() {
-    //refresh "übrige Leben" wenn getötet
+    const LIFE_LENGTH = 2;
+    const TIME_LENGTH = 4;
+    const DIAMOND_LENGTH = 2;
+    const SCORE_LENGTH = 5;
+
+    // refresh "übrige Leben" wenn getötet
     if (digger_death) {
-        var sl = "" + score_leben;
-        while (sl.length < 2)
-            sl = "0" + sl;
+        let sl = score_leben.toString().padStart(LIFE_LENGTH, '0');
         scorelineChar(sl, 7, 0);
     }
 
-    //refresh "Countdown"
-    var sz = "" + score_zeit;
-    while (sz.length < 4)
-        sz = "0" + sz;
-    //blinken, wenn weniger als 1000
-    if ((score_zeit < 1000) && ((score_zeit % 4) <= 1) && (score_zeit != 0)) {
+    // refresh "Countdown"
+    let sz = score_zeit.toString().padStart(TIME_LENGTH, '0');
+    // blinken, wenn weniger als 1000
+    if (score_zeit < 1000 && (score_zeit % 4) <= 1 && score_zeit !== 0) {
         sz = "    ";
     }
     scorelineChar(sz, 15, 0);
 
-    //refresh "gesammelte Diamanten"
-    if (score_ges != last_ges) {
-        var sg = "" + score_ges;
-        while (sg.length < 2)
-            sg = "0" + sg;
+    // refresh "gesammelte Diamanten"
+    if (score_ges !== last_ges) {
+        let sg = score_ges.toString().padStart(DIAMOND_LENGTH, '0');
         scorelineChar(sg, 23, 0);
         last_ges = score_ges;
     }
 
-    //refresh "gesamte Punktanzahl"
+    // refresh "gesamte Punktanzahl"
     if (autoscore > 0) {
         score_punkte += 5;
         autoscore -= 5;
         SFX.STONE = true;
     }
-    if (score_punkte != last_punkte) {
-        var sp = "" + score_punkte;
-        while (sp.length < 5)
-            sp = "0" + sp;
+    if (score_punkte !== last_punkte) {
+        let sp = score_punkte.toString().padStart(SCORE_LENGTH, '0');
         scorelineChar(sp, 33, 0);
         last_punkte = score_punkte;
     }
