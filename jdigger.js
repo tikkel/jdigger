@@ -1544,7 +1544,7 @@ function scorelineUpdate() {
 function draw_frame() {
 
     //Gamepad#0 abfragen
-    gamepadUpdate()
+    gamepadUpdate();
 
     if (state == 'look' || state == 'init' || state == 'play') {
 
