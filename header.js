@@ -3,7 +3,7 @@
 // GNU GPL v3 - http://www.gnu.org/licenses/
 
 //Parameter
-var LEBENMAX = 20;
+var LEBENMAX = 1;
 var LEBENMIN = 1;
 var FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 

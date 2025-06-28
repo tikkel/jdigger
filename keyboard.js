@@ -23,7 +23,11 @@ function kb_press(e) {
         case 'quit': // Q - Quit
             if (state === 'play' || state === 'init') {
                 idle_stop();
-                resetGame();
+                score_punkte = 0;
+                score_leben = LEBENMAX;
+                score_raum = 1;
+                storageGameSave();
+                init_room(score_raum);
                 state = 'menu';
                 menuDraw();
             }
@@ -66,12 +70,14 @@ function kb_press(e) {
                 if (score_leben < LEBENMIN) {
                     state = 'highscore';
                     highscoreDraw();
-                    resetGame();
+                    score_punkte = 0;
+                    score_leben = LEBENMAX;
+                    score_raum = 1;
                 } else {
                     state = 'init';
                     init_room(score_raum);
                 }
-                storageGameSave();
+                storageGameSave(); //spielstand sichern
             } else if (state === 'highscore') {
                 state = 'menu';
                 menuDraw();
@@ -102,7 +108,11 @@ function kb_press(e) {
                 state = 'look';
                 init_room(score_raum);
             } else if (state === 'look') {
-                changeLevel(e.shiftKey ? -1 : 1);
+                const NEW_ROOM = e.shiftKey ? Math.max(1, score_raum - 1) : Math.min(room.length, score_raum + 1);
+                if (NEW_ROOM !== score_raum) {
+                    score_raum = NEW_ROOM;
+                    init_room(score_raum);
+                }
             }
             handled = true;
             break;
@@ -120,15 +130,6 @@ function kb_release(e) {
     if (state === 'input') return;
     const action = KEY_MAP[e.keyCode || e.which];
     if (DIRECTIONS.includes(action)) releaseDirection(action);
-}
-
-// Hilfsfunktionen
-function resetGame() {
-    score_punkte = 0;
-    score_leben = LEBENMAX;
-    score_raum = 1;
-    storageGameSave();
-    init_room(score_raum);
 }
 
 function changeLevel(delta) {
