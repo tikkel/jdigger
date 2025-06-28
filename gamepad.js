@@ -2,15 +2,14 @@
 // Copyright (C) 2022–2025  Marko Klingner
 // GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 
-
 // Gamepad State Variablen
 var gamepadConnected = false;
 var gamepadType = 'none';
 var gamepadBrand = 'keyboard';
 var gamepadDualrumble = false;
-var gamepadIndex = 0; // Welcher Gamepad-Slot verwendet wird
+var gamepadIndex = 0;
 
-// Button States - kombiniert in Arrays für einfachere Verwaltung
+// Button States
 var prevButtons = {
     left: false, right: false, up: false, down: false,
     A: false, B: false, X: false, Y: false, L1: false, R1: false
@@ -20,7 +19,7 @@ var currButtons = {
     A: false, B: false, X: false, Y: false, L1: false, R1: false
 };
 
-// Optimiertes Button-Mapping mit besserer Struktur
+// Controller-Typen mit Button-Mapping
 var CONTROLLER_TYPES = {
     xbox: {
         name: 'Xbox',
@@ -46,7 +45,7 @@ var CONTROLLER_TYPES = {
 
 var currentController = CONTROLLER_TYPES.xbox;
 
-// Optimierte Richtungserkennung mit weniger Code-Duplikation
+// Richtungserkennung für verschiedene Gamepad-Typen
 function gamepadGetDirections(gp) {
     var left = false, right = false, up = false, down = false;
     
@@ -80,15 +79,14 @@ function gamepadGetDirections(gp) {
     return { left, right, up, down };
 }
 
-// Vereinfachte Button-Prüfung
+// Button-Prüfung
 function isButtonPressed(gamepad, buttonFunction) {
     const buttonIndex = currentController.buttons[buttonFunction];
     return gamepad.buttons[buttonIndex]?.pressed || gamepad.buttons[buttonIndex]?.value > 0.5;
 }
 
-// Optimierte State-Verwaltung
+// State-Verwaltung
 function updateButtonStates() {
-    // Previous State kopieren
     Object.assign(prevButtons, currButtons);
 }
 
@@ -100,7 +98,7 @@ function checkButtonRelease(button) {
     return !currButtons[button] && prevButtons[button];
 }
 
-// Kompakte Movement-Behandlung
+// Movement-Behandlung
 function gamepadHandleMovement() {
     const movements = [
         { curr: 'left', prev: 'left', press: kb_press_left, release: kb_release_left },
@@ -115,7 +113,7 @@ function gamepadHandleMovement() {
     });
 }
 
-// Vereinfachte Action-Handler mit weniger Code-Duplikation
+// Action-Handler für verschiedene Game-States
 var ACTION_HANDLERS = {
     play: function() {
         gamepadHandleMovement();
@@ -200,7 +198,7 @@ function gamepadBackToMenu() {
     menuDraw();
 }
 
-// Optimierte Controller-Erkennung
+// Controller-Erkennung
 function detectControllerType(gamepad) {
     const id = gamepad.id.toLowerCase();
     
@@ -211,11 +209,10 @@ function detectControllerType(gamepad) {
         }
     }
     
-    // Fallback zu Xbox
-    return CONTROLLER_TYPES.xbox;
+    return CONTROLLER_TYPES.xbox; // Fallback
 }
 
-// Optimierte Gamepad-Typ-Detection
+// Gamepad-Typ-Detection
 function detectGamepadType(gamepad) {
     const axesCount = gamepad.axes.length;
     const buttonCount = gamepad.buttons.length;
@@ -226,12 +223,12 @@ function detectGamepadType(gamepad) {
     return 'none';
 }
 
-// Optimierte Connect-Funktion
+// Gamepad Connect Handler
 function gamepadConnect(e) {
     gamepadConnected = true;
     gamepadIndex = e.gamepad.index;
     
-    // Resume or Init audioContext
+    // Audio Context aktivieren
     try {
         audioContext.resume();
     } catch (e) {
@@ -243,7 +240,7 @@ function gamepadConnect(e) {
     gamepadBrand = currentController.name.toLowerCase();
     gamepadType = detectGamepadType(e.gamepad);
     
-    // Vibration testen (sicher)
+    // Vibration testen
     if (!gamepadDualrumble) {
         try {
             if (e.gamepad.vibrationActuator && 
@@ -276,6 +273,7 @@ function gamepadConnect(e) {
         e.gamepad.axes.length, gamepadType, currentController.name);
 }
 
+// Gamepad Disconnect Handler
 function gamepadDisconnect(e) {
     gamepadConnected = false;
     gamepadDualrumble = false;
@@ -286,15 +284,14 @@ function gamepadDisconnect(e) {
     console.log('Gamepad #%d getrennt: "%s"', e.gamepad.index, e.gamepad.id);
 }
 
-// Hauptupdate-Funktion optimiert
+// Hauptupdate-Funktion
 function gamepadUpdate() {
     if (!gamepadConnected || state === 'input') return;
     
     const gp = navigator.getGamepads()[gamepadIndex];
     if (!gp || !gp.connected) return;
     
-    // Previous state sichern
-    updateButtonStates();
+    updateButtonStates(); // Previous state sichern
     
     // Richtungen lesen
     const directions = gamepadGetDirections(gp);
