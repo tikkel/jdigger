@@ -313,7 +313,3 @@ function gamepadUpdate() {
         ACTION_HANDLERS[state]();
     }
 }
-
-// Event Listeners
-window.addEventListener('gamepadconnected', gamepadConnect);
-window.addEventListener('gamepaddisconnected', gamepadDisconnect);

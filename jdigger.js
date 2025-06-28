@@ -2561,6 +2561,7 @@ function game_loop() {
 }
 
 function init_events() {
+
     //Touch aktivieren (Handy, Tablet)
     document.body.addEventListener('touchstart', touchDown, false);
     document.body.addEventListener('touchmove', touchXY, true);
@@ -2581,6 +2582,7 @@ function init_events() {
         window.addEventListener('gamepadconnected', gamepadConnect, false);
         window.addEventListener('gamepaddisconnected', gamepadDisconnect, false);
     }
+    
 }
 
 

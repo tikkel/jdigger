@@ -2,170 +2,313 @@
 // Copyright (C) 2023-2025 Marko Klingner
 // GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 
-const KEY_MAP = {
-    81: 'quit', 72: 'highscore', 57: 'cheat9', 68: 'cheatd', 27: 'escape',
-    13: 'action', 32: 'action', 80: 'play', 36: 'pos1', 76: 'look',
-    38: 'up', 40: 'down', 37: 'left', 39: 'right'
-};
+function kb_press(taste) {
 
-const DIRECTIONS = ['up', 'down', 'left', 'right'];
+    handled = false;
+    if (state != 'input') {
 
-function kb_press(e) {
-    let handled = false;
-    const action = KEY_MAP[e.keyCode || e.which];
-    
-    if (state === 'input') {
-        if (e.key === 'Backspace') input = e.key;
-        return;
-    }
-
-    switch (action) {
-        case 'quit': // Q - Quit
-            if (state === 'play' || state === 'init') {
-                idle_stop();
-                score_punkte = 0;
-                score_leben = LEBENMAX;
-                score_raum = 1;
-                storageGameSave();
-                init_room(score_raum);
-                state = 'menu';
-                menuDraw();
-            }
-            handled = true;
-            break;
-
-        case 'highscore': // H - Highscore
-            if (state === 'menu') {
-                state = 'highscore';
-                highscoreDraw();
-            }
-            handled = true;
-            break;
-
-        case 'cheat9': // 9 - Cheat Teil 1
-            cheat_tmp = '9' + cheat_tmp;
-            handled = true;
-            break;
-
-        case 'cheatd': // D - Cheat Teil 2
-            cheat_tmp += 'd';
-            if (cheat_tmp === '99d') {
-                digger_cheat = !digger_cheat;
-                cheat_tmp = '';
-            }
-            handled = true;
-            break;
-
-        case 'escape': // ESC
-            if (state === 'play') digger_death = true;
-            else if (state === 'highscore' || state === 'look') {
-                state = 'menu';
-                menuDraw();
-            }
-            handled = true;
-            break;
-
-        case 'action': // Enter/Space
-            if (state === 'play' && digger_death) {
-                if (score_leben < LEBENMIN) {
-                    state = 'highscore';
-                    highscoreDraw();
+        switch (taste.keyCode || taste.which) {
+            //q Quit
+            case 81:
+                if ((state == 'play') || (state == 'init')) {
+                    idle_stop();
+                    state = 'menu';
+                    //spielstand resetten
                     score_punkte = 0;
                     score_leben = LEBENMAX;
                     score_raum = 1;
-                } else {
+                    storageGameSave(); //spielstand sichern
+                    init_room(score_raum);
+                    menuDraw();
+                }
+                handled = true;
+                break;
+            //h Highscore
+            case 72:
+                if (state == 'menu') {
+                    state = 'highscore';
+                    highscoreDraw();
+                }
+                handled = true;
+                break;
+            //9
+            case 57:
+                cheat_tmp = '9' + cheat_tmp;
+                handled = true;
+                break;
+            //d
+            case 68:
+                cheat_tmp = cheat_tmp + 'd';
+                if (cheat_tmp == '99d') {
+                    if (!digger_cheat) digger_cheat = true;
+                    else digger_cheat = false;
+                }
+                cheat_tmp = '';
+                handled = true;
+                break;
+            //Escape
+            case 27:
+                if (state == 'play')
+                    digger_death = true;
+                else if (state == 'highscore' || state == 'look') {
+                    state = 'menu';
+                    menuDraw();
+                }
+                handled = true;
+                break;
+            //Enter
+            case 13:
+            //Space
+            case 32:
+                if ((state == 'play') && digger_death) {
+
+                    if (score_leben < LEBENMIN) {
+                        state = 'highscore';
+                        highscoreDraw();
+                        score_punkte = 0;
+                        score_leben = LEBENMAX;
+                        score_raum = 1;
+                    } else {
+                        state = 'init';
+                        init_room(score_raum);
+                    }
+                    storageGameSave(); //spielstand sichern
+
+                } else if (state == 'highscore') {
+                    state = 'menu';
+                    menuDraw();
+                }
+                handled = true;
+                break;
+            //p Play
+            case 80:
+                if (state == 'menu') {
+                    //Resume or Init audioContext
+                    try {
+                        audioContext.resume();
+                    } catch (e) {
+                        initAudio();
+                    }
+                    storageGameRestore(); //spielstand restaurieren
                     state = 'init';
                     init_room(score_raum);
                 }
-                storageGameSave(); //spielstand sichern
-            } else if (state === 'highscore') {
-                state = 'menu';
-                menuDraw();
-            }
-            handled = true;
-            break;
-
-        case 'play': // P - Play
-            if (state === 'menu') {
-                try { audioContext.resume(); }
-                catch (ex) { initAudio(); }
-                storageGameRestore();
-                state = 'init';
-                init_room(score_raum);
-            }
-            handled = true;
-            break;
-
-        case 'pos1': // Pos1 - Level wechseln (Cheat)
-            if (digger_cheat && (state === 'play' || state === 'init')) {
-                changeLevel(e.shiftKey ? -1 : 1);
-            }
-            handled = true;
-            break;
-
-        case 'look': // L - Look Mode
-            if (state === 'menu') {
-                state = 'look';
-                init_room(score_raum);
-            } else if (state === 'look') {
-                const NEW_ROOM = e.shiftKey ? Math.max(1, score_raum - 1) : Math.min(room.length, score_raum + 1);
-                if (NEW_ROOM !== score_raum) {
-                    score_raum = NEW_ROOM;
-                    init_room(score_raum);
+                handled = true;
+                break;
+            //pos1 (+shiftKey)
+            case 36:
+                if (digger_cheat && ((state == 'play') || (state == 'init'))) {
+                    if (!taste.shiftKey && (score_raum < room.length)) {
+                        idle_stop();
+                        score_raum++;
+                        state = 'init';
+                        init_room(score_raum);
+                        storageGameSave();
+                    }
+                    else if (taste.shiftKey && (score_raum > 1)) {
+                        idle_stop();
+                        score_raum--;
+                        state = 'init';
+                        init_room(score_raum);
+                        storageGameSave();
+                    }
                 }
-            }
-            handled = true;
-            break;
+                handled = true;
+                break;
 
-        case 'up': case 'down': case 'left': case 'right': // Richtungstasten
-            setDirection(action);
-            handled = true;
-            break;
-    }
+            //l Look
+            case 76:
+                if (state == 'menu') {
+                    state = 'look';
+                    init_room(score_raum);
+                } else if (state == 'look') {
+                    if (!taste.shiftKey && (score_raum < room.length)) {
+                        score_raum++;
+                        init_room(score_raum);
+                    }
+                    else if (taste.shiftKey && (score_raum > 1)) {
+                        score_raum--;
+                        init_room(score_raum);
+                    }
+                }
+                handled = true;
+                break;
 
-    if (handled) e.preventDefault();
-}
+            //oben
+            case 38:
+                kb_press_up();
+                handled = true;
+                break;
+            //unten
+            case 40:
+                kb_press_down();
+                handled = true;
+                break;
+            //links
+            case 37:
+                kb_press_left();
+                handled = true;
+                break;
+            //rechts
+            case 39:
+                kb_press_right();
+                handled = true;
+                break;
 
-function kb_release(e) {
-    if (state === 'input') return;
-    const action = KEY_MAP[e.keyCode || e.which];
-    if (DIRECTIONS.includes(action)) releaseDirection(action);
-}
+        }
 
-function changeLevel(delta) {
-    const newRoom = score_raum + delta;
-    if (newRoom >= 1 && newRoom <= room.length) {
-        idle_stop();
-        score_raum = newRoom;
-        state = 'init';
-        init_room(score_raum);
-        storageGameSave();
-    }
-}
-
-function setDirection(dir) {
-    const startVar = `digger_start_${dir}`;
-    if (!window[startVar]) {
-        window[`digger_${dir}`] = true;
-        digger_go = dir.toUpperCase();
-        digger_idle = false;
-        window[startVar] = true;
-    }
-}
-
-function releaseDirection(dir) {
-    const startVar = `digger_start_${dir}`;
-    if (window[startVar]) {
-        setTimeout(() => releaseDirection(dir), 10);
     } else {
-        window[`digger_${dir}`] = false;
-        // Nächste aktive Richtung finden
-        const activeDir = DIRECTIONS.find(d => window[`digger_${d}`]);
-        digger_go = activeDir ? activeDir.toUpperCase() : 'NONE';
+        if (taste.key == 'Backspace')
+            //input = 8;
+            input = taste.key;
+    }
+
+    // Eventweiterleitung ab hier verhindern
+    if (handled)
+        taste.preventDefault();
+}
+
+function kb_press_up() {
+    if (!digger_start_up) {
+        digger_up = true;
+        digger_go = 'UP';
+        digger_idle = false;
+        digger_start_up = true;
+    }
+}
+
+function kb_press_down() {
+    if (!digger_start_down) {
+        digger_down = true;
+        digger_go = 'DOWN';
+        digger_idle = false;
+        digger_start_down = true;
+    }
+}
+
+function kb_press_left() {
+    if (!digger_start_left) {
+        digger_left = true;
+        digger_go = 'LEFT';
+        digger_idle = false;
+        digger_start_left = true;
+    }
+}
+
+function kb_press_right() {
+    if (!digger_start_right) {
+        digger_right = true;
+        digger_go = 'RIGHT';
+        digger_idle = false;
+        digger_start_right = true;
+    }
+}
+
+//KEYRELEASE (nur für die Richtungssteuerung (37,38,39,40))
+function kb_release(taste) {
+
+    if (state != 'input') {
+
+        switch (taste.keyCode || taste.which) {
+
+            //oben
+            case 38:
+                kb_release_up();
+                handled = true;
+                break;
+            //unten
+            case 40:
+                kb_release_down();
+                handled = true;
+                break;
+            //links
+            case 37:
+                kb_release_left();
+                handled = true;
+                break;
+            //rechts
+            case 39:
+                kb_release_right();
+                handled = true;
+                break;
+
+        }
+    }
+
+}
+
+function kb_release_up() {
+    // warte eine Bewegung bis zum 1. Step (!digger_half_step) ab
+    if (digger_start_up)
+        window.setTimeout(kb_release_up, 10);
+    else {
+        digger_up = false;
+        if (digger_down)
+            digger_go = 'DOWN';
+        else if (digger_left)
+            digger_go = 'LEFT';
+        else if (digger_right)
+            digger_go = 'RIGHT';
+        else
+            digger_go = 'NONE';
+    }
+}
+
+function kb_release_down() {
+    // warte eine Bewegung bis zum 1. Step (!digger_half_step) ab
+    if (digger_start_down)
+        window.setTimeout(kb_release_down, 10);
+    else {
+        digger_down = false;
+        if (digger_up)
+            digger_go = 'UP';
+        else if (digger_left)
+            digger_go = 'LEFT';
+        else if (digger_right)
+            digger_go = 'RIGHT';
+        else
+            digger_go = 'NONE';
+    }
+}
+
+function kb_release_left() {
+    // warte eine Bewegung bis zum 1. Step (!digger_half_step) ab
+    if (digger_start_left)
+        window.setTimeout(kb_release_left, 10);
+    else {
+        digger_left = false;
+        if (digger_up)
+            digger_go = 'UP';
+        else if (digger_down)
+            digger_go = 'DOWN';
+        else if (digger_right)
+            digger_go = 'RIGHT';
+        else
+            digger_go = 'NONE';
+    }
+}
+
+function kb_release_right() {
+    // warte eine Bewegung bis zum 1. Step (!digger_half_step) ab
+    if (digger_start_right)
+        window.setTimeout(kb_release_right, 10);
+    else {
+        digger_right = false;
+        if (digger_up)
+            digger_go = 'UP';
+        else if (digger_down)
+            digger_go = 'DOWN';
+        else if (digger_left)
+            digger_go = 'LEFT';
+        else
+            digger_go = 'NONE';
     }
 }
 
 function kb_unpress() {
-    // Alle Richtungen stoppen (für Touch-Release)
-    DIRECTIONS.forEach(releaseDirection);
+    // alles stop, bei touchrelease
+    kb_release_up();
+    kb_release_down();
+    kb_release_left();
+    kb_release_right();
 }
