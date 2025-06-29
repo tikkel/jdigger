@@ -1435,35 +1435,22 @@ function draw_frame1() {
         }
     }
 
-
-    //DIGGER ANIMIEREN
-    //links (bei jedem Halbbild, also hier und in Frame2/2 nochmal)
+    // DIGGER_ANIMIEREN
+    // Links/Rechts (bei jedem Halbbild)
     if (digger_animation_left) {
         idx[d_idx] = digger_step_left + 0.1;
-        digger_step_left++;
-        if (digger_step_left > 18)
-            digger_step_left = 13;
-    }
-    //rechts (bei jedem Halbbild, also hier und in Frame2/2 nochmal)
-    else if (digger_animation_right) {
+        digger_step_left = digger_step_left === 18 ? 13 : digger_step_left + 1;
+    } else if (digger_animation_right) {
         idx[d_idx] = digger_step_right + 0.1;
-        digger_step_right++;
-        if (digger_step_right > 24)
-            digger_step_right = 19;
+        digger_step_right = digger_step_right === 24 ? 19 : digger_step_right + 1;
     }
-    //hoch (nur bei jedem Vollbild, also nur hier in Frame1/2)
+    // Hoch/Runter (nur bei jedem Vollbild)
     if (digger_animation_up) {
         idx[d_idx] = digger_step_up + 0.1;
-        digger_step_up++;
-        if (digger_step_up > 10)
-            digger_step_up = 9;
-    }
-    //runter (nur bei jedem Vollbild, also nur hier in Frame1/2)
-    else if (digger_animation_down) {
+        digger_step_up = digger_step_up === 10 ? 9 : digger_step_up + 1;
+    } else if (digger_animation_down) {
         idx[d_idx] = digger_step_down + 0.1;
-        digger_step_down++;
-        if (digger_step_down > 12)
-            digger_step_down = 11;
+        digger_step_down = digger_step_down === 12 ? 11 : digger_step_down + 1;
     }
 
     //SPIELFELD AKTIVITAETEN
