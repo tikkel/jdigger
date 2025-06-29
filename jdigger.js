@@ -1238,199 +1238,81 @@ function scorelineUpdate() {
 //FRAME 1/2
 function draw_frame1() {
 
-    //DIGGER HALT
-    if ((state == 'play') && !digger_death && !digger_idle && (digger_go == 'NONE')) {
-        // Animation zuruecksetzen
+    // DIGGER_HALT
+    if (state === 'play' && !digger_death && !digger_idle && digger_go === 'NONE') {
+        // Animation zurücksetzen
         idx[d_idx] = 8.1;
         digger_step_left = 13;
         digger_step_up = 9;
         digger_step_right = 19;
         digger_step_down = 11;
-        digger_animation_left = false;
-        digger_animation_right = false;
-        digger_animation_up = false;
-        digger_animation_down = false;
+        digger_animation_left = digger_animation_right = digger_animation_up = digger_animation_down = false;
         digger_idle = true;
     }
 
-    //DIGGER MOVE
-    if ((state == 'play') && !digger_death && !digger_idle) {
-        if (stone_l && (digger_go != 'LEFT'))
-            stone_l = false;
-        if (stone_r && (digger_go != 'RIGHT'))
-            stone_r = false;
-
-        // ? LINKS
-        if (digger_go == 'LEFT') {
-            // ? Diamant
-            if (idx[d_idx - 1] == 3) {
+    // DIGGER_MOVE
+    if (state === 'play' && !digger_death && !digger_idle) {
+        if (stone_l && digger_go !== 'LEFT') stone_l = false;
+        if (stone_r && digger_go !== 'RIGHT') stone_r = false;
+        var directions = {
+            'LEFT': { offset: -1, stone_offset: -2, stone_flag: 'stone_l', 
+                    step_var: 'digger_step_left', step_init: 13, anim_flag: 'digger_animation_left' },
+            'UP': { offset: -20, stone_offset: null, stone_flag: null,
+                step_var: 'digger_step_up', step_init: 9, anim_flag: 'digger_animation_up' },
+            'RIGHT': { offset: 1, stone_offset: 2, stone_flag: 'stone_r',
+                    step_var: 'digger_step_right', step_init: 19, anim_flag: 'digger_animation_right' },
+            'DOWN': { offset: 20, stone_offset: null, stone_flag: null,
+                    step_var: 'digger_step_down', step_init: 11, anim_flag: 'digger_animation_down' }
+        };
+        var dir = directions[digger_go];
+        if (dir) {
+            var target_idx = d_idx + dir.offset;
+            var target_val = idx[target_idx];
+            // Diamant sammeln
+            if (target_val === 3) {
                 score_ges++;
                 score_punkte += 3;
                 SFX.DIAMOND = true;
             }
-            // ? Ausgang
-            else if (idx[d_idx - 1] == 41) {
+            // Ausgang erreicht
+            else if (target_val === 41) {
                 autoscore = 100;
                 state = 'init';
                 verz = window.setTimeout(idle_exit, 3000);
             }
-            // ? Geist
-            else if ((idx[d_idx - 1] >= 43) && (idx[d_idx - 1] < 63))
+            // Geist berührt
+            else if (target_val >= 43 && target_val < 63) {
                 digger_death = true;
-            // ? Stein
-            else if (idx[d_idx - 1] == 7) {
-                // ? Platz zum wegschieben
-                if (idx[d_idx - 2] == 1) {
-                    // ! 2 Takte lang druecken
-                    if (stone_l) {
-                        idx[d_idx - 2] = 7.1;
-                        idx[d_idx - 1] = 1.1;
-                        stone_l = false;
+            }
+            // Stein schieben (nur links/rechts)
+            if (target_val === 7 && dir.stone_offset) {
+                if (idx[d_idx + dir.stone_offset] === 1) {
+                    var stone_flag = window[dir.stone_flag];
+                    if (stone_flag) {
+                        idx[d_idx + dir.stone_offset] = 7.1;
+                        idx[target_idx] = 1.1;
+                        window[dir.stone_flag] = false;
                         brumm = true;
                     } else {
-                        stone_l = true;
+                        window[dir.stone_flag] = true;
                     }
                 }
             }
-            // ? Sand, Diamant oder Leer
-            if ((idx[d_idx - 1] < 4) || (idx[d_idx - 1] == 41)) {
+            // Bewegung ausführen (wenn Ziel Sand, Diamant, Leer, Ausgang oder geschobener Stein)
+            if (target_val < 4 || target_val === 41 || 
+                (target_val === 7 && dir.stone_offset && idx[target_idx] === 1.1)) {
                 idx[d_idx] = 1.1;
-                d_idx--;
+                d_idx += dir.offset;
                 SFX.STEP = true;
             }
-            //Animation aktivieren, Start ab Vollbild
-            if (digger_step_left == 13) {
-                digger_animation_left = true;
-                digger_animation_right = false;
-                digger_animation_up = false;
-                digger_animation_down = false;
-                //digger_step_left = 13;
-                digger_step_up = 9;
-                digger_step_right = 19;
-                digger_step_down = 11;
-            }
-        }
-
-        // ? HOCH
-        else if (digger_go == 'UP') {
-            // ? Diamant
-            if (idx[d_idx - 20] == 3) {
-                score_ges++;
-                score_punkte += 3;
-                SFX.DIAMOND = true;
-            }
-            // ? Ausgang
-            else if (idx[d_idx - 20] == 41) {
-                autoscore = 100;
-                state = 'init';
-                verz = window.setTimeout(idle_exit, 3000);
-            }
-            // ? Geist
-            else if ((idx[d_idx - 20] >= 43) && (idx[d_idx - 20] < 63))
-                digger_death = true;
-            // ? Sand, Diamant oder Leer
-            if ((idx[d_idx - 20] < 4) || (idx[d_idx - 20] == 41)) {
-                idx[d_idx] = 1.1;
-                d_idx -= 20;
-                SFX.STEP = true;
-            }
-            //Animation aktivieren, beginnen ab Vollbild
-            if (digger_step_up == 9) {
-                digger_animation_left = false;
-                digger_animation_right = false;
-                digger_animation_up = true;
-                digger_animation_down = false;
-                digger_step_left = 13;
-                //digger_step_up = 9;
-                digger_step_right = 19;
-                digger_step_down = 11;
-            }
-        }
-
-        // ? RECHTS
-        else if (digger_go == 'RIGHT') {
-            // ? Diamant
-            if (idx[d_idx + 1] == 3) {
-                score_ges++;
-                score_punkte += 3;
-                SFX.DIAMOND = true;
-            }
-            // ? Ausgang
-            else if (idx[d_idx + 1] == 41) {
-                autoscore = 100;
-                state = 'init';
-                verz = window.setTimeout(idle_exit, 3000);
-            }
-            // ? Geist
-            else if ((idx[d_idx + 1] >= 43) && (idx[d_idx + 1] < 63))
-                digger_death = true;
-            // ? Stein
-            else if (idx[d_idx + 1] == 7) {
-                // ? Platz zum wegschieben
-                if (idx[d_idx + 2] == 1) {
-                    // ! 2 Takte lang druecken
-                    if (stone_r) {
-                        idx[d_idx + 2] = 7.1;
-                        idx[d_idx + 1] = 1.1;
-                        stone_r = false;
-                        brumm = true;
-                    } else {
-                        stone_r = true;
-                    }
-                }
-            }
-            // ? Sand, Diamant oder Leer
-            if ((idx[d_idx + 1] < 4) || (idx[d_idx + 1] == 41)) {
-                idx[d_idx] = 1.1;
-                d_idx++;
-                SFX.STEP = true;
-            }
-            //Animation aktivieren, Start ab Vollbild
-            if (digger_step_right == 19) {
-                digger_animation_left = false;
-                digger_animation_right = true;
-                digger_animation_up = false;
-                digger_animation_down = false;
-                digger_step_left = 13;
-                digger_step_up = 9;
-                //digger_step_right = 19;
-                digger_step_down = 11;
-            }
-        }
-
-        // ? RUNTER
-        else if (digger_go == 'DOWN') {
-            // ? Diamant
-            if (idx[d_idx + 20] == 3) {
-                score_ges++;
-                score_punkte += 3;
-                SFX.DIAMOND = true;
-            }
-            // ? Ausgang
-            else if (idx[d_idx + 20] == 41) {
-                autoscore = 100;
-                state = 'init';
-                verz = window.setTimeout(idle_exit, 3000);
-            }
-            // ? Geist
-            else if ((idx[d_idx + 20] >= 43) && (idx[d_idx + 20] < 63))
-                digger_death = true;
-            // ? Sand, Diamant oder Leer
-            if ((idx[d_idx + 20] < 4) || (idx[d_idx + 20] == 41)) {
-                idx[d_idx] = 1.1;
-                d_idx += 20;
-                SFX.STEP = true;
-            }
-            //Animation aktivieren, Start ab Vollbild
-            if (digger_step_down == 11) {
-                digger_animation_left = false;
-                digger_animation_right = false;
-                digger_animation_up = false;
-                digger_animation_down = true;
+            // Animation aktivieren (beim ersten Schritt)
+            if (window[dir.step_var] === dir.step_init) {
+                digger_animation_left = digger_animation_right = digger_animation_up = digger_animation_down = false;
+                window[dir.anim_flag] = true;
                 digger_step_left = 13;
                 digger_step_up = 9;
                 digger_step_right = 19;
-                //digger_step_down = 11;
+                digger_step_down = 11;
             }
         }
     }
