@@ -525,276 +525,79 @@ function storageGameRestore() {
 }
 
 
-//MAUS-Click
+//MOUSE_CLICK
 function mo_press(ev) {
     //Fullscreen
-    if (!fullscreen_flag)
-        fullscreen();
+    if (!fullscreen_flag) fullscreen();
 
-    if (!touch_flag) {
-
-        //Mausposition
-        var mausX = (ev.pageX / (body_width / 40)) << 0;
-        var mausY = (ev.pageY / (body_height / 30)) << 0;
-
-        //im Menu
-        if (state == 'menu') {
-            //Resume or Init audioContext
-            try {
-                audioContext.resume();
-            } catch (e) {
-                initAudio();
-            }
-
-            //P: Play
-            if (mausX >= 9 && mausX <= 15 && mausY == 20) {
-                storageGameRestore(); //spielstand restaurieren
-                state = 'init';
-                init_room(score_raum);
-            }
-            //H: Highscore
-            else if (mausX >= 19 && mausX <= 30 && mausY == 20) {
-                state = 'highscore';
-                highscoreDraw();
-            }
-            //L: Look at the rooms
-            else if (mausX >= 9 && mausX <= 30 && mausY == 22) {
-                state = 'look';
-                init_room(score_raum);
-            }
-        }
-
-        //im Look
-        else if ((state == 'look') && (score_raum < room.length)) {
-            score_raum++;
-            init_room(score_raum);
-        }
-
-        //im Look und letzten Raum erreicht
-        else if ((state == 'look') && (score_raum >= room.length)) {
-            state = 'menu';
-            score_punkte = 0;
-            score_leben = LEBENMAX;
-            score_raum = 1;
-            init_room(score_raum);
-            menuDraw();
-        }
-
-        //im Spiel
-        else if ((state == 'play') && digger_death) {
-
-            if (score_leben < LEBENMIN) {
-                state = 'highscore';
-                highscoreDraw();
-                score_punkte = 0;
-                score_leben = LEBENMAX;
-                score_raum = 1;
-            } else {
-                state = 'init';
-                init_room(score_raum);
-            }
-            storageGameSave(); //spielstand sichern
-
-        }
-
-        //im Highscore
-        else if (state == 'highscore') {
-            state = 'menu';
-            menuDraw();
-        }
-    } else
+    if (touch_flag) {
         touch_flag = false;
-}
-
-function touchDown(e) {
-    touch_flag = true;
-
-    //3 Finger Tap (entspricht [Q], Abbruch und zurück zum Menü)
-    if (e.touches.length > 2) {
-        //q Quit
-        if ((state == 'play') || (state == 'init')) {
-            idle_stop();
-            state = 'menu';
-            //spielstand resetten
-            score_punkte = 0;
-            score_leben = LEBENMAX;
-            score_raum = 1;
-            storageGameSave(); //spielstand sichern
-            init_room(score_raum);
-            menuDraw();
-        }
+        return;
     }
 
-    //2 Finger Tap (entspricht [Esc], Abbruch und Level neu starten)
-    else if (e.touches.length > 1) {
-        //ESC
-        if (state == 'play')
-            digger_death = true;
-        else if (state == 'highscore' || state == 'look') {
-            state = 'menu';
-            menuDraw();
-        }
-    }
+    //Mausposition
+    const mausX = (ev.pageX / (body_width / 40)) << 0;
+    const mausY = (ev.pageY / (body_height / 30)) << 0;
 
-    //1 Finger Tap
-    //im Spiel und tot
-    else if ((state == 'play') && digger_death) {
-
-        if (score_leben < LEBENMIN) {
-            //virtuelle Tastatur einblenden
-            document.body.removeEventListener('click', vkb_focus, false);
-            document.body.addEventListener('click', vkb_focus, false);
-            document.body.removeEventListener('input', vkb_input, false);
-            document.body.addEventListener('input', vkb_input, false);
-            state = 'highscore';
-            highscoreDraw();
-            score_punkte = 0;
-            score_leben = LEBENMAX;
-            score_raum = 1;
-        } else {
-            state = 'init';
-            init_room(score_raum);
-        }
-        storageGameSave(); //spielstand sichern
-
-    }
-
-    //im Spiel
-    else {
-        //Richtungsgesten
-        mouseIsDown = true;
-        joyOn = true;
-        touchXY(e);
-    }
-}
-
-function touchUp(e) {
-    //im Menu
-    if (state == 'menu' && single_touch == 0) {
-        //Resume or Init audioContext
-        try {
-            audioContext.resume();
-        } catch (e) {
-            initAudio();
-        }
-
-        //iOS, initiiere Sound von Benutzergeste aus
-        playAudio('Leer');
-
-        var touchS = e.changedTouches[0].pageX / (body_width / 40) << 0;
-        var touchZ = e.changedTouches[0].pageY / (body_height / 30) << 0;
-
-        //P: Play
-        if (touchS >= 9 && touchS <= 15 && touchZ == 20) {
-            storageGameRestore(); //spielstand restaurieren
-            state = 'init';
-            init_room(score_raum);
-        }
-        //H: Highscore
-        else if (touchS >= 19 && touchS <= 30 && touchZ == 20) {
-            state = 'highscore';
-            highscoreDraw();
-        }
-        //L: Look at the rooms
-        else if (touchS >= 9 && touchS <= 30 && touchZ == 22) {
-            state = 'look';
-            init_room(score_raum);
-        }
-    }
-
-    //im Look
-    else if ((state == 'look') && (score_raum < room.length)) {
-        score_raum++;
-        init_room(score_raum);
-    }
-
-    //im Look und letzten Raum erreicht
-    else if ((state == 'look') && (score_raum >= room.length)) {
-        state = 'menu';
+    const resetGame = () => {
         score_punkte = 0;
         score_leben = LEBENMAX;
         score_raum = 1;
-        init_room(score_raum);
-        menuDraw();
-    }
+    };
 
-    //im Highscore
-    else if (state == 'highscore') {
-        state = 'menu';
-        menuDraw();
-    }
+    //State handlers
+    const handlers = {
+        menu: () => {
+            //Resume or Init audioContext
+            try { audioContext.resume(); } catch (e) { initAudio(); }
 
-    //im Spiel
-    mouseIsDown = false;
-    direction = 'stop';
-    setPos();
+            //Menu actions
+            if (mausY == 20 && mausX >= 9 && mausX <= 15) {         // P: Play
+                storageGameRestore();
+                state = 'init';
+                init_room(score_raum);
+            } else if (mausY == 20 && mausX >= 19 && mausX <= 30) { // H: Highscore
+                state = 'highscore';
+                highscoreDraw();
+            } else if (mausY == 22 && mausX >= 9 && mausX <= 30) {  // L: Look at rooms
+                state = 'look';
+                init_room(score_raum);
+            }
+        },
 
-    //letzte Fingeranzahl merken
-    single_touch = e.touches.length;
-}
+        look: () => {
+            if (score_raum < room.length) {
+                score_raum++;
+                init_room(score_raum);
+            } else {
+                state = 'menu';
+                resetGame();
+                init_room(score_raum);
+                menuDraw();
+            }
+        },
 
-function touchXY(e) {
-    e.preventDefault(); //iOS, scrollen verhindern
-    touchX = e.targetTouches[0].pageX;
-    touchY = e.targetTouches[0].pageY;
-    if (joyOn) {
-        joyX = touchX;
-        joyY = touchY;
-        joyOn = false;
-    }
-    setPos();
-}
+        play: () => {
+            if (digger_death) {
+                if (score_leben < LEBENMIN) {
+                    state = 'highscore';
+                    highscoreDraw();
+                    resetGame();
+                } else {
+                    state = 'init';
+                    init_room(score_raum);
+                }
+                storageGameSave();
+            }
+        },
 
-function setPos() {
-    if (mouseIsDown) {
-        if (((joyX - touchX) < -30) && (direction != 'rechts')) {
-            direction = 'rechts';
-            joyX = touchX;
-            joyY = touchY;
+        highscore: () => {
+            state = 'menu';
+            menuDraw();
         }
-        if ((joyX - touchX) > 30 && (direction != 'links')) {
-            direction = 'links';
-            joyX = touchX;
-            joyY = touchY;
-        }
-        if ((joyY - touchY) < -30 && (direction != 'runter')) {
-            direction = 'runter';
-            joyX = touchX;
-            joyY = touchY;
-        }
-        if ((joyY - touchY) > 30 && (direction != 'hoch')) {
-            direction = 'hoch';
-            joyX = touchX;
-            joyY = touchY;
-        }
-    }
-    switch (direction) {
-        case 'links':
-            if (direction != ldirection)
-                kb_press_left();
-            ldirection = direction;
-            break;
-        case 'rechts':
-            if (direction != ldirection)
-                kb_press_right();
-            ldirection = direction;
-            break;
-        case 'hoch':
-            if (direction != ldirection)
-                kb_press_up();
-            ldirection = direction;
-            break;
-        case 'runter':
-            if (direction != ldirection)
-                kb_press_down();
-            ldirection = direction;
-            break;
-        case 'stop':
-            if (direction != ldirection)
-                kb_unpress();
-            ldirection = direction;
-            break;
-    }
+    };
+
+    handlers[state]?.();
 }
 
 //FULLSCREEN
@@ -1817,13 +1620,17 @@ function game_loop() {
 
 }
 
+
 function init_events() {
 
     //Touch aktivieren (Handy, Tablet)
     document.body.addEventListener('touchstart', touchDown, false);
-    document.body.addEventListener('touchmove', touchXY, true);
     document.body.addEventListener('touchend', touchUp, false);
     document.body.addEventListener('touchcancel', touchUp, false);
+    document.body.addEventListener('touchmove', touchXY, true);
+    
+    // Verhindert Zoomen durch Doppeltipp
+    document.body.style.touchAction = 'manipulation';
 
     //Maus und Tastatur aktivieren (PC, LG-SmartTV)
     document.body.addEventListener('click', mo_press, false);
