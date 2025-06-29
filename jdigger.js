@@ -2331,92 +2331,69 @@ function draw_frame1() {
             }
 
             // Steine und Diamanten
-            else if ((idx[l] == 7) || (idx[l] == 3)) {
-                //Stein in Diamant umwandeln
-                if ((idx[l] == 7) && (idx[l + 20] == 5) && (idx[l + 40] == 1)) {
+            else if (idx[l] === 7 || idx[l] === 3) {
+                // Stein in Diamant umwandeln
+                if (idx[l] === 7 && idx[l + 20] === 5 && idx[l + 40] === 1) {
                     idx[l + 40] = 3.2;
                     idx[l] = 1.1;
-                    // trifft er auf einen Gegenstand?
                     if (idx[l + 60] > 1) {
-                        // Ja: Sound abspielen!
                         SFX.STONE = true;
-                        // Digger: KILLEN!
-                        if ((idx[l + 60] >= 8) && (idx[l + 60] < 41))
+                        if (idx[l + 60] >= 8 && idx[l + 60] < 41) {
                             digger_death = true;
-                        // Geist: KILLEN!
-                        else if ((idx[l + 60] >= 43) && (idx[l + 60] < 63))
-                            idx[l + 60] = ((idx[l + 60]) << 0) + 0.2;
+                        } else if (idx[l + 60] >= 43 && idx[l + 60] < 63) {
+                            idx[l + 60] = (idx[l + 60] << 0) + 0.2;
+                        }
                     }
                 }
-
-                //Stein oder Diamant fallen
-                else if ((idx[l] == 7) || (idx[l] == 3)) {
-                    // ? Drunter: frei
-                    if (idx[l + 20] == 1) {
-                        idx[l + 20] = idx[l] + 0.2;
-                        idx[l] = 1.1;
-                        // trifft er auf einen Gegenstand
-                        if (idx[l + 40] >= 2) {
-                            //Ja: Sound abspielen
-                            SFX.STONE = true;
-                            // Digger KILLEN
-                            if ((idx[l + 40] >= 8) && (idx[l + 40] < 41))
-                                digger_death = true;
-                            // Geist KILLEN
-                            else if ((idx[l + 40] >= 43) && (idx[l + 40] < 63))
-                                idx[l + 40] = ((idx[l + 40]) << 0) + 0.2;
+                // Fallen lassen
+                else if (idx[l + 20] === 1) {
+                    idx[l + 20] = idx[l] + 0.2;
+                    idx[l] = 1.1;
+                    if (idx[l + 40] >= 2) {
+                        SFX.STONE = true;
+                        if (idx[l + 40] >= 8 && idx[l + 40] < 41) {
+                            digger_death = true;
+                        } else if (idx[l + 40] >= 43 && idx[l + 40] < 63) {
+                            idx[l + 40] = (idx[l + 40] << 0) + 0.2;
                         }
                     }
-                    // ? Drunter: Stein(7), Diamant(3) oder toter Digger(63)
-                    else if ((idx[l + 20] == 7) || (idx[l + 20] == 3) || (idx[l + 20] == 63)) {
-                        //links plumpsen!
-                        if (((idx[l - 1] == 1) || (idx[l - 1] == 7.2) || (idx[l - 1] == 3.2)) && (idx[l + 19] == 1)) {
-                            idx[l + 19] = idx[l] + 0.2;
-                            idx[l] = 1 + (idx[l] / 10);
-                            // trifft er auf einen Gegenstand
-                            if (idx[l + 39] >= 2) {
-                                //Ja: Sound abspielen
+                }
+                // Rollen
+                else if (idx[l + 20] === 7 || idx[l + 20] === 3 || idx[l + 20] === 63) {
+                    // Prüfe links (-1) dann rechts (+1)
+                    for (var d = -1; d <= 1; d += 2) {
+                        if ((idx[l + d] === 1 || idx[l + d] === 7.2 || idx[l + d] === 3.2) 
+                            && idx[l + 20 + d] === 1) {
+                            idx[l + 20 + d] = idx[l] + 0.2;
+                            idx[l] = 1.1;
+                            if (idx[l + 40 + d] >= 2) {
                                 SFX.STONE = true;
-                                // Digger KILLEN
-                                if ((idx[l + 39] >= 8) && (idx[l + 39] < 41))
+                                if (idx[l + 40 + d] >= 8 && idx[l + 40 + d] < 41) {
                                     digger_death = true;
-                                // Geist KILLEN
-                                else if ((idx[l + 39] >= 43) && (idx[l + 39] < 63))
-                                    idx[l + 39] = ((idx[l + 39]) << 0) + 0.2;
+                                } else if (idx[l + 40 + d] >= 43 && idx[l + 40 + d] < 63) {
+                                    idx[l + 40 + d] = (idx[l + 40 + d] << 0) + 0.2;
+                                }
                             }
-                        }
-                        //rechts plumpsen!
-                        else if (((idx[l + 1] == 1) || (idx[l + 1] == 7.2) || (idx[l + 1] == 3.2)) && (idx[l + 21] == 1)) {
-                            idx[l + 21] = idx[l] + 0.2;
-                            idx[l] = 1 + (idx[l] / 10);
-                            // trifft er auf einen Gegenstand
-                            if (idx[l + 41] >= 2) {
-                                //Ja: Sound abspielen
-                                SFX.STONE = true;
-                                // Digger KILLEN
-                                if ((idx[l + 41] >= 8) && (idx[l + 41] < 41))
-                                    digger_death = true;
-                                // Geist KILLEN
-                                else if ((idx[l + 41] >= 43) && (idx[l + 41] < 63))
-                                    idx[l + 41] = ((idx[l + 41]) << 0) + 0.2;
-                            }
+                            break;
                         }
                     }
                 }
             }
 
             // mache den unsichtbaren/unbenutzbaren Ausgang (6) sichtbar (41), bei genuegent Diamanten
-            else if ((idx[l] == 6) && (score_ges >= score_dia)) {
+            else if (idx[l] === 6 && score_ges >= score_dia) {
                 idx[l] = 41.1;
-                exit_blink = 41; //Animationsanfang setzen
+                exit_blink = 41; // Animationsanfang setzen
             }
 
             // Staub(0.1) nach 3 Loops in Leere(1.1) aufloesen
-            else if ((idx[l] >= 0.1) && (idx[l] <= 0.4)) {
+            else if (idx[l] >= 0.1 && idx[l] <= 0.4) {
                 idx[l] += 0.1;
-                if (idx[l] == 0.4)
+                if (idx[l] === 0.4) {
                     idx[l] = 1.1;
+                }
             }
+
         }
     }
 
