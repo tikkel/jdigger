@@ -1469,46 +1469,42 @@ function draw_frame1() {
     //SPIELFELD AKTIVITAETEN
     if (state == 'play') {
 
-        //DIGGER_IDLE
-        //- Digger langweilt sich
-        //- und blinzelt dann mit den Augen
-        //- oder stampft mit dem Fuß
+        // DIGGER_IDLE
+        // Digger langweilt sich und blinzelt oder stampft
         if (digger_idle) {
-            zufall++;
-            if (zufall > 280)
-                zufall = 1;
-            // ZUFALL(Stein=blinzeln)
-            if ((!digger_in_idle) && (idx[zufall] == 7)) {
-                digger_idle_augen = 24;
-                digger_in_idle = true;
-                idle_augen = true;
+            zufall = (zufall % 280) + 1;
+            // Neue Animation starten
+            if (!digger_in_idle) {
+                var zufallsWert = idx[zufall];
+                if (zufallsWert === 7) {        // Stein -> Digger blinzeln
+                    digger_idle_augen = 24;
+                    digger_in_idle = true;
+                    idle_augen = true;
+                } else if (zufallsWert === 3) { // Diamant -> Digger stampfen
+                    digger_idle_stampfen = 32;
+                    digger_in_idle = true;
+                    idle_augen = false;
+                }
             }
-            // ZUFALL(Diamant=stampfen)
-            else if ((!digger_in_idle) && (idx[zufall] == 3)) {
-                digger_idle_eier = 32;
-                digger_in_idle = true;
-                idle_augen = false;
-            }
+            // Animation fortsetzen
             if (digger_in_idle) {
-                // Animationsfortschritt, blinzeln
-                if (idle_augen) {
-                    digger_idle_augen++;
-                    if (digger_idle_augen == 33)
+                if (idle_augen) {   // Digger blinzeln
+                    if (++digger_idle_augen === 33) {
                         digger_in_idle = false;
+                    }
                 }
-                // Animationsfortschritt, stampfen
-                else {
-                    digger_idle_eier++;
-                    if (digger_idle_eier == 41)
+                else {              // Digger stampfen
+                    if (++digger_idle_stampfen === 41) {
                         digger_in_idle = false;
+                    }
                 }
             }
-        } else
-            digger_in_idle = false; // DIGGER nix in IDLE
-        if (digger_in_idle && idle_augen && !digger_death)
-            idx[d_idx] = digger_idle_augen + 0.1;
-        else if (digger_in_idle && !digger_death)
-            idx[d_idx] = digger_idle_eier + 0.1;
+        } else {
+            digger_in_idle = false;             // Animation abbrechen  
+        }
+        if (digger_in_idle && !digger_death) {  // Animation setzen
+            idx[d_idx] = (idle_augen ? digger_idle_augen : digger_idle_stampfen) + 0.1;  //
+        }
 
         //GEISTER STONE DIAMOND EXIT STAUB (280xloop)
         //- Geister bewegen
