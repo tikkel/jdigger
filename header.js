@@ -2,6 +2,7 @@
 // Copyright (C) 2017–2025  Marko Klingner
 // GNU GPL v3 - http://www.gnu.org/licenses/
 
+
 //Parameter
 var LEBENMAX = 20;
 var LEBENMIN = 1;

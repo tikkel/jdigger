@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2025 Marko Klingner
 // GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 
+
 // Hauptfunktion für Keyboard-Press-Events
 function kb_press(taste) {
     handled = false;
