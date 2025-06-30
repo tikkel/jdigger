@@ -1,21 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0
+// jdigger/levels80.js - original Leveldatei von http://lanale.de/
+// Copyright (C) 2017–2025  Marko Klingner
 
-
-//     jdigger/Digger.JS
-//     Copyright (C) 2017  Marko Klingner
-//
-//     Dieses Programm ist freie Software. Sie können es unter den Bedingungen der GNU General Public License,
-//     wie von der Free Software Foundation veröffentlicht, weitergeben und/oder modifizieren, entweder gemäß
-//     Version 3 der Lizenz oder (nach Ihrer Option) jeder späteren Version.
-//
-//     Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen von Nutzen sein wird, aber
-//     OHNE IRGENDEINE GARANTIE, sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR
-//     EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License.
-//
-//     Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben.
-//     Falls nicht, siehe <http://www.gnu.org/licenses/>.
-
-
-// original Leveldatei von http://lanale.de/
 room = new Array(
     new Array(0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
         0x62, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x00, 0x01, 0x56,

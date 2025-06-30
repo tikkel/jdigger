@@ -1,85 +1,123 @@
-// jdigger/Digger.JS - KC85 Soundemulation per WebAudio
+// SPDX-License-Identifier: GPL-3.0
+// jdigger/audio.js - KC85 Soundemulation mit WebAudio
 // Copyright (C) 2017–2025  Marko Klingner
-// GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 
+let sound_type = 'no';
+let gain_node;
+let merger_node;
+let audio_context;
+let audio_buffers = {};
 
-let soundType='no',gainNode,mergerNode,audioContext,audioBuffers={};
+/* KC85 Systemkonstanten */
+const CPU_FREQ_KC85_2 = 1750000;	// CPU-Takt KC85/2
+const CPU_FREQ_KC85_3 = 1750000;	// CPU-Takt KC85/3
+const CPU_FREQ_KC85_4 = 1773447.5;	// CPU-Takt KC85/4
+/*
+ * Max. Samplefreq. (Halbwellen)[CPU-Takt] / [CTC-Vorteiler]
+ * Ich benutze den KC85/3-Takt
+ */
+const KC_CTC_FREQ_VT16 = CPU_FREQ_KC85_3 / 16;	// VT16  -> 109375Hz
+const KC_CTC_FREQ_VT256 = CPU_FREQ_KC85_3 / 256;	// VT256 -> 6835.9375Hz
+const TONE_LOW = -1;
+const TONE_HIGH = 1;
+const TONE_RATE = 44100;	// WebAudio-API-Samplefreq.
 
-// KC85 System Konstanten
-const CPU_FREQ_KC85_2=1750000,   //CPU-Takt KC85/2
-      CPU_FREQ_KC85_3=1750000,   //CPU-Takt KC85/3
-      CPU_FREQ_KC85_4=1773447.5, //CPU-Takt KC85/4
-      // max. Samplefreq. (Halbwellen)[CPU-Takt] / [CTC-Vorteiler]
-      // ich benutze den KC85/3-Takt
-      KC_CTC_FREQ_VT16=CPU_FREQ_KC85_3/16,  //VT16  -> 109375Hz
-      KC_CTC_FREQ_VT256=CPU_FREQ_KC85_3/256, //VT256 -> 6835,9375Hz
-      TONE_LOW=-1,
-      TONE_HIGH=1,
-      TONE_RATE=44100; //default 44100Hz webAudio-API-Samplefreq. (Halbwellen)
+function init_audio() {
+	const AC = window.AudioContext || window.webkitAudioContext;
+	if (!AC)
+		return;
 
-function initAudio(){
-  const AC=window.AudioContext||window.webkitAudioContext;
-  if(!AC)return;
-  audioContext=new AC();
-  gainNode=audioContext.createGain();
-  gainNode.gain.value=.2;
-  gainNode.connect(audioContext.destination);
-  mergerNode=audioContext.createChannelMerger(2);
-  mergerNode.connect(gainNode);
-  
-  // Leerer Buffer
-  audioBuffers.Leer=audioContext.createBuffer(1,1,TONE_RATE);
-  
-  // Generiere Step-, Stone- und Diamond-Buffer
-  
-  // Step: 2 Halbwellen mit Zeitkonstante 0x40 und Prescaler 256
-  audioBuffers.Step=createToneBuffer([{tc:0x40,count:2,freq:KC_CTC_FREQ_VT256}]);
-  console.log('tonsynthese: schritt buffer: '+audioBuffers.Step.length);
-  
-  // Stone: 0x14 (20) Halbwellen mit aufsteigender Zeitkonstante (0xFF, 0x00, 0x01...) und Prescaler 16
-  audioBuffers.Stone=createToneBuffer(Array.from({length:0x14},(v,i)=>({tc:((0xFF+i)&0xFF)||256,count:1,freq:KC_CTC_FREQ_VT16})));
-  console.log('tonsynthese: stein buffer: '+audioBuffers.Stone.length);
-  
-  // Diamond: 0x40 (64) Halbwellen mit absteigender Zeitkonstante (0x40, 0x3F...) und Prescaler 16
-  audioBuffers.Diamond=createToneBuffer(Array.from({length:0x40},(v,i)=>({tc:0x40-i,count:1,freq:KC_CTC_FREQ_VT16})));
-  console.log('tonsynthese: diamant buffer: '+audioBuffers.Diamond.length);
-  
-  soundType='api';
-  console.log('webAudio: '+soundType+': Initialisierung abgeschlossen');
+	audio_context = new AC();
+	gain_node = audio_context.createGain();
+	gain_node.gain.value = 0.2;
+	gain_node.connect(audio_context.destination);
+	merger_node = audio_context.createChannelMerger(2);
+	merger_node.connect(gain_node);
+
+	/* Leerer Buffer */
+	audio_buffers.Leer = audio_context.createBuffer(1, 1, TONE_RATE);
+
+	/* Generiere Step-, Stone- und Diamond-Buffer */
+	// Step: 2 Halbwellen mit Zeitkonstante 0x40 und Prescaler 256
+	audio_buffers.Step = create_tone_buffer([{
+		tc: 0x40,
+		count: 2,
+		freq: KC_CTC_FREQ_VT256
+	}]);
+	console.log('tonsynthese: schritt buffer: ' + audio_buffers.Step.length);
+
+	/* Stone: 0x14 Halbwellen mit aufsteigender Zeitkonstante */
+	audio_buffers.Stone = create_tone_buffer(Array.from({
+		length: 0x14
+	}, (v, i) => ({
+		tc: ((0xFF + i) & 0xFF) || 256,
+		count: 1,
+		freq: KC_CTC_FREQ_VT16
+	})));
+	console.log('tonsynthese: stein buffer: ' + audio_buffers.Stone.length);
+
+	/* Diamond: 0x40 Halbwellen mit absteigender Zeitkonstante */
+	audio_buffers.Diamond = create_tone_buffer(Array.from({
+		length: 0x40
+	}, (v, i) => ({
+		tc: 0x40 - i,
+		count: 1,
+		freq: KC_CTC_FREQ_VT16
+	})));
+	console.log('tonsynthese: diamant buffer: ' + audio_buffers.Diamond.length);
+
+	sound_type = 'api';
+	console.log('webAudio: ' + sound_type + ': Initialisierung abgeschlossen');
 }
 
-// Berechne die Rechteck-Wellenformen
-function createToneBuffer(tones){
-  // Berechne die Gesamtanzahl der Samples für alle Halbwellen
-  const totalSamples=tones.reduce((sum,{tc,count,freq})=>sum+count*Math.floor(TONE_RATE/freq*tc),0);
-  
-  const buffer=audioContext.createBuffer(1,totalSamples,TONE_RATE);
-  const data=buffer.getChannelData(0);
-  let pos=0,peak=TONE_LOW;
-  
-  tones.forEach(({tc,count,freq})=>{
-    // Samples pro Halbwelle basierend auf Zeitkonstante und Frequenz
-    const samplesPerHalfWave=Math.floor(TONE_RATE/freq*tc);
-    
-    // Erzeuge 'count' Halbwellen
-    for(let i=0;i<count;i++){
-      // Fülle eine Halbwelle mit dem aktuellen Pegel
-      for(let k=0;k<samplesPerHalfWave;k++)
-        data[pos++]=peak;
-      
-      // Schalte die Polarität um (entspricht einem CTC-Interrupt)
-      peak=TONE_LOW+TONE_HIGH-peak;
-    }
-  });
-  
-  return buffer;
+/* Berechne Rechteck-Wellenformen */
+function create_tone_buffer(tones) {
+	/* Berechne Gesamtsamples für alle Halbwellen */
+	let total_samples = 0;
+	tones.forEach(({
+		tc,
+		count,
+		freq
+	}) => {
+		total_samples += count * Math.floor(TONE_RATE / freq * tc);
+	});
+
+	const buffer = audio_context.createBuffer(1, total_samples, TONE_RATE);
+	const data = buffer.getChannelData(0);
+	let pos = 0;
+	let peak = TONE_LOW;
+
+	tones.forEach(({
+		tc,
+		count,
+		freq
+	}) => {
+		/* Samples pro Halbwelle */
+		const samples_per_half_wave = Math.floor(TONE_RATE / freq * tc);
+
+		/* Erzeuge Halbwellen */
+		for (let i = 0; i < count; i++) {
+			for (let k = 0; k < samples_per_half_wave; k++)
+				data[pos++] = peak;
+
+			/* Polarität umschalten (CTC-Interrupt) */
+			peak = TONE_LOW + TONE_HIGH - peak;
+		}
+	});
+
+	return buffer;
 }
 
-function playAudio(ton){
-    if(soundType!=='api'||!audioBuffers[ton])return;
-    
-    const source=audioContext.createBufferSource();
-    source.buffer=audioBuffers[ton];
-    source.connect(mergerNode,0,ton==='Step'||ton==='Diamond'?1:0);
-    source.start(0);
+function play_audio(ton) {
+	if (sound_type !== 'api' || !audio_buffers[ton])
+		return;
+
+	const source = audio_context.createBufferSource();
+	source.buffer = audio_buffers[ton];
+	source.connect(
+		merger_node,
+		0,
+		(ton === 'Step' || ton === 'Diamond') ? 1 : 0
+	);
+	source.start(0);
 }

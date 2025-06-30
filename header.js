@@ -86,7 +86,7 @@ var virt_kbd_last_length;
 var touchX;
 var touchY;
 var direction = 'stop';
-var ldirection = 'stop';
+var last_direction = 'stop';
 var touch_flag = false;
 var fullscreen_flag = false;
 var single_touch = 0;

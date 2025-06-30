@@ -93,9 +93,9 @@ function scaleReload() {
     document.getElementById('menuimg').height = body_height;
     scalePixelated(context_menuimg); //Pixelgrafik, no dithering
     if (state == 'menu')
-        menuDraw();
+        menu_draw();
     else if (state == 'highscore')
-        highscoreDraw();
+        highscore_draw();
     rd_in = false;
     rd_yn = false;
 
@@ -123,7 +123,7 @@ function scaleReload() {
 }
 
 
-function highscoreDraw() {
+function highscore_draw() {
     //Puffer mit Farbe löschen (copy)
     buffer_menuContext.globalCompositeOperation = "copy";
     buffer_menuContext.fillStyle = KCB_TUERKIS;
@@ -163,7 +163,7 @@ function highscoreDraw() {
         if (state == 'input')
             setTimeout(highscoreInput, 50);
     } else
-        setTimeout(menuDraw, 1000);
+        setTimeout(menu_draw, 1000);
 }
 
 
@@ -262,7 +262,7 @@ function highscoreYesNo() {
             input_line = 0;
             input = undefined;
             rd_yn = false;
-            //storageGameRestore(); //spielstand restaurieren
+            //storage_game_restore(); //spielstand restaurieren
             state = 'init';
             init_room(score_raum);
             handled = true;
@@ -279,7 +279,7 @@ function highscoreYesNo() {
             rd_yn = false;
             idle_stop();
             state = 'menu';
-            menuDraw();
+            menu_draw();
             handled = true;
             //virtuelle Tastatur ausblenden
             document.body.removeEventListener('click', vkb_focus, false);
@@ -294,7 +294,7 @@ function highscoreYesNo() {
 
 
 //schreibe zeilenweise die MENU-Grafik (in orig. Größe 320x240) in den Canvas-Puffer (buffer_menuCanvas)
-function menuDraw() {
+function menu_draw() {
     //Puffer mit Farbe löschen (copy)
     buffer_menuContext.globalCompositeOperation = "copy";
     buffer_menuContext.fillStyle = KCB_BLAU;
@@ -325,17 +325,17 @@ function menuDraw() {
         menuLine("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
         menuLine("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
         menuLine("         BERLIN         \247\250", 7, 18);
-        if (gamepadBrand == 'sony') {
+        if (gamepad_brand == 'sony') {
             // X:\330 O:\331 Q:\332 D:\333
             menuLine("\330: PLAY   \333: HIGHSCORE", 9, 20);
             menuLine("\332: A LOOK AT THE ROOMS", 9, 22);
         }
-        else if (gamepadBrand == 'xbox') {
+        else if (gamepad_brand == 'xbox') {
             // A:\334 B:\335 X:\336 Y:\337
             menuLine("\334: PLAY   \337: HIGHSCORE", 9, 20);
             menuLine("\336: A LOOK AT THE ROOMS", 9, 22);
         }
-        else if (gamepadBrand == 'nintendo') {
+        else if (gamepad_brand == 'nintendo') {
             // A:\334 B:\335 X:\336 Y:\337
             menuLine("\334: PLAY   \337: HIGHSCORE", 9, 20);
             menuLine("\336: A LOOK AT THE ROOMS", 9, 22);
@@ -357,7 +357,7 @@ function menuDraw() {
         context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
         document.getElementById('menudiv').style.visibility = "visible";
     } else
-        setTimeout(menuDraw, 1000);
+        setTimeout(menu_draw, 1000);
 }
 
 
@@ -453,12 +453,12 @@ function storageHighscoreSave() {
 
 
 //Spielstand sichern
-function storageGameSave() {
+function storage_game_save() {
     try { //wird localStorage unterstützt?
         localStorage.setItem("level", score_raum);
         localStorage.setItem("lives", score_leben);
         localStorage.setItem("score", score_punkte);
-        console.log('storageGameSave: nach localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storage_game_save: nach localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     } catch (e) { //ansonsten Cookies benutzen
         var d = new Date();
         d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
@@ -466,13 +466,13 @@ function storageGameSave() {
         document.cookie = "level=" + score_raum + "; " + expires;
         document.cookie = "lives=" + score_leben + "; " + expires;
         document.cookie = "score=" + score_punkte + "; " + expires;
-        console.log('storageGameSave: nach Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storage_game_save: nach Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
 
 
 //Spielstand restaurieren
-function storageGameRestore() {
+function storage_game_restore() {
     var ca;
     var i;
     var c;
@@ -483,7 +483,7 @@ function storageGameRestore() {
             score_leben = Number(localStorage.getItem("lives"));
         if (localStorage.getItem("score"))
             score_punkte = Number(localStorage.getItem("score"));
-        console.log('storageGameRestore: von localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storage_game_restore: von localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     } catch (e) { //ansonsten Cookies benutzen
         var name = "level=";
         ca = document.cookie.split(';');
@@ -520,7 +520,7 @@ function storageGameRestore() {
             }
         }
 
-        console.log('storageGameRestore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
+        console.log('storage_game_restore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
 
@@ -549,16 +549,16 @@ function mo_press(ev) {
     const handlers = {
         menu: () => {
             //Resume or Init audioContext
-            try { audioContext.resume(); } catch (e) { initAudio(); }
+            try { audioContext.resume(); } catch (e) { init_audio(); }
 
             //Menu actions
             if (mausY == 20 && mausX >= 9 && mausX <= 15) {         // P: Play
-                storageGameRestore();
+                storage_game_restore();
                 state = 'init';
                 init_room(score_raum);
             } else if (mausY == 20 && mausX >= 19 && mausX <= 30) { // H: Highscore
                 state = 'highscore';
-                highscoreDraw();
+                highscore_draw();
             } else if (mausY == 22 && mausX >= 9 && mausX <= 30) {  // L: Look at rooms
                 state = 'look';
                 init_room(score_raum);
@@ -573,7 +573,7 @@ function mo_press(ev) {
                 state = 'menu';
                 resetGame();
                 init_room(score_raum);
-                menuDraw();
+                menu_draw();
             }
         },
 
@@ -581,19 +581,19 @@ function mo_press(ev) {
             if (digger_death) {
                 if (score_leben < LEBENMIN) {
                     state = 'highscore';
-                    highscoreDraw();
+                    highscore_draw();
                     resetGame();
                 } else {
                     state = 'init';
                     init_room(score_raum);
                 }
-                storageGameSave();
+                storage_game_save();
             }
         },
 
         highscore: () => {
             state = 'menu';
-            menuDraw();
+            menu_draw();
         }
     };
 
@@ -1484,7 +1484,7 @@ function draw_frame1() {
     if (next_raum) {
         if (score_raum == room.length) {
             state = 'highscore';
-            highscoreDraw();
+            highscore_draw();
             score_raum = 1;
             score_leben = LEBENMAX;
             score_punkte = 0;
@@ -1494,7 +1494,7 @@ function draw_frame1() {
             init_room(score_raum);
         }
         next_raum = false;
-        storageGameSave();
+        storage_game_save();
     }
 
     //Statuszeile und
@@ -1504,12 +1504,12 @@ function draw_frame1() {
 
     //Ton abspielen
     if (SFX.DIAMOND) {
-        playAudio('Diamond');
+        play_audio('Diamond');
     } else if (SFX.STONE) {
-        playAudio('Stone');
+        play_audio('Stone');
         brumm = true;
     } else if (SFX.STEP) {
-        playAudio('Step');
+        play_audio('Step');
     }
     SFX.DIAMOND = false;
     SFX.STEP = false;
@@ -1518,7 +1518,7 @@ function draw_frame1() {
     //Vibration (Gamepad/Handy/Tablet)
     if (brumm) {
         //Gamepad
-        if (gamepadDualrumble)
+        if (gamepad_dualrumble)
             navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {startDelay:0,duration:48,weakMagnitude:1.0,strongMagnitude:0.0})
         else
             if (navigator.vibrate)
@@ -1532,7 +1532,7 @@ function draw_frame1() {
         digger_go = 'NONE';
         score_leben--;
         //spielstand sichern
-        storageGameSave();
+        storage_game_save();
     }
 
     //Frame 1/2 --> Frame 2/2
@@ -1571,7 +1571,7 @@ function draw_frame2() {
 function game_loop() {
 
     //Gamepad#0 abfragen
-    gamepadUpdate();
+    gamepad_update();
 
     if (state == 'look' || state == 'init' || state == 'play') {
 
@@ -1624,10 +1624,10 @@ function game_loop() {
 function init_events() {
 
     //Touch aktivieren (Handy, Tablet)
-    document.body.addEventListener('touchstart', touchDown, false);
-    document.body.addEventListener('touchend', touchUp, false);
-    document.body.addEventListener('touchcancel', touchUp, false);
-    document.body.addEventListener('touchmove', touchXY, true);
+    document.body.addEventListener('touchstart', touch_down, false);
+    document.body.addEventListener('touchend', touch_up, false);
+    document.body.addEventListener('touchcancel', touch_up, false);
+    document.body.addEventListener('touchmove', touch_xy, true);
     
     // Verhindert Zoomen durch Doppeltipp
     document.body.style.touchAction = 'manipulation';
@@ -1643,8 +1643,8 @@ function init_events() {
 
     //Gamepad verbunden|abgesteckt
     if (navigator.getGamepads) {
-        window.addEventListener('gamepadconnected', gamepadConnect, false);
-        window.addEventListener('gamepaddisconnected', gamepadDisconnect, false);
+        window.addEventListener('gamepadconnected', gamepad_connect, false);
+        window.addEventListener('gamepaddisconnected', gamepad_disconnect, false);
     }
     
 }
