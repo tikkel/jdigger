@@ -48,28 +48,28 @@ function scaleInit() {
 
 
 function scaleBuffer() {
-    // ? spritesImage und charsImage vorgeladen
-    if (spritesImage.complete && charsImage.complete) {
+    // ? sprites_image und chars_image vorgeladen
+    if (sprites_image.complete && chars_image.complete) {
 
         //Sprites Puffer-Canvas, 1x40 Sprites
-        buffer_spritesCanvas.width = pre_icon_size;
-        buffer_spritesCanvas.height = pre_icon_size * 40;
+        buffer_sprites_canvas.width = pre_icon_size;
+        buffer_sprites_canvas.height = pre_icon_size * 40;
         //Pixelgrafik, no dithering
-        scalePixelated(buffer_spritesContext);
-        //Sprites skaliert in "buffer_spritesCanvas" schreiben/puffern
-        buffer_spritesContext.drawImage(spritesImage, 0, 0, buffer_spritesCanvas.width, buffer_spritesCanvas.height);
-        console.log('buffersize sprites: ' + buffer_spritesCanvas.width + 'x' + buffer_spritesCanvas.height);
+        scalePixelated(buffer_sprites_context);
+        //Sprites skaliert in "buffer_sprites_canvas" schreiben/puffern
+        buffer_sprites_context.drawImage(sprites_image, 0, 0, buffer_sprites_canvas.width, buffer_sprites_canvas.height);
+        console.log('buffersize sprites: ' + buffer_sprites_canvas.width + 'x' + buffer_sprites_canvas.height);
 
         //Zeichen Puffer-Canvas
-        buffer_charsCanvas.width = (body_width / 40) << 0;
-        buffer_charsCanvas.height = pre_icon_size * 192;
+        buffer_chars_canvas.width = (body_width / 40) << 0;
+        buffer_chars_canvas.height = pre_icon_size * 192;
         //Pixelgrafik, no dithering
-        scalePixelated(buffer_charsContext);
-        //Charset skaliert in "buffer_charsCanvas" schreiben/puffern
-        buffer_charsContext.fillStyle = KCB_ROT;
-        buffer_charsContext.fillRect(0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
-        buffer_charsContext.drawImage(charsImage, 0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
-        console.log('buffersize chars: ' + buffer_charsCanvas.width + 'x' + buffer_charsCanvas.height);
+        scalePixelated(buffer_chars_context);
+        //Charset skaliert in "buffer_chars_canvas" schreiben/puffern
+        buffer_chars_context.fillStyle = KCB_ROT;
+        buffer_chars_context.fillRect(0, 0, buffer_chars_canvas.width, buffer_chars_canvas.height);
+        buffer_chars_context.drawImage(chars_image, 0, 0, buffer_chars_canvas.width, buffer_chars_canvas.height);
+        console.log('buffersize chars: ' + buffer_chars_canvas.width + 'x' + buffer_chars_canvas.height);
 
     } else
         setTimeout(scaleBuffer, 1000);
@@ -125,15 +125,15 @@ function scaleReload() {
 
 function highscore_draw() {
     //Puffer mit Farbe löschen (copy)
-    buffer_menuContext.globalCompositeOperation = "copy";
-    buffer_menuContext.fillStyle = KCB_TUERKIS;
-    buffer_menuContext.fillRect(0, 0, 320, 240);
+    buffer_menu_context.globalCompositeOperation = "copy";
+    buffer_menu_context.fillStyle = KCB_TUERKIS;
+    buffer_menu_context.fillRect(0, 0, 320, 240);
 
-    if (charsImage.complete) {
+    if (chars_image.complete) {
         //schneide KCF_WEISS aus KCB_TUERKIS aus
         //KCB_TUERKIS ist die Hintergrundfarbe und KCF_WEISS ist 100% transparent (destination-out)
         //im Zielcanvas ist KCF_WEISS dann die vorher gefüllte Farbe
-        buffer_menuContext.globalCompositeOperation = "destination-out";
+        buffer_menu_context.globalCompositeOperation = "destination-out";
 
         //die Überschrift ...
         menuLine("HIGHSCORE :", 8, 4);
@@ -156,7 +156,7 @@ function highscore_draw() {
         context_menuimg.fillRect(0, 0, body_width, body_height);
         //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
         context_menuimg.globalCompositeOperation = "source-over";
-        context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
         document.getElementById('menudiv').style.visibility = "visible";
 
         //eventl. neuen Alias abfragen
@@ -170,15 +170,15 @@ function highscore_draw() {
 function highscoreInput() {
     if (!rd_in) { //braucht nur 1x gemalt werden
         //Loop Tastaturabfrage
-        buffer_menuContext.globalCompositeOperation = "destination-out";
+        buffer_menu_context.globalCompositeOperation = "destination-out";
         menuLine("...well done, please enter your name :", 1, 2);
 
         //Zeile löschen
         //Cursor(\177) und Zeichen
-        buffer_menuContext.globalCompositeOperation = "source-over";
-        buffer_menuContext.fillStyle = KCB_TUERKIS;
-        buffer_menuContext.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
-        buffer_menuContext.globalCompositeOperation = "destination-out";
+        buffer_menu_context.globalCompositeOperation = "source-over";
+        buffer_menu_context.fillStyle = KCB_TUERKIS;
+        buffer_menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
+        buffer_menu_context.globalCompositeOperation = "destination-out";
         menuLine(input_alias + "\177", 17, 7 + input_line);
 
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
@@ -188,7 +188,7 @@ function highscoreInput() {
         context_menuimg.fillRect(0, 0, body_width, body_height);
         //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
         context_menuimg.globalCompositeOperation = "source-over";
-        context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
 
         rd_in = true;
     }
@@ -232,15 +232,15 @@ function highscoreInput() {
 function highscoreYesNo() {
     if (!rd_yn) { //braucht nur 1x gemalt werden
         //Loop Tastaturabfrage Y/N (89/78)
-        buffer_menuContext.globalCompositeOperation = "destination-out";
+        buffer_menu_context.globalCompositeOperation = "destination-out";
         menuLine("NEW GAME ? (Y/N)", 12, 28);
 
         //Zeile löschen
         //Cursor(\177) und Zeichen
-        buffer_menuContext.globalCompositeOperation = "source-over";
-        buffer_menuContext.fillStyle = KCB_TUERKIS;
-        buffer_menuContext.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
-        buffer_menuContext.globalCompositeOperation = "destination-out";
+        buffer_menu_context.globalCompositeOperation = "source-over";
+        buffer_menu_context.fillStyle = KCB_TUERKIS;
+        buffer_menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
+        buffer_menu_context.globalCompositeOperation = "destination-out";
         menuLine(input_alias, 17, 7 + input_line);
 
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
@@ -250,7 +250,7 @@ function highscoreYesNo() {
         context_menuimg.fillRect(0, 0, body_width, body_height);
         //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
         context_menuimg.globalCompositeOperation = "source-over";
-        context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
 
         rd_yn = true;
     }
@@ -293,18 +293,18 @@ function highscoreYesNo() {
 }
 
 
-//schreibe zeilenweise die MENU-Grafik (in orig. Größe 320x240) in den Canvas-Puffer (buffer_menuCanvas)
+//schreibe zeilenweise die MENU-Grafik (in orig. Größe 320x240) in den Canvas-Puffer (buffer_menu_canvas)
 function menu_draw() {
     //Puffer mit Farbe löschen (copy)
-    buffer_menuContext.globalCompositeOperation = "copy";
-    buffer_menuContext.fillStyle = KCB_BLAU;
-    buffer_menuContext.fillRect(0, 0, 320, 240);
+    buffer_menu_context.globalCompositeOperation = "copy";
+    buffer_menu_context.fillStyle = KCB_BLAU;
+    buffer_menu_context.fillRect(0, 0, 320, 240);
 
-    if (charsImage.complete) {
+    if (chars_image.complete) {
         //male KCF_WEISS auf die vorher KCB_BLAU gefüllte Fläche über
         //KCB_BLAU ist die Hintergrundfarbe und KCF_WEISS ist 100% deckend (source-over)
         //im Zielcanvas ist KCF_WEISS dann also normal KCF_WEISS
-        buffer_menuContext.globalCompositeOperation = "source-over";
+        buffer_menu_context.globalCompositeOperation = "source-over";
 
         //der Text ...
         menuLine("\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236", 0, 0);
@@ -344,7 +344,7 @@ function menu_draw() {
             menuLine("P: PLAY   H: HIGHSCORE", 9, 20);
             menuLine("L: A LOOK AT THE ROOMS", 9, 22);
         }
-        menuLine("JSv " + digger_version, 5, 25);
+        menuLine("JSv " + DIGGER_VERSION, 5, 25);
         menuLine("\140 1988", 29, 25);
         menuLine("by TIKKEL", 5, 26);
         menuLine("BERLIN", 29, 26);
@@ -354,7 +354,7 @@ function menu_draw() {
         menuLine("\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310", 0, 29);
 
         //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
-        context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
         document.getElementById('menudiv').style.visibility = "visible";
     } else
         setTimeout(menu_draw, 1000);
@@ -371,8 +371,8 @@ function menuLine(s, x, y) {
         sy = (s.charCodeAt(i) - 32) * 8;
         dx = (x + i) * pre_w;
         dy = y * pre_h;
-        //buffer_menuContext.globalCompositeOperation = "destination-out";
-        buffer_menuContext.drawImage(charsImage, sx, sy, 8, 8, dx, dy, pre_w, pre_h);
+        //buffer_menu_context.globalCompositeOperation = "destination-out";
+        buffer_menu_context.drawImage(chars_image, sx, sy, 8, 8, dx, dy, pre_w, pre_h);
 
     }
 }
@@ -638,7 +638,7 @@ function idle_start() {
         if (idx[l] == 41)
             idx[l] = 8.1;
     }
-    SFX.STEP = true;
+    sfx.step = true;
     state = 'play';
 }
 
@@ -788,7 +788,7 @@ function draw_digger_death() {
 
     idx[d_idx] = 63.1;
     digger_is_dead = true;
-    SFX.DIAMOND = true;
+    sfx.diamond = true;
 
     // Diggeranimation zurücksetzen
     digger_animation_left = false; digger_animation_right = false;
@@ -818,47 +818,47 @@ function soft_scroll() {
     }
 
     //links, Randabstand < 2 Spritebreiten?
-    if (((digger_x + viewport_x) < (pre_abstand)) && (actual_marginLeft <= viewport_x) && (viewport_x != 0)) {
+    if (((digger_x + viewport_x) < (pre_abstand)) && (actual_margin_left <= viewport_x) && (viewport_x != 0)) {
         //scroll nach rechts, -x..0
         viewport_x = (diggerdiv_width / 2 - digger_x - pre_icon_size / 2) << 0;
         if (viewport_x > 0)
             viewport_x = 0;
-        duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
+        duration_x = Math.abs(viewport_x - actual_margin_left) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginLeft = viewport_x + "px";
     }
     //rechts, Randabstand < 2 Spritebreiten?
-    else if (((digger_x + pre_icon_size + viewport_x) > (diggerdiv_width - pre_abstand)) && (actual_marginLeft >= viewport_x) && (viewport_x != pre_max_w_offset)) {
+    else if (((digger_x + pre_icon_size + viewport_x) > (diggerdiv_width - pre_abstand)) && (actual_margin_left >= viewport_x) && (viewport_x != pre_max_w_offset)) {
         //scroll nach links, 0..+x
         viewport_x = (diggerdiv_width / 2 - digger_x - pre_icon_size / 2) << 0;
         if (viewport_x < pre_max_w_offset)
             viewport_x = pre_max_w_offset;
         if (viewport_x > 0)
             viewport_x = 0;
-        duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
+        duration_x = Math.abs(viewport_x - actual_margin_left) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginLeft = viewport_x + "px";
     }
 
     //oben, Randabstand < 2 Spritehöhen
-    if (((digger_y + viewport_y) < (pre_abstand)) && (actual_marginTop <= viewport_y) && (viewport_y != 0)) {
+    if (((digger_y + viewport_y) < (pre_abstand)) && (actual_margin_top <= viewport_y) && (viewport_y != 0)) {
         //scroll nach unten, -y..0
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y > 0)
             viewport_y = 0;
-        duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
+        duration_y = Math.abs(viewport_y - actual_margin_top) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginTop = viewport_y + "px";
     }
     //unten, Randabstand < 2 Spritehöhen
-    else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_marginTop >= viewport_y) && (viewport_y != pre_max_h_offset)) {
+    else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_margin_top >= viewport_y) && (viewport_y != pre_max_h_offset)) {
         //scroll nach oben, 0--+y
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y < pre_max_h_offset)
             viewport_y = pre_max_h_offset;
         if (viewport_y > 0)
             viewport_y = 0;
-        duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
+        duration_y = Math.abs(viewport_y - actual_margin_top) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginTop = viewport_y + "px";
     }
@@ -867,8 +867,8 @@ function soft_scroll() {
 
 function draw_field() {
     // Style-Werte nur einmal pro Frame berechnen
-    actual_marginLeft = parseInt(window.getComputedStyle(canvas_digger).marginLeft, 10);
-    actual_marginTop = parseInt(window.getComputedStyle(canvas_digger).marginTop, 10);
+    actual_margin_left = parseInt(window.getComputedStyle(canvas_digger).marginLeft, 10);
+    actual_margin_top = parseInt(window.getComputedStyle(canvas_digger).marginTop, 10);
     
     // Geister-Set für O(1) Lookup statt wiederholten Vergleichen
     const ghostSet = new Set([43.2, 44.2, 45.2, 46.2, 47.2, 48.2, 49.2, 50.2, 
@@ -876,10 +876,10 @@ function draw_field() {
                               59.2, 60.2, 61.2, 62.2]);
     
     // Viewport-Grenzen vorberechnen
-    const viewLeft = -actual_marginLeft;
-    const viewRight = diggerdiv_width - actual_marginLeft;
-    const viewTop = -actual_marginTop;
-    const viewBottom = diggerdiv_height - actual_marginTop;
+    const viewLeft = -actual_margin_left;
+    const viewRight = diggerdiv_width - actual_margin_left;
+    const viewTop = -actual_margin_top;
+    const viewBottom = diggerdiv_height - actual_margin_top;
     
     let i, x, y, z, s, idx_val;
     
@@ -921,7 +921,7 @@ function draw_field() {
         // Optimiertes Clipping: nur zeichnen wenn sichtbar oder kein Diamant
         if (i < 64 || (x + pre_icon_size >= viewLeft && x <= viewRight && 
                        y + pre_icon_size >= viewTop && y <= viewBottom)) {
-            context_digger.drawImage(buffer_spritesCanvas, 0, sprites[i] * pre_icon_size, 
+            context_digger.drawImage(buffer_sprites_canvas, 0, sprites[i] * pre_icon_size, 
                                    pre_icon_size, pre_icon_size, x, y, pre_icon_size, pre_icon_size);
         }
     }
@@ -934,16 +934,16 @@ function scorelineChar(s, x, y) {
     for (let i = 0; i < s.length; i++) {
         const sx = 0;
         const sy = (s.charCodeAt(i) - 32) * pre_icon_size;
-        const dx = (x + i) * buffer_charsCanvas.width;
+        const dx = (x + i) * buffer_chars_canvas.width;
         const dy = y * pre_icon_size;
 
-        // vorskalierte Zeichen aus "buffer_charsCanvas" ins sichtbare "canvas_scoreline" zeichnen
+        // vorskalierte Zeichen aus "buffer_chars_canvas" ins sichtbare "canvas_scoreline" zeichnen
         context_scoreline.drawImage(
-            buffer_charsCanvas,
+            buffer_chars_canvas,
             sx, sy,
-            buffer_charsCanvas.width, pre_icon_size,
+            buffer_chars_canvas.width, pre_icon_size,
             dx, dy,
-            buffer_charsCanvas.width, pre_icon_size
+            buffer_chars_canvas.width, pre_icon_size
         );
     }
 }
@@ -1002,7 +1002,7 @@ function scorelineUpdate() {
     if (autoscore > 0) {
         score_punkte += 5;
         autoscore -= 5;
-        SFX.STONE = true;
+        sfx.stone = true;
     }
     if (score_punkte !== last_punkte) {
         let sp = score_punkte.toString().padStart(SCORE_LENGTH, '0');
@@ -1065,7 +1065,7 @@ function draw_frame1() {
             if (target_val === 3) {
                 score_ges++;
                 score_punkte += 3;
-                SFX.DIAMOND = true;
+                sfx.diamond = true;
             }
             // Ausgang erreicht
             else if (target_val === 41) {
@@ -1096,7 +1096,7 @@ function draw_frame1() {
                 (target_val === 7 && dir.stone_offset && idx[target_idx] === 1.1)) {
                 idx[d_idx] = 1.1;
                 d_idx += dir.offset;
-                SFX.STEP = true;
+                sfx.step = true;
             }
             // Animation aktivieren (beim ersten Schritt)
             if (window[dir.step_var] === dir.step_init) {
@@ -1185,7 +1185,7 @@ function draw_frame1() {
                         digger_death = true;
                     // Geist zu Staub
                     [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    SFX.STONE = true;
+                    sfx.stone = true;
                 }
                 //GEISTER hin und her (43-46)
                 else {
@@ -1238,7 +1238,7 @@ function draw_frame1() {
                         digger_death = true;
                     // Geist zu Staub
                     [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    SFX.STONE = true;
+                    sfx.stone = true;
                 }
                 //Geister bewegen: 47=down, 49=up, 48=right, 50=left 90L
                 else {
@@ -1284,7 +1284,7 @@ function draw_frame1() {
                         digger_death = true;
                     // Geist zu Staub
                     [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    SFX.STONE = true;
+                    sfx.stone = true;
                 }
                 //Geister bewegen: 51=down, 53=up, 52=right, 54=left 90R
                 else {
@@ -1330,7 +1330,7 @@ function draw_frame1() {
                         digger_death = true;
                     // Geist zu Staub
                     [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    SFX.STONE = true;
+                    sfx.stone = true;
                 }
                 //Geister bewegen: 55=down, 57=up, 56=right, 58=left 90LR
                 else {
@@ -1376,7 +1376,7 @@ function draw_frame1() {
                         digger_death = true;
                     // Geist zu Staub
                     [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    SFX.STONE = true;
+                    sfx.stone = true;
                 }
                 //Geister bewegen: 59=down, 61=up, 60=right, 62=left 90RL
                 else {
@@ -1420,7 +1420,7 @@ function draw_frame1() {
                     idx[l + 40] = 3.2;
                     idx[l] = 1.1;
                     if (idx[l + 60] > 1) {
-                        SFX.STONE = true;
+                        sfx.stone = true;
                         if (idx[l + 60] >= 8 && idx[l + 60] < 41) {
                             digger_death = true;
                         } else if (idx[l + 60] >= 43 && idx[l + 60] < 63) {
@@ -1433,7 +1433,7 @@ function draw_frame1() {
                     idx[l + 20] = idx[l] + 0.2;
                     idx[l] = 1.1;
                     if (idx[l + 40] >= 2) {
-                        SFX.STONE = true;
+                        sfx.stone = true;
                         if (idx[l + 40] >= 8 && idx[l + 40] < 41) {
                             digger_death = true;
                         } else if (idx[l + 40] >= 43 && idx[l + 40] < 63) {
@@ -1450,7 +1450,7 @@ function draw_frame1() {
                             idx[l + 20 + d] = idx[l] + 0.2;
                             idx[l] = 1.1;
                             if (idx[l + 40 + d] >= 2) {
-                                SFX.STONE = true;
+                                sfx.stone = true;
                                 if (idx[l + 40 + d] >= 8 && idx[l + 40 + d] < 41) {
                                     digger_death = true;
                                 } else if (idx[l + 40 + d] >= 43 && idx[l + 40 + d] < 63) {
@@ -1503,17 +1503,17 @@ function draw_frame1() {
     soft_scroll();
 
     //Ton abspielen
-    if (SFX.DIAMOND) {
+    if (sfx.diamond) {
         play_audio('Diamond');
-    } else if (SFX.STONE) {
+    } else if (sfx.stone) {
         play_audio('Stone');
         brumm = true;
-    } else if (SFX.STEP) {
+    } else if (sfx.step) {
         play_audio('Step');
     }
-    SFX.DIAMOND = false;
-    SFX.STEP = false;
-    SFX.STONE = false;
+    sfx.diamond = false;
+    sfx.step = false;
+    sfx.stone = false;
 
     //Vibration (Gamepad/Handy/Tablet)
     if (brumm) {
