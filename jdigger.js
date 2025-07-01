@@ -262,6 +262,7 @@ function highscoreInput() {
       handled = true;
       highscore[input_line] += "  " + input_alias;
       storageHighscoreSave();
+      resetGame();
       setTimeout(highscoreYesNo, 100);
       return;
     } else if (input == 'Backspace') {
@@ -279,6 +280,7 @@ function highscoreInput() {
       if (input_alias.length == 14) {
         highscore[input_line] += "  " + input_alias;
         storageHighscoreSave();
+        resetGame();
         setTimeout(highscoreYesNo, 100);
         return;
       }
@@ -449,6 +451,12 @@ function vkb_focus() {
     virt_kbd_last_length = -1;
 }
 
+function resetGame () {
+    score_punkte = 0;
+    score_leben = LEBENMAX;
+    score_raum = 1;
+}
+
 //Spielstand sichern
 function storage_game_save() {
     try { //wird localStorage unterstützt?
@@ -479,6 +487,7 @@ function storage_game_restore() {
             score_leben = Number(localStorage.getItem("lives"));
         if (localStorage.getItem("score"))
             score_punkte = Number(localStorage.getItem("score"));
+        if (score_leben < LEBENMIN) resetGame()
         console.log('storage_game_restore: von localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     } catch (e) { //ansonsten Cookies benutzen
         var name = "level=";
@@ -491,7 +500,6 @@ function storage_game_restore() {
             if (c.indexOf(name) == 0)
                 score_raum = Number(c.substring(name.length, c.length));
         }
-
         name = "lives=";
         ca = document.cookie.split(';');
         for (i = 0; i < ca.length; i++) {
@@ -503,7 +511,6 @@ function storage_game_restore() {
                 score_leben = Number(c.substring(name.length, c.length));
             }
         }
-
         name = "score=";
         ca = document.cookie.split(';');
         for (i = 0; i < ca.length; i++) {
@@ -515,7 +522,7 @@ function storage_game_restore() {
                 score_punkte = Number(c.substring(name.length, c.length));
             }
         }
-
+        if (score_leben < LEBENMIN) resetGame()
         console.log('storage_game_restore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
@@ -535,12 +542,6 @@ function mo_press(ev) {
     const mausX = (ev.pageX / (body_width / 40)) << 0;
     const mausY = (ev.pageY / (body_height / 30)) << 0;
 
-    const resetGame = () => {
-        score_punkte = 0;
-        score_leben = LEBENMAX;
-        score_raum = 1;
-    };
-
     //State handlers
     const handlers = {
         menu: () => {
@@ -557,6 +558,7 @@ function mo_press(ev) {
                 highscore_draw();
             } else if (mausY == 22 && mausX >= 9 && mausX <= 30) {  // L: Look at rooms
                 state = 'look';
+                storage_game_restore();
                 init_room(score_raum);
             }
         },
@@ -567,7 +569,6 @@ function mo_press(ev) {
                 init_room(score_raum);
             } else {
                 state = 'menu';
-                resetGame();
                 init_room(score_raum);
                 menu_draw();
             }
@@ -1270,9 +1271,7 @@ function draw_frame1() {
             // Alle Level geschafft - Highscore anzeigen
             state = 'highscore';
             highscore_draw();
-            score_raum = 1;
-            score_leben = LEBENMAX;
-            score_punkte = 0;
+            resetGame();
         } else {
             // Nächstes Level laden
             score_raum++;

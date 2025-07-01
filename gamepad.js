@@ -125,9 +125,6 @@ var ACTION_HANDLERS = {
 				if (score_leben < LEBENMIN) {
 					state = 'highscore'
 					highscore_draw()
-					score_punkte = 0
-					score_leben = LEBENMAX
-					score_raum = 1
 				} else {
 					state = 'init'
 					init_room(score_raum)
@@ -159,6 +156,7 @@ var ACTION_HANDLERS = {
 		}
 		if (check_button_press('Y')) {
 			state = 'look'
+			storage_game_restore()
 			init_room(score_raum)
 		}
 	},
@@ -189,11 +187,9 @@ var ACTION_HANDLERS = {
 /* Hilfsfunktion für Menu-Rückkehr */
 function gamepad_back_to_menu() {
 	idle_stop()
-	state = 'menu'
-	score_punkte = 0
-	score_leben = LEBENMAX
-	score_raum = 1
+	resetGame()
 	storage_game_save()
+	state = 'menu'
 	init_room(score_raum)
 	menu_draw()
 }

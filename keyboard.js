@@ -21,11 +21,9 @@ function kb_press(taste) {
 		81: () => {
 			if (state === 'play' || state === 'init') {
 				idle_stop();
-				state = 'menu';
-				score_punkte = 0;
-				score_leben = LEBENMAX;
-				score_raum = 1;
+				resetGame();
 				storage_game_save();
+				state = 'menu';
 				init_room(score_raum);
 				menu_draw();
 			}
@@ -66,9 +64,6 @@ function kb_press(taste) {
 				if (score_leben < LEBENMIN) {
 					state = 'highscore';
 					highscore_draw();
-					score_punkte = 0;
-					score_leben = LEBENMAX;
-					score_raum = 1;
 				} else {
 					state = 'init';
 					init_room(score_raum);
@@ -86,9 +81,6 @@ function kb_press(taste) {
 				if (score_leben < LEBENMIN) {
 					state = 'highscore';
 					highscore_draw();
-					score_punkte = 0;
-					score_leben = LEBENMAX;
-					score_raum = 1;
 				} else {
 					state = 'init';
 					init_room(score_raum);
@@ -133,6 +125,7 @@ function kb_press(taste) {
 		76: () => {
 			if (state === 'menu') {
 				state = 'look';
+				storage_game_restore();
 				init_room(score_raum);
 			} else if (state === 'look') {
 				const direction = !taste.shiftKey ? 1 : -1;

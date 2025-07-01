@@ -10,11 +10,9 @@ function touch_down(e) {
 	if (touches > 2) {
 		if (state === 'play' || state === 'init') {
 			idle_stop()
-			state = 'menu'
-			score_punkte = 0
-			score_leben = LEBENMAX
-			score_raum = 1
+			resetGame()
 			storage_game_save()
+			state = 'menu'
 			init_room(score_raum)
 			menu_draw()
 		}
@@ -36,9 +34,6 @@ function touch_down(e) {
 			body.addEventListener('input', vkb_input, false)
 			state = 'highscore'
 			highscore_draw()
-			score_punkte = 0
-			score_leben = LEBENMAX
-			score_raum = 1
 		} else {
 			state = 'init'
 			init_room(score_raum)
@@ -79,6 +74,7 @@ function touch_up(e) {
 		/* L: Look at the rooms */
 		} else if (touch_s >= 9 && touch_s <= 30 && touch_z === 22) {
 			state = 'look'
+			storage_game_restore()
 			init_room(score_raum)
 		}
 	/* Im Look */
@@ -88,9 +84,6 @@ function touch_up(e) {
 			init_room(score_raum)
 		} else {
 			state = 'menu'
-			score_punkte = 0
-			score_leben = LEBENMAX
-			score_raum = 1
 			init_room(score_raum)
 			menu_draw()
 		}
