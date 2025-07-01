@@ -1145,67 +1145,73 @@ function draw_frame1() {
                 }
             };
 
-            // GEISTER TYP 180° (43-46) - drehen sich alle 180° um
+            // GEISTER TYP 180° (0x3 43-46) - drehen sich immer um 180°
+            // 43=down,  45=up,  44=right,  46=left  180
             if (val >= 43 && val < 47) {
                 if (!handleGhostExplosion([43.2, 44.2, 45.2, 46.2])) {
                     ti = l;
                     moveGhost([
-                        [45, [-20, 45.1, -40], [-1, 46.1, -2], [1, 44.1, 2], [20, 43.1, 40]], // Geist 45: hoch, links, rechts, runter
-                        [43, [20, 43.1, 40], [1, 44.1, 2], [-1, 46.1, -2], [-20, 45.1, -40]], // Geist 43: runter, rechts, links, hoch
-                        [44, [1, 44.1, 2], [-20, 45.1, -40], [20, 43.1, 40], [-1, 46.1, -2]], // Geist 44: rechts, hoch, runter, links
-                        [46, [-1, 46.1, -2], [20, 43.1, 40], [-20, 45.1, -40], [1, 44.1, 2]]  // Geist 46: links, runter, hoch, rechts
+                        [46, [-1, 46.1, -2], [1, 44.1, 2]],      // links: links rechts
+                        [44, [1, 44.1, 2], [-1, 46.1, -2]],      // rechts: recht links
+                        [45, [-20, 45.1, -40], [20, 43.1, 40]],  // hoch: hoch runter
+                        [43, [20, 43.1, 40], [-20, 45.1, -40]]   // runter: runter hoch
+                        
                     ]);
                     killGhostUnderFalling();
                 }
             }
-            // GEISTER TYP 90L (47-50) - drehen sich 90° nach links
+            // GEISTER TYP 90L (0x7 47-50) - drehen sich primär 90° nach links
+            // 47=down,  49=up,  48=right,  50=left  90L
             else if (val >= 47 && val < 51) {
                 if (!handleGhostExplosion([47.2, 48.2, 49.2, 50.2])) {
                     ti = l;
                     moveGhost([
-                        [49, [-20, 49.1, -40], [-1, 50.1, -2], [1, 48.1, 2], [20, 47.1, 40]],
-                        [47, [20, 47.1, 40], [1, 48.1, 2], [-1, 50.1, -2], [-20, 49.1, -40]],
-                        [48, [1, 48.1, 2], [-20, 49.1, -40], [20, 47.1, 40], [-1, 50.1, -2]],
-                        [50, [-1, 50.1, -2], [20, 47.1, 40], [-20, 49.1, -40], [1, 48.1, 2]]
+                        [50, [-1, 50.1, -2], [20, 47.1, 40], [-20, 49.1, -40], [1, 48.1, 2]],  // links: links runter hoch rechts
+                        [48, [1, 48.1, 2], [-20, 49.1, -40], [20, 47.1, 40], [-1, 50.1, -2]],  // rechts: rechts hoch runter links
+                        [49, [-20, 49.1, -40], [-1, 50.1, -2], [1, 48.1, 2], [20, 47.1, 40]],  // hoch: hoch links rechts runter
+                        [47, [20, 47.1, 40], [1, 48.1, 2], [-1, 50.1, -2], [-20, 49.1, -40]]   // runter: runter rechts links hoch
                     ]);
                     killGhostUnderFalling();
                 }
             }
-            // GEISTER TYP 90R (51-54) - drehen sich 90° nach rechts
+            // GEISTER TYP 90R (0xB 51-54) - drehen sich primär 90° nach rechts
+            // 51=down,  53=up,  52=right,  54=left  90R
             else if (val >= 51 && val < 55) {
                 if (!handleGhostExplosion([51.2, 52.2, 53.2, 54.2])) {
                     ti = l;
                     moveGhost([
-                        [53, [-20, 53.1, -40], [1, 52.1, 2], [-1, 54.1, -2], [20, 51.1, 40]],
-                        [51, [20, 51.1, 40], [-1, 54.1, -2], [1, 52.1, 2], [-20, 53.1, -40]],
-                        [52, [1, 52.1, 2], [20, 51.1, 40], [-20, 53.1, -40], [-1, 54.1, -2]],
-                        [54, [-1, 54.1, -2], [-20, 53.1, -40], [20, 51.1, 40], [1, 52.1, 2]]
+                        [54, [-1, 54.1, -2], [-20, 53.1, -40], [20, 51.1, 40], [1, 52.1, 2]],  // links: links hoch runter rechts
+                        [52, [1, 52.1, 2], [20, 51.1, 40], [-20, 53.1, -40], [-1, 54.1, -2]],  // rechts: rechts runter hoch links
+                        [53, [-20, 53.1, -40], [1, 52.1, 2], [-1, 54.1, -2], [20, 51.1, 40]],  // hoch: hoch rechts links runter
+                        [51, [20, 51.1, 40], [-1, 54.1, -2], [1, 52.1, 2], [-20, 53.1, -40]]   // runter: runter links rechts hoch
                     ]);
                     killGhostUnderFalling();
                 }
             }
-            // GEISTER TYP 90LR (55-58) - wechseln zwischen links und rechts drehen
+            // GEISTER TYP 90LR (0xF 55-58) - wechseln zwischen links und rechts drehen
+            // 55=down,  57=up,  56=right,  58=left  90LR  zuletzt links abgebogen
             else if (val >= 55 && val < 59) {
                 if (!handleGhostExplosion([55.2, 56.2, 57.2, 58.2])) {
                     ti = l;
                     moveGhost([
-                        [57, [-20, 57.1, -40], [-1, 62.1, -2], [1, 60.1, 2], [20, 55.1, 40]],
-                        [55, [20, 55.1, 40], [1, 60.1, 2], [-1, 62.1, -2], [-20, 57.1, -40]],
-                        [56, [1, 56.1, 2], [-20, 61.1, -40], [20, 59.1, 40], [-1, 58.1, -2]],
-                        [58, [-1, 58.1, -2], [20, 59.1, 40], [-20, 61.1, -40], [1, 56.1, 2]]
+                        [58, [-1, 58.1, -2], [-20, 57.1, -40], [20, 55.1, 40], [1, 60.1, 2]],  // links: links hoch runter rechts(90RL)
+                        [56, [1, 56.1, 2], [20, 55.1, 40], [-20, 57.1, -40], [-1, 62.1, -2]],  // rechts: rechts runter hoch links(90RL)
+                        [57, [-20, 57.1, -40], [1, 56.1, 2], [-1, 58.1, -2], [20, 59.1, 40]],  // hoch: hoch rechts links runter(90RL)
+                        [55, [20, 55.1, 40], [-1, 58.1, -2], [1, 56.1, 2], [-20, 61.1, -40]]   // runter: runter links rechts hoch(90RL)
                     ]);
                     killGhostUnderFalling();
                 }
             }
             // GEISTER TYP 90RL (59-62) - wechseln zwischen rechts und links drehen
+            // 59=down,  61=up,  60=right,  62=left  90RL  zuletzt rechts abgebogen
             else if (val >= 59 && val < 63) {
                 if (!handleGhostExplosion([59.2, 60.2, 61.2, 62.2])) {
                     ti = l;
                     moveGhost([
-                        [61, [-20, 61.1, -40], [1, 56.1, 2], [-1, 58.1, -2], [20, 59.1, 40]],
-                        [59, [20, 59.1, 40], [-1, 58.1, -2], [1, 56.1, 2], [-20, 61.1, -40]],
-                        [60, [1, 60.1, 2], [20, 55.1, 40], [-20, 57.1, -40], [-1, 62.1, -2]],
-                        [62, [-1, 62.1, -2], [-20, 57.1, -40], [20, 55.1, 40], [1, 60.1, 2]]
+                        [62, [-1, 62.1, -2], [20, 59.1, 40], [-20, 61.1, -40], [1, 56.1, 2]],  // links: links runter hoch rechts
+                        [60, [1, 60.1, 2], [-20, 61.1, -40], [20, 59.1, 40], [-1, 58.1, -2]],  // rechts: rechts hoch runter links
+                        [61, [-20, 61.1, -40], [-1, 62.1, -2], [1, 60.1, 2], [20, 55.1, 40]],  // hoch: hoch links rechts runter
+                        [59, [20, 59.1, 40], [1, 60.1, 2], [-1, 62.1, -2], [-20, 57.1, -40]]   // runter: runter rechts links hoch
                     ]);
                     killGhostUnderFalling();
                 }

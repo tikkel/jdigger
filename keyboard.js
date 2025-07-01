@@ -153,6 +153,9 @@ function kb_press(taste) {
 		taste.preventDefault();
 }
 
+
+/* wird auch durch gemepad.js und touch.js benutzt */
+
 /* Behandelt Drücken der UP-Taste */
 function kb_press_up() {
 	/* Verhindere doppelte Aktivierung */

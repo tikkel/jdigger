@@ -5,7 +5,7 @@
 const DIGGER_VERSION = '01.07.25'
 
 //Parameter
-const LEBENMAX = 2;
+const LEBENMAX = 20;
 const LEBENMIN = 1;
 const FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 
