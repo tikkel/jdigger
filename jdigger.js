@@ -2,7 +2,6 @@
 // Copyright (C) 2019–2025  Marko Klingner
 // GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 
-
 //wenn möglich, schönen Pixelsalat zeichnen
 function scalePixelated(ctx) {
     ctx.imageSmoothingEnabled = false; /* standard */
@@ -12,371 +11,342 @@ function scalePixelated(ctx) {
     ctx.msImageSmoothingEnabled = false; /* IE */
 }
 
-
 function scaleInit() {
-    //Screen Groesse ermitteln (body_width, body_height)
-    if (window.innerWidth) {
-        body_width = window.innerWidth;
-        body_height = window.innerHeight;
-    } else {
-        body_width = document.body.offsetHeight;
-        body_height = document.body.offsetHeight;
-    }
-    console.log('screensize: ' + body_width + 'x' + body_height);
-
-    //Sprite Groesse ermitteln (scale)
-    var scale_width = (body_width / 20) << 0;
-    var scale_height = (body_height / 15) << 0;
-    if (scale_width > scale_height)
-        scale = scale_width;
-    else
-        scale = scale_height;
-
-    //div container fuer canvas #digger, Groesse bestimmen
-    diggerdiv_width = body_width;
-    diggerdiv_height = body_height - scale;
-
-    //Viewport bestimmen, fuer soft_scroll() und draw_field()
-    pre_icon_size = scale;
-    pre_max_w_offset = -(pre_icon_size * 20 - diggerdiv_width);
-    pre_max_h_offset = -(pre_icon_size * 14 - diggerdiv_height);
-
-    //canvas field (#digger), Groesse bestimmen
-    field_width = pre_icon_size * 20;
-    field_height = pre_icon_size * 14;
+  // Screen-Größe ermitteln
+  body_width = window.innerWidth || document.body.offsetWidth;
+  body_height = window.innerHeight || document.body.offsetHeight;
+  
+  console.log(`body_size: ${body_width}x${body_height}`);
+  
+  // Sprite-Größe ermitteln (scale) - das GRÖSSERE wird gewählt
+  scale = Math.max((body_width / 20) | 0, (body_height / 15) | 0);
+  
+  // Container und Viewport
+  diggerdiv_width = body_width;
+  diggerdiv_height = body_height - scale;
+  pre_icon_size = scale;
+  pre_max_w_offset = -(scale * 20 - diggerdiv_width);
+  pre_max_h_offset = -(scale * 14 - diggerdiv_height);
+  
+  // Canvas field
+  field_width = scale * 20;
+  field_height = scale * 14;
 }
-
 
 function scaleBuffer() {
-    // ? sprites_image und chars_image vorgeladen
-    if (sprites_image.complete && chars_image.complete) {
-
-        //Sprites Puffer-Canvas, 1x40 Sprites
-        buffer_sprites_canvas.width = pre_icon_size;
-        buffer_sprites_canvas.height = pre_icon_size * 40;
-        //Pixelgrafik, no dithering
-        scalePixelated(buffer_sprites_context);
-        //Sprites skaliert in "buffer_sprites_canvas" schreiben/puffern
-        buffer_sprites_context.drawImage(sprites_image, 0, 0, buffer_sprites_canvas.width, buffer_sprites_canvas.height);
-        console.log('buffersize sprites: ' + buffer_sprites_canvas.width + 'x' + buffer_sprites_canvas.height);
-
-        //Zeichen Puffer-Canvas
-        buffer_chars_canvas.width = (body_width / 40) << 0;
-        buffer_chars_canvas.height = pre_icon_size * 192;
-        //Pixelgrafik, no dithering
-        scalePixelated(buffer_chars_context);
-        //Charset skaliert in "buffer_chars_canvas" schreiben/puffern
-        buffer_chars_context.fillStyle = KCB_ROT;
-        buffer_chars_context.fillRect(0, 0, buffer_chars_canvas.width, buffer_chars_canvas.height);
-        buffer_chars_context.drawImage(chars_image, 0, 0, buffer_chars_canvas.width, buffer_chars_canvas.height);
-        console.log('buffersize chars: ' + buffer_chars_canvas.width + 'x' + buffer_chars_canvas.height);
-
-    } else
-        setTimeout(scaleBuffer, 1000);
+  // Prüfen ob Bilder geladen sind
+  if (!spritesImage.complete || !charsImage.complete) {
+    setTimeout(scaleBuffer, 1000);
+    return;
+  }
+  
+  // Sprites Buffer-Canvas Setup
+  buffer_spritesCanvas.width = pre_icon_size;
+  buffer_spritesCanvas.height = pre_icon_size * 40;
+  scalePixelated(buffer_spritesContext);
+  buffer_spritesContext.drawImage(spritesImage, 0, 0, buffer_spritesCanvas.width, buffer_spritesCanvas.height);
+  console.log(`buffersize sprites: ${buffer_spritesCanvas.width}x${buffer_spritesCanvas.height}`);
+  
+  // Chars Buffer-Canvas Setup
+  buffer_charsCanvas.width = (body_width / 40) << 0;
+  buffer_charsCanvas.height = pre_icon_size * 192;
+  scalePixelated(buffer_charsContext);
+  buffer_charsContext.fillStyle = KCB_ROT;
+  buffer_charsContext.fillRect(0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
+  buffer_charsContext.drawImage(charsImage, 0, 0, buffer_charsCanvas.width, buffer_charsCanvas.height);
+  console.log(`buffersize chars: ${buffer_charsCanvas.width}x${buffer_charsCanvas.height}`);
 }
-
 
 function scaleReload() {
-    //Fullscreen wieder ermöglichen
-    fullscreen_flag = false;
+  // Fullscreen wieder ermöglichen
+  fullscreen_flag = false;
+  
+  // Scalierfaktor und Puffer aktualisieren
+  scaleInit();
+  scaleBuffer();
+  
+  // Menu refreshen
+  const menudiv = document.getElementById('menudiv');
+  const menuimg = document.getElementById('menuimg');
+  menudiv.style.width = body_width + 'px';
+  menudiv.style.height = body_height + 'px';
+  menuimg.width = body_width;
+  menuimg.height = body_height;
+  scalePixelated(context_menuimg);
+  
+  if (state == 'menu') menu_draw();
+  else if (state == 'highscore') highscore_draw();
+  
+  rd_in = rd_yn = false;
+  
+  // Scoreline refreshen
+  const scorelinediv = document.getElementById('scorelinediv');
+  const scoreline = document.getElementById('scoreline');
+  scorelinediv.style.width = body_width + 'px';
+  scorelinediv.style.height = scale + 'px';
+  scoreline.width = body_width;
+  scoreline.height = scale;
+  scorelinePrewrite();
+  
+  // Spielfeld refreshen
+  const diggerdiv = document.getElementById('diggerdiv');
+  const digger = document.getElementById('digger');
+  diggerdiv.style.width = body_width + 'px';
+  diggerdiv.style.height = (body_height - scale) + 'px';
+  diggerdiv.style.top = scale + 'px';
+  digger.width = field_width;
+  digger.height = field_height;
+  
+  // Drawflags setzen (idx[1-280])
+  for (let l = 1; l < 281; l++) {
+    const i = idx[l] << 0;
+    if (idx[l] == i) idx[l] += 0.1;
+  }
+}
 
-    // Scalierfaktor aktualisieren
-    scaleInit();
-
-    // Puffer refreshen (Sprites and Chars)
-    scaleBuffer();
-
-    // Menu refreshen
-    document.getElementById('menudiv').style.width = (body_width) + 'px';
-    document.getElementById('menudiv').style.height = (body_height) + 'px';
-    document.getElementById('menuimg').width = body_width;
-    document.getElementById('menuimg').height = body_height;
-    scalePixelated(context_menuimg); //Pixelgrafik, no dithering
-    if (state == 'menu')
-        menu_draw();
-    else if (state == 'highscore')
-        highscore_draw();
-    rd_in = false;
-    rd_yn = false;
-
-    // Scoreline refreshen
-    document.getElementById('scorelinediv').style.width = (body_width) + 'px';
-    document.getElementById('scorelinediv').style.height = (scale) + 'px';
-    document.getElementById('scoreline').width = body_width;
-    document.getElementById('scoreline').height = scale;
-    scorelinePrewrite();
-
-    // Spielfeld refreshen (idx[1-280]), alle Sprites neu zeichnen lassen (drawflag setzen)
-    document.getElementById('diggerdiv').style.width = (body_width) + 'px';
-    document.getElementById('diggerdiv').style.height = (body_height - scale) + 'px';
-    document.getElementById('diggerdiv').style.top = (scale) + 'px';
-    document.getElementById('digger').width = field_width;
-    document.getElementById('digger').height = field_height;
-    var i;
-    for (var l = 1; l < 281; l++) {
-        // icon auslesen und nachkommastelle abschneiden
-        i = (idx[l] << 0);
-        // nachkommastelle (drawflag, +0.1) erzeugen, wenn nicht bereits vorhanden (idx[l] == i)
-        if (idx[l] == i)
-            idx[l] += 0.1;
+// Eine Zeile in den Menu-Puffer zeichnen
+function menuLine(strg, x, y) {
+    const dy = y * 8;
+    for (let i = 0; i < strg.length; i++) {
+        buffer_menuContext.drawImage(
+            charsImage, 
+            0, (strg.charCodeAt(i) - 32) * 8, 8, 8,
+            (x + i) * 8, dy, 8, 8
+        );
     }
 }
 
+// Schreibe zeilenweise die MENU-Grafik (320x240) in den Canvas-Puffer
+function menu_draw() {
+    if (!charsImage.complete) {
+        setTimeout(menu_draw, 1000);
+        return;
+    }
+
+    // Puffer mit Hintergrundfarbe füllen
+    buffer_menuContext.globalCompositeOperation = "copy";
+    buffer_menuContext.fillStyle = KCB_BLAU;
+    buffer_menuContext.fillRect(0, 0, 320, 240);
+    buffer_menuContext.globalCompositeOperation = "source-over";
+
+    // Rahmen zeichnen
+    const border = [
+        "\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236",
+        "\237\240\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\242\237",
+        "\237\243\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236\251\237"
+    ];
+    
+    border.forEach((line, i) => menuLine(line, 0, i));
+    
+    // Seitenrahmen
+    for (let i = 3; i < 27; i++) {
+        menuLine("\237\243\237", 0, i);
+        menuLine("\237\251\237", 37, i);
+    }
+
+    // Spieltitel
+    const title = [
+        "\200\201\202\203 \210 \211\212\213\214 \211\212\213\214 \200\201\215\215 \133\215\221\222",
+        "\133 \206\207 \133 \133  \215 \133  \215 \133    \133 \223\224",
+        "\133  \133 \133 \133 \244\216 \133 \244\216 \133\217\220  \133\225\226\227",
+        "\133 \260\261 \133 \133 \316\133 \133 \316\133 \133    \133 \230\231",
+        "\252\253\254\255 \262 \263\264\265\266 \263\264\265\266 \252\253\267\267 \133 \232\233"
+    ];
+    
+    title.forEach((line, i) => menuLine(line, 7, 6 + i));
+
+    // Credits
+    menuLine("WRITTEN BY  ALEXANDER LANG", 7, 13);
+    menuLine("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
+    menuLine("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
+    menuLine("         BERLIN         \247\250", 7, 18);
+
+    // Gamepad-spezifische Steuerung
+    const controls = getGamepadText();
+    menuLine(controls.play, 9, 20);
+    menuLine(controls.rooms, 9, 22);
+
+    // Version und Copyright
+    menuLine("JSv " + DIGGER_VERSION, 5, 25);
+    menuLine("\140 1988", 29, 25);
+    menuLine("by TIKKEL", 5, 26);
+    menuLine("BERLIN", 29, 26);
+
+    // Unterer Rahmen
+    menuLine("\237\243\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310\251\237", 0, 27);
+    menuLine("\237\312\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\314\237", 0, 28);
+    menuLine("\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310", 0, 29);
+
+    // Canvas aktualisieren und anzeigen
+    context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+    document.getElementById('menudiv').style.visibility = "visible";
+}
+
+// Hilfsfunktion für Gamepad-spezifische Texte
+function getGamepadText() {
+    const controlMaps = {
+        sony: { play: "\330: PLAY   \333: HIGHSCORE", rooms: "\332: A LOOK AT THE ROOMS" },
+        xbox: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" },
+        nintendo: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" }
+    };
+    
+    return controlMaps[gamepad_brand] || 
+           { play: "P: PLAY   H: HIGHSCORE", rooms: "L: A LOOK AT THE ROOMS" };
+}
 
 function highscore_draw() {
-    //Puffer mit Farbe löschen (copy)
-    buffer_menu_context.globalCompositeOperation = "copy";
-    buffer_menu_context.fillStyle = KCB_TUERKIS;
-    buffer_menu_context.fillRect(0, 0, 320, 240);
-
-    if (chars_image.complete) {
-        //schneide KCF_WEISS aus KCB_TUERKIS aus
-        //KCB_TUERKIS ist die Hintergrundfarbe und KCF_WEISS ist 100% transparent (destination-out)
-        //im Zielcanvas ist KCF_WEISS dann die vorher gefüllte Farbe
-        buffer_menu_context.globalCompositeOperation = "destination-out";
-
-        //die Überschrift ...
-        menuLine("HIGHSCORE :", 8, 4);
-        menuLine("\217\217\217\217\217\217\217\217\217\217\217", 8, 5);
-
-        //Higscore laden und eventl. aktualisieren
-        storageHighscoreUpdate();
-
-        //die Liste ... 20 Zeilen
-        for (var i = 0; i < 20; i++) {
-            //sprintf(entry, "%.6d  %s", highscore[i].score, highscore[i].name);
-            //var entry = "123456  1234567890";
-            menuLine(highscore[i], 10, 7 + i);
-        }
-
-        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
-        //Menu mit Farbe löschen (copy)
-        context_menuimg.globalCompositeOperation = "copy";
-        context_menuimg.fillStyle = KCF_GELB;
-        context_menuimg.fillRect(0, 0, body_width, body_height);
-        //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
-        context_menuimg.globalCompositeOperation = "source-over";
-        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
-        document.getElementById('menudiv').style.visibility = "visible";
-
-        //eventl. neuen Alias abfragen
-        if (state == 'input')
-            setTimeout(highscoreInput, 50);
-    } else
-        setTimeout(menu_draw, 1000);
+  if (!charsImage.complete) {
+    setTimeout(menu_draw, 1000);
+    return;
+  }
+  
+  // Puffer mit KCB_TUERKIS füllen (copy)
+  buffer_menuContext.globalCompositeOperation = "copy";
+  buffer_menuContext.fillStyle = KCB_TUERKIS;
+  buffer_menuContext.fillRect(0, 0, 320, 240);
+  
+  // KCF_WEISS aus KCB_TUERKIS ausschneiden (destination-out für Transparenz)
+  buffer_menuContext.globalCompositeOperation = "destination-out";
+  menuLine("HIGHSCORE :", 8, 4);
+  menuLine("\217\217\217\217\217\217\217\217\217\217\217", 8, 5);
+  
+  // Highscore laden und 20 Zeilen zeichnen
+  storageHighscoreUpdate();
+  for (let i = 0; i < 20; i++) {
+    menuLine(highscore[i], 10, 7 + i);
+  }
+  
+  // Menu-Canvas mit KCF_GELB füllen, dann Puffer skaliert kopieren
+  context_menuimg.globalCompositeOperation = "copy";
+  context_menuimg.fillStyle = KCF_GELB;
+  context_menuimg.fillRect(0, 0, body_width, body_height);
+  context_menuimg.globalCompositeOperation = "source-over";
+  context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+  
+  document.getElementById('menudiv').style.visibility = "visible";
+  
+  // Eventl. neuen Alias abfragen
+  if (state == 'input') setTimeout(highscoreInput, 50);
 }
-
 
 function highscoreInput() {
-    if (!rd_in) { //braucht nur 1x gemalt werden
-        //Loop Tastaturabfrage
-        buffer_menu_context.globalCompositeOperation = "destination-out";
-        menuLine("...well done, please enter your name :", 1, 2);
-
-        //Zeile löschen
-        //Cursor(\177) und Zeichen
-        buffer_menu_context.globalCompositeOperation = "source-over";
-        buffer_menu_context.fillStyle = KCB_TUERKIS;
-        buffer_menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
-        buffer_menu_context.globalCompositeOperation = "destination-out";
-        menuLine(input_alias + "\177", 17, 7 + input_line);
-
-        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
-        //Menu mit Farbe löschen (copy)
-        context_menuimg.globalCompositeOperation = "copy";
-        context_menuimg.fillStyle = KCF_GELB;
-        context_menuimg.fillRect(0, 0, body_width, body_height);
-        //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
-        context_menuimg.globalCompositeOperation = "source-over";
-        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
-
-        rd_in = true;
+  // Eingabefeld nur einmal zeichnen
+  if (!rd_in) {
+    // Eingabeaufforderung ausschneiden
+    buffer_menuContext.globalCompositeOperation = "destination-out";
+    menuLine("...well done, please enter your name :", 1, 2);
+    
+    // Eingabezeile mit Cursor neu zeichnen
+    buffer_menuContext.globalCompositeOperation = "source-over";
+    buffer_menuContext.fillStyle = KCB_TUERKIS;
+    buffer_menuContext.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
+    buffer_menuContext.globalCompositeOperation = "destination-out";
+    menuLine(input_alias + "\177", 17, 7 + input_line);
+    
+    // Puffer skaliert ins Menu-Canvas kopieren
+    context_menuimg.globalCompositeOperation = "copy";
+    context_menuimg.fillStyle = KCF_GELB;
+    context_menuimg.fillRect(0, 0, body_width, body_height);
+    context_menuimg.globalCompositeOperation = "source-over";
+    context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+    
+    rd_in = true;
+  }
+  
+  // Tasteneingabe verarbeiten
+  if (input != undefined) {
+    if (input == 'Enter') {
+      // Enter -> Eingabe abschließen
+      rd_in = false;
+      input = undefined;
+      handled = true;
+      highscore[input_line] += "  " + input_alias;
+      storageHighscoreSave();
+      setTimeout(highscoreYesNo, 100);
+      return;
+    } else if (input == 'Backspace') {
+      // Backspace -> letztes Zeichen löschen
+      if (input_alias.length > 0) {
+        input_alias = input_alias.substr(0, input_alias.length - 1);
+        rd_in = false;
+      }
+    } else {
+      // Zeichen hinzufügen
+      input_alias += input;
+      rd_in = false;
+      
+      // Max. 14 Zeichen -> automatisch abschließen
+      if (input_alias.length == 14) {
+        highscore[input_line] += "  " + input_alias;
+        storageHighscoreSave();
+        setTimeout(highscoreYesNo, 100);
+        return;
+      }
     }
-
-    if (input != undefined) {
-        if (input == 'Enter') { //Enter -> 'weiter zu YesNo'
-            rd_in = false;
-            input = undefined;
-            handled = true;
-            highscore[input_line] = highscore[input_line] + "  " + input_alias; //"99999  alias678901234"
-            storageHighscoreSave();
-            setTimeout(highscoreYesNo, 100);
-            return;
-        } else if (input == 'Backspace') {
-            if (input_alias.length > 0) {
-                input_alias = input_alias.substr(0, input_alias.length - 1);
-                rd_in = false;
-            }
-            input = undefined;
-            handled = true;
-        } else { //if (input > 31 && input < 127) { //32-126
-            input_alias = input_alias + input; //String.fromCharCode(input);
-            rd_in = false;
-            input = undefined;
-            handled = true;
-            // max. 14 Zeichen -> 'weiter zu YesNo'
-            if (input_alias.length == 14) {
-                highscore[input_line] = highscore[input_line] + "  " + input_alias; //"99999  alias678901234"
-                storageHighscoreSave();
-                setTimeout(highscoreYesNo, 100);
-                return;
-            }
-        }
-    }
-
-    //keine Taste, weiter warten
-    setTimeout(highscoreInput, 50);
+    
+    input = undefined;
+    handled = true;
+  }
+  
+  // Weiter warten auf Eingabe
+  setTimeout(highscoreInput, 50);
 }
 
-
 function highscoreYesNo() {
-    if (!rd_yn) { //braucht nur 1x gemalt werden
-        //Loop Tastaturabfrage Y/N (89/78)
-        buffer_menu_context.globalCompositeOperation = "destination-out";
+    // Einmaliges Zeichnen der Y/N Abfrage
+    if (!rd_yn) {
+        // Y/N Abfrage anzeigen
+        buffer_menuContext.globalCompositeOperation = "destination-out";
         menuLine("NEW GAME ? (Y/N)", 12, 28);
 
-        //Zeile löschen
-        //Cursor(\177) und Zeichen
-        buffer_menu_context.globalCompositeOperation = "source-over";
-        buffer_menu_context.fillStyle = KCB_TUERKIS;
-        buffer_menu_context.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
-        buffer_menu_context.globalCompositeOperation = "destination-out";
+        // Eingabezeile löschen
+        buffer_menuContext.globalCompositeOperation = "source-over";
+        buffer_menuContext.fillStyle = KCB_TUERKIS;
+        buffer_menuContext.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
+        buffer_menuContext.globalCompositeOperation = "destination-out";
         menuLine(input_alias, 17, 7 + input_line);
 
-        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
-        //Menu mit Farbe löschen (copy)
+        // Puffer ins sichtbare Canvas kopieren
         context_menuimg.globalCompositeOperation = "copy";
         context_menuimg.fillStyle = KCF_GELB;
         context_menuimg.fillRect(0, 0, body_width, body_height);
-        //Menu mit Puffer beschreiben (Weiß ist ausgeschnitten und transparent, KCF_GELB)
         context_menuimg.globalCompositeOperation = "source-over";
-        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
+        context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
 
         rd_yn = true;
     }
 
-    switch (input) {
-        case 'y':
-        case 'Y':
-            input_alias = "";
-            input_line = 0;
-            input = undefined;
-            rd_yn = false;
-            //storage_game_restore(); //spielstand restaurieren
+    // Eingabe verarbeiten
+    const key = input?.toLowerCase();
+    if (key === 'y' || key === 'n') {
+        // Gemeinsame Aufräumarbeiten
+        input_alias = "";
+        input_line = 0;
+        input = undefined;
+        rd_yn = false;
+        handled = true;
+        
+        // Virtuelle Tastatur ausblenden
+        document.body.removeEventListener('click', vkb_focus, false);
+        document.body.removeEventListener('input', vkb_input, false);
+        virt_kbd.blur();
+
+        if (key === 'y') {
+            // Neues Spiel starten
             state = 'init';
             init_room(score_raum);
-            handled = true;
-            //virtuelle Tastatur ausblenden
-            document.body.removeEventListener('click', vkb_focus, false);
-            document.body.removeEventListener('input', vkb_input, false);
-            virt_kbd.blur();
-            return;
-        case 'n':
-        case 'N':
-            input_alias = "";
-            input_line = 0;
-            input = undefined;
-            rd_yn = false;
+        } else {
+            // Zurück zum Menü
             idle_stop();
             state = 'menu';
             menu_draw();
-            handled = true;
-            //virtuelle Tastatur ausblenden
-            document.body.removeEventListener('click', vkb_focus, false);
-            document.body.removeEventListener('input', vkb_input, false);
-            virt_kbd.blur();
-            return;
+        }
+        return;
     }
 
-    //keine Taste, weiter warten
+    // Weiter warten auf Y/N Eingabe
     setTimeout(highscoreYesNo, 50);
 }
-
-
-//schreibe zeilenweise die MENU-Grafik (in orig. Größe 320x240) in den Canvas-Puffer (buffer_menu_canvas)
-function menu_draw() {
-    //Puffer mit Farbe löschen (copy)
-    buffer_menu_context.globalCompositeOperation = "copy";
-    buffer_menu_context.fillStyle = KCB_BLAU;
-    buffer_menu_context.fillRect(0, 0, 320, 240);
-
-    if (chars_image.complete) {
-        //male KCF_WEISS auf die vorher KCB_BLAU gefüllte Fläche über
-        //KCB_BLAU ist die Hintergrundfarbe und KCF_WEISS ist 100% deckend (source-over)
-        //im Zielcanvas ist KCF_WEISS dann also normal KCF_WEISS
-        buffer_menu_context.globalCompositeOperation = "source-over";
-
-        //der Text ...
-        menuLine("\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236", 0, 0);
-        menuLine("\237\240\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\242\237", 0, 1);
-        menuLine("\237\243\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236\251\237", 0, 2);
-        for (var i = 3; i < 27; i++) {
-            menuLine("\237\243\237", 0, i);
-            menuLine("\237\251\237", 37, i);
-        }
-        menuLine("\200\201\202\203 \210 \211\212\213\214 \211\212\213\214 \200\201\215\215 \133\215\221\222", 7, 6);
-        menuLine("\133 \206\207 \133 \133  \215 \133  \215 \133    \133 \223\224", 7, 7);
-        menuLine("\133  \133 \133 \133 \244\216 \133 \244\216 \133\217\220  \133\225\226\227", 7, 8);
-        menuLine("\133 \260\261 \133 \133 \316\133 \133 \316\133 \133    \133 \230\231", 7, 9);
-        menuLine("\252\253\254\255 \262 \263\264\265\266 \263\264\265\266 \252\253\267\267 \133 \232\233", 7, 10);
-
-        menuLine("WRITTEN BY  ALEXANDER LANG", 7, 13);
-        /* menuLine("GRAPHIX BY  MARTIN    GUTH", 7, 15); */
-        menuLine("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
-        menuLine("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
-        menuLine("         BERLIN         \247\250", 7, 18);
-        if (gamepad_brand == 'sony') {
-            // X:\330 O:\331 Q:\332 D:\333
-            menuLine("\330: PLAY   \333: HIGHSCORE", 9, 20);
-            menuLine("\332: A LOOK AT THE ROOMS", 9, 22);
-        }
-        else if (gamepad_brand == 'xbox') {
-            // A:\334 B:\335 X:\336 Y:\337
-            menuLine("\334: PLAY   \337: HIGHSCORE", 9, 20);
-            menuLine("\336: A LOOK AT THE ROOMS", 9, 22);
-        }
-        else if (gamepad_brand == 'nintendo') {
-            // A:\334 B:\335 X:\336 Y:\337
-            menuLine("\334: PLAY   \337: HIGHSCORE", 9, 20);
-            menuLine("\336: A LOOK AT THE ROOMS", 9, 22);
-        }
-        else { 
-            menuLine("P: PLAY   H: HIGHSCORE", 9, 20);
-            menuLine("L: A LOOK AT THE ROOMS", 9, 22);
-        }
-        menuLine("JSv " + DIGGER_VERSION, 5, 25);
-        menuLine("\140 1988", 29, 25);
-        menuLine("by TIKKEL", 5, 26);
-        menuLine("BERLIN", 29, 26);
-
-        menuLine("\237\243\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310\251\237", 0, 27);
-        menuLine("\237\312\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\314\237", 0, 28);
-        menuLine("\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310", 0, 29);
-
-        //kopiere die Grafik aus dem Puffer skaliert (body_width x body_height) in das sichtbare Menu-Canvas (canvas_menuimg)
-        context_menuimg.drawImage(buffer_menu_canvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
-        document.getElementById('menudiv').style.visibility = "visible";
-    } else
-        setTimeout(menu_draw, 1000);
-}
-
-
-//eine Zeile in den Menu-Puffer
-function menuLine(s, x, y) {
-    var sx, sy, dx, dy;
-    var pre_w = 8;
-    var pre_h = 8;
-    for (var i = 0; i < s.length; i++) {
-        sx = 0;
-        sy = (s.charCodeAt(i) - 32) * 8;
-        dx = (x + i) * pre_w;
-        dy = y * pre_h;
-        //buffer_menu_context.globalCompositeOperation = "destination-out";
-        buffer_menu_context.drawImage(chars_image, sx, sy, 8, 8, dx, dy, pre_w, pre_h);
-
-    }
-}
-
 
 //Highscore laden und aktualisieren
 function storageHighscoreUpdate() {
@@ -437,7 +407,6 @@ function storageHighscoreUpdate() {
     }
 }
 
-
 //Highscore sichern
 function storageHighscoreSave() {
     //schreibe Array
@@ -451,6 +420,34 @@ function storageHighscoreSave() {
     }
 }
 
+// Highscore-Eingabe über Tastatur (PC)
+function kb_input(taste) {
+    if (state === 'input') {
+        input = taste.key.replace(ALLOWED_CHARS, '');
+    }
+}
+
+// Highscore-Eingabe über virtuelle Tastatur (Mobile/Smart TV)
+function vkb_input() {
+    if (state !== 'input') return;
+    
+    const currentLength = virt_kbd.value.length;
+    const hasNewChar = virt_kbd_last_length < currentLength;
+    
+    input = hasNewChar 
+        ? virt_kbd.value.charAt(currentLength - 1).replace(ALLOWED_CHARS, '')
+        : 'Backspace';
+    
+    virt_kbd_last_length = currentLength;
+}
+
+// Virtuelle Tastatur aktivieren (Mobile)
+function vkb_focus() {
+    exit_fullscreen();
+    virt_kbd.focus();
+    virt_kbd.value = "";
+    virt_kbd_last_length = -1;
+}
 
 //Spielstand sichern
 function storage_game_save() {
@@ -469,7 +466,6 @@ function storage_game_save() {
         console.log('storage_game_save: nach Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
 }
-
 
 //Spielstand restaurieren
 function storage_game_restore() {
@@ -600,83 +596,46 @@ function mo_press(ev) {
     handlers[state]?.();
 }
 
-//FULLSCREEN
+// Fullscreen aktivieren
 function fullscreen() {
-    var i = document.getElementById('body');
-    // go full-screen
-    if (i.requestFullscreen) {
-        i.requestFullscreen();
-        fullscreen_flag = true;
-    } else if (i.webkitRequestFullscreen) {
-        i.webkitRequestFullscreen();
-        fullscreen_flag = true;
-    } else if (i.mozRequestFullScreen) {
-        i.mozRequestFullScreen();
-        fullscreen_flag = true;
-    } else if (i.msRequestFullscreen) {
-        i.msRequestFullscreen();
-        fullscreen_flag = true;
+    const element = document.getElementById('body');
+    const methods = ['requestFullscreen', 'webkitRequestFullscreen', 'mozRequestFullScreen', 'msRequestFullscreen'];
+    
+    for (const method of methods) {
+        if (element[method]) {
+            element[method]();
+            fullscreen_flag = true;
+            return;
+        }
     }
 }
 
-//NOFULLSCREEN
+// Fullscreen beenden
 function exit_fullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
+    const methods = ['exitFullscreen', 'webkitExitFullscreen', 'mozCancelFullScreen', 'msExitFullscreen'];
+    
+    for (const method of methods) {
+        if (document[method]) {
+            document[method]();
+            return;
+        }
     }
 }
 
+// Idle-Modus starten - EXIT(41) durch Digger(8.1) ersetzen
 function idle_start() {
-    //EXIT(41) finden und Digger dort setzen (auch mehrfach, siehe Raum29/Level30)
-    for (var l = 1; l < 281; l++) {
-        if (idx[l] == 41)
-            idx[l] = 8.1;
+    for (let i = 1; i < 281; i++) {
+        if (idx[i] === 41) idx[i] = 8.1;
     }
-    sfx.step = true;
+    SFX.STEP = true;
     state = 'play';
 }
 
-function idle_exit() {
-    next_raum = true;
-}
+// Zum nächsten Raum wechseln
+const idle_exit = () => next_raum = true;
 
-function idle_stop() {
-    window.clearTimeout(verz);
-}
-
-// H I G H S C O R E   I N P U T
-//Highscore-ALIAS-Eingabe (PC)
-function kb_input(taste) {
-    if (state == 'input')
-        input = taste.key.replace(/[^a-zA-Z0-9!"#$%&()*+,./:;<=>?@\-\s]+/g, '');
-}
-
-//Highscore-ALIAS-Eingabe (Table, Handy, LG-SmartTV)
-function vkb_input() {
-    if (state == 'input' && (virt_kbd_last_length < virt_kbd.value.length)) {
-        input = virt_kbd.value.charAt(virt_kbd.value.length - 1).replace(/[^a-zA-Z0-9!"#$%&()*+,./:;<=>?@\-\s]+/g, '');
-        virt_kbd_last_length = virt_kbd.value.length;
-    } else {
-        input = 'Backspace';
-        virt_kbd_last_length = virt_kbd.value.length;
-    }
-}
-
-//virtuelle Tastatur einblenden (Tablet, Handy)
-function vkb_focus() {
-    exit_fullscreen();
-    virt_kbd.focus();
-    virt_kbd.value = "";
-    virt_kbd_last_length = -1;
-}
-
-
+// Timeout stoppen
+const idle_stop = () => clearTimeout(verz);
 
 function init_room(level) {
     console.log('Level: ' + level);
@@ -788,7 +747,7 @@ function draw_digger_death() {
 
     idx[d_idx] = 63.1;
     digger_is_dead = true;
-    sfx.diamond = true;
+    SFX.DIAMOND = true;
 
     // Diggeranimation zurücksetzen
     digger_animation_left = false; digger_animation_right = false;
@@ -818,47 +777,47 @@ function soft_scroll() {
     }
 
     //links, Randabstand < 2 Spritebreiten?
-    if (((digger_x + viewport_x) < (pre_abstand)) && (actual_margin_left <= viewport_x) && (viewport_x != 0)) {
+    if (((digger_x + viewport_x) < (pre_abstand)) && (actual_marginLeft <= viewport_x) && (viewport_x != 0)) {
         //scroll nach rechts, -x..0
         viewport_x = (diggerdiv_width / 2 - digger_x - pre_icon_size / 2) << 0;
         if (viewport_x > 0)
             viewport_x = 0;
-        duration_x = Math.abs(viewport_x - actual_margin_left) / duration / (pre_icon_size / 16);
+        duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginLeft = viewport_x + "px";
     }
     //rechts, Randabstand < 2 Spritebreiten?
-    else if (((digger_x + pre_icon_size + viewport_x) > (diggerdiv_width - pre_abstand)) && (actual_margin_left >= viewport_x) && (viewport_x != pre_max_w_offset)) {
+    else if (((digger_x + pre_icon_size + viewport_x) > (diggerdiv_width - pre_abstand)) && (actual_marginLeft >= viewport_x) && (viewport_x != pre_max_w_offset)) {
         //scroll nach links, 0..+x
         viewport_x = (diggerdiv_width / 2 - digger_x - pre_icon_size / 2) << 0;
         if (viewport_x < pre_max_w_offset)
             viewport_x = pre_max_w_offset;
         if (viewport_x > 0)
             viewport_x = 0;
-        duration_x = Math.abs(viewport_x - actual_margin_left) / duration / (pre_icon_size / 16);
+        duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginLeft = viewport_x + "px";
     }
 
     //oben, Randabstand < 2 Spritehöhen
-    if (((digger_y + viewport_y) < (pre_abstand)) && (actual_margin_top <= viewport_y) && (viewport_y != 0)) {
+    if (((digger_y + viewport_y) < (pre_abstand)) && (actual_marginTop <= viewport_y) && (viewport_y != 0)) {
         //scroll nach unten, -y..0
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y > 0)
             viewport_y = 0;
-        duration_y = Math.abs(viewport_y - actual_margin_top) / duration / (pre_icon_size / 16);
+        duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginTop = viewport_y + "px";
     }
     //unten, Randabstand < 2 Spritehöhen
-    else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_margin_top >= viewport_y) && (viewport_y != pre_max_h_offset)) {
+    else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_marginTop >= viewport_y) && (viewport_y != pre_max_h_offset)) {
         //scroll nach oben, 0--+y
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y < pre_max_h_offset)
             viewport_y = pre_max_h_offset;
         if (viewport_y > 0)
             viewport_y = 0;
-        duration_y = Math.abs(viewport_y - actual_margin_top) / duration / (pre_icon_size / 16);
+        duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
         canvas_digger.style.marginTop = viewport_y + "px";
     }
@@ -867,8 +826,8 @@ function soft_scroll() {
 
 function draw_field() {
     // Style-Werte nur einmal pro Frame berechnen
-    actual_margin_left = parseInt(window.getComputedStyle(canvas_digger).marginLeft, 10);
-    actual_margin_top = parseInt(window.getComputedStyle(canvas_digger).marginTop, 10);
+    actual_marginLeft = parseInt(window.getComputedStyle(canvas_digger).marginLeft, 10);
+    actual_marginTop = parseInt(window.getComputedStyle(canvas_digger).marginTop, 10);
     
     // Geister-Set für O(1) Lookup statt wiederholten Vergleichen
     const ghostSet = new Set([43.2, 44.2, 45.2, 46.2, 47.2, 48.2, 49.2, 50.2, 
@@ -876,10 +835,10 @@ function draw_field() {
                               59.2, 60.2, 61.2, 62.2]);
     
     // Viewport-Grenzen vorberechnen
-    const viewLeft = -actual_margin_left;
-    const viewRight = diggerdiv_width - actual_margin_left;
-    const viewTop = -actual_margin_top;
-    const viewBottom = diggerdiv_height - actual_margin_top;
+    const viewLeft = -actual_marginLeft;
+    const viewRight = diggerdiv_width - actual_marginLeft;
+    const viewTop = -actual_marginTop;
+    const viewBottom = diggerdiv_height - actual_marginTop;
     
     let i, x, y, z, s, idx_val;
     
@@ -921,7 +880,7 @@ function draw_field() {
         // Optimiertes Clipping: nur zeichnen wenn sichtbar oder kein Diamant
         if (i < 64 || (x + pre_icon_size >= viewLeft && x <= viewRight && 
                        y + pre_icon_size >= viewTop && y <= viewBottom)) {
-            context_digger.drawImage(buffer_sprites_canvas, 0, sprites[i] * pre_icon_size, 
+            context_digger.drawImage(buffer_spritesCanvas, 0, sprites[i] * pre_icon_size, 
                                    pre_icon_size, pre_icon_size, x, y, pre_icon_size, pre_icon_size);
         }
     }
@@ -934,16 +893,16 @@ function scorelineChar(s, x, y) {
     for (let i = 0; i < s.length; i++) {
         const sx = 0;
         const sy = (s.charCodeAt(i) - 32) * pre_icon_size;
-        const dx = (x + i) * buffer_chars_canvas.width;
+        const dx = (x + i) * buffer_charsCanvas.width;
         const dy = y * pre_icon_size;
 
-        // vorskalierte Zeichen aus "buffer_chars_canvas" ins sichtbare "canvas_scoreline" zeichnen
+        // vorskalierte Zeichen aus "buffer_charsCanvas" ins sichtbare "canvas_scoreline" zeichnen
         context_scoreline.drawImage(
-            buffer_chars_canvas,
+            buffer_charsCanvas,
             sx, sy,
-            buffer_chars_canvas.width, pre_icon_size,
+            buffer_charsCanvas.width, pre_icon_size,
             dx, dy,
-            buffer_chars_canvas.width, pre_icon_size
+            buffer_charsCanvas.width, pre_icon_size
         );
     }
 }
@@ -1002,7 +961,7 @@ function scorelineUpdate() {
     if (autoscore > 0) {
         score_punkte += 5;
         autoscore -= 5;
-        sfx.stone = true;
+        SFX.STONE = true;
     }
     if (score_punkte !== last_punkte) {
         let sp = score_punkte.toString().padStart(SCORE_LENGTH, '0');
@@ -1030,88 +989,72 @@ function scorelineUpdate() {
 
 //FRAME 1/2
 function draw_frame1() {
-
-    // DIGGER_HALT
+    // === DIGGER STOPP ===
+    // Wenn das Spiel läuft, der Digger nicht tot ist, nicht im Leerlauf ist und sich nicht bewegt,
+    // dann wird er in den Leerlauf-Zustand versetzt
     if (state === 'play' && !digger_death && !digger_idle && digger_go === 'NONE') {
-        // Animation zurücksetzen
         idx[d_idx] = 8.1;
-        digger_step_left = 13;
-        digger_step_up = 9;
-        digger_step_right = 19;
-        digger_step_down = 11;
+        digger_step_left = 13; digger_step_up = 9; digger_step_right = 19; digger_step_down = 11;
         digger_animation_left = digger_animation_right = digger_animation_up = digger_animation_down = false;
         digger_idle = true;
     }
 
-    // DIGGER_MOVE
+    // === DIGGER BEWEGUNG ===
+    // Behandelt die Bewegung des Diggers in alle vier Richtungen
     if (state === 'play' && !digger_death && !digger_idle) {
+        // Stein-Schiebe-Flags zurücksetzen wenn Richtung gewechselt wird
         if (stone_l && digger_go !== 'LEFT') stone_l = false;
         if (stone_r && digger_go !== 'RIGHT') stone_r = false;
-        var directions = {
-            'LEFT': { offset: -1, stone_offset: -2, stone_flag: 'stone_l', 
-                    step_var: 'digger_step_left', step_init: 13, anim_flag: 'digger_animation_left' },
-            'UP': { offset: -20, stone_offset: null, stone_flag: null,
-                step_var: 'digger_step_up', step_init: 9, anim_flag: 'digger_animation_up' },
-            'RIGHT': { offset: 1, stone_offset: 2, stone_flag: 'stone_r',
-                    step_var: 'digger_step_right', step_init: 19, anim_flag: 'digger_animation_right' },
-            'DOWN': { offset: 20, stone_offset: null, stone_flag: null,
-                    step_var: 'digger_step_down', step_init: 11, anim_flag: 'digger_animation_down' }
+        
+        // Konfiguration für alle Bewegungsrichtungen
+        const dirs = {
+            'LEFT': { off: -1, stone_off: -2, stone_flag: 'stone_l', step: 'digger_step_left', init: 13, anim: 'digger_animation_left' },
+            'UP': { off: -20, stone_off: null, stone_flag: null, step: 'digger_step_up', init: 9, anim: 'digger_animation_up' },
+            'RIGHT': { off: 1, stone_off: 2, stone_flag: 'stone_r', step: 'digger_step_right', init: 19, anim: 'digger_animation_right' },
+            'DOWN': { off: 20, stone_off: null, stone_flag: null, step: 'digger_step_down', init: 11, anim: 'digger_animation_down' }
         };
-        var dir = directions[digger_go];
+        
+        const dir = dirs[digger_go];
         if (dir) {
-            var target_idx = d_idx + dir.offset;
-            var target_val = idx[target_idx];
-            // Diamant sammeln
-            if (target_val === 3) {
-                score_ges++;
-                score_punkte += 3;
-                sfx.diamond = true;
-            }
-            // Ausgang erreicht
-            else if (target_val === 41) {
-                autoscore = 100;
-                state = 'init';
-                verz = window.setTimeout(idle_exit, 3000);
-            }
-            // Geist berührt
-            else if (target_val >= 43 && target_val < 63) {
-                digger_death = true;
-            }
-            // Stein schieben (nur links/rechts)
-            if (target_val === 7 && dir.stone_offset) {
-                if (idx[d_idx + dir.stone_offset] === 1) {
-                    var stone_flag = window[dir.stone_flag];
-                    if (stone_flag) {
-                        idx[d_idx + dir.stone_offset] = 7.1;
-                        idx[target_idx] = 1.1;
-                        window[dir.stone_flag] = false;
-                        brumm = true;
-                    } else {
-                        window[dir.stone_flag] = true;
-                    }
+            const target = d_idx + dir.off;
+            const val = idx[target];
+            
+            // Interaktionen mit Spielelementen behandeln
+            if (val === 3) { score_ges++; score_punkte += 3; SFX.DIAMOND = true; } // Diamant einsammeln
+            else if (val === 41) { autoscore = 100; state = 'init'; verz = window.setTimeout(idle_exit, 3000); } // Ausgang erreicht
+            else if (val >= 43 && val < 63) digger_death = true; // Geist berührt - Tod
+            
+            // Steine schieben (nur links/rechts möglich)
+            if (val === 7 && dir.stone_off && idx[d_idx + dir.stone_off] === 1) {
+                if (window[dir.stone_flag]) {
+                    // Stein wird geschoben
+                    idx[d_idx + dir.stone_off] = 7.1;
+                    idx[target] = 1.1;
+                    window[dir.stone_flag] = false;
+                    brumm = true; // Vibration aktivieren
+                } else {
+                    window[dir.stone_flag] = true; // Stein-Schiebe-Flag setzen
                 }
             }
-            // Bewegung ausführen (wenn Ziel Sand, Diamant, Leer, Ausgang oder geschobener Stein)
-            if (target_val < 4 || target_val === 41 || 
-                (target_val === 7 && dir.stone_offset && idx[target_idx] === 1.1)) {
-                idx[d_idx] = 1.1;
-                d_idx += dir.offset;
-                sfx.step = true;
+            
+            // Bewegung ausführen wenn Zielfeld frei ist
+            if (val < 4 || val === 41 || (val === 7 && dir.stone_off && idx[target] === 1.1)) {
+                idx[d_idx] = 1.1; // Alte Position leeren
+                d_idx += dir.off; // Neue Position setzen
+                SFX.STEP = true; // Schritt-Sound aktivieren
             }
-            // Animation aktivieren (beim ersten Schritt)
-            if (window[dir.step_var] === dir.step_init) {
+            
+            // Animation starten
+            if (window[dir.step] === dir.init) {
                 digger_animation_left = digger_animation_right = digger_animation_up = digger_animation_down = false;
-                window[dir.anim_flag] = true;
-                digger_step_left = 13;
-                digger_step_up = 9;
-                digger_step_right = 19;
-                digger_step_down = 11;
+                window[dir.anim] = true;
+                digger_step_left = 13; digger_step_up = 9; digger_step_right = 19; digger_step_down = 11;
             }
         }
     }
 
-    // DIGGER_ANIMIEREN
-    // Links/Rechts (bei jedem Halbbild)
+    // === DIGGER ANIMATION ===
+    // Animiert den Digger während der Bewegung
     if (digger_animation_left) {
         idx[d_idx] = digger_step_left + 0.1;
         digger_step_left = digger_step_left === 18 ? 13 : digger_step_left + 1;
@@ -1119,7 +1062,6 @@ function draw_frame1() {
         idx[d_idx] = digger_step_right + 0.1;
         digger_step_right = digger_step_right === 24 ? 19 : digger_step_right + 1;
     }
-    // Hoch/Runter (nur bei jedem Vollbild)
     if (digger_animation_up) {
         idx[d_idx] = digger_step_up + 0.1;
         digger_step_up = digger_step_up === 10 ? 9 : digger_step_up + 1;
@@ -1128,420 +1070,257 @@ function draw_frame1() {
         digger_step_down = digger_step_down === 12 ? 11 : digger_step_down + 1;
     }
 
-    //SPIELFELD AKTIVITAETEN
+    // === SPIELFELD AKTIVITÄTEN ===
     if (state == 'play') {
-
-        // DIGGER_IDLE
-        // Digger langweilt sich und blinzelt oder stampft
+        // === DIGGER IDLE ===
+        // Spezielle Animationen wenn der Digger stillsteht
         if (digger_idle) {
-            zufall = (zufall % 280) + 1;
-            // Neue Animation starten
+            zufall = (zufall % 280) + 1; // Zufällige Position im Spielfeld
             if (!digger_in_idle) {
-                var zufallsWert = idx[zufall];
-                if (zufallsWert === 7) {        // Stein -> Digger blinzeln
-                    digger_idle_augen = 24;
-                    digger_in_idle = true;
-                    idle_augen = true;
-                } else if (zufallsWert === 3) { // Diamant -> Digger stampfen
-                    digger_idle_stampfen = 32;
-                    digger_in_idle = true;
-                    idle_augen = false;
-                }
+                const val = idx[zufall];
+                if (val === 7) { digger_idle_augen = 24; digger_in_idle = true; idle_augen = true; } // Augen-Animation bei Steinen
+                else if (val === 3) { digger_idle_stampfen = 32; digger_in_idle = true; idle_augen = false; } // Stampf-Animation bei Diamanten
             }
-            // Animation fortsetzen
             if (digger_in_idle) {
-                if (idle_augen) {   // Digger blinzeln
-                    if (++digger_idle_augen === 33) {
-                        digger_in_idle = false;
-                    }
-                }
-                else {              // Digger stampfen
-                    if (++digger_idle_stampfen === 41) {
-                        digger_in_idle = false;
-                    }
-                }
+                if (idle_augen && ++digger_idle_augen === 33) digger_in_idle = false;
+                else if (!idle_augen && ++digger_idle_stampfen === 41) digger_in_idle = false;
             }
         } else {
-            digger_in_idle = false;             // Animation abbrechen  
+            digger_in_idle = false;
         }
-        if (digger_in_idle && !digger_death) {  // Animation setzen
-            idx[d_idx] = (idle_augen ? digger_idle_augen : digger_idle_stampfen) + 0.1;  //
+        // Leerlauf-Animation anzeigen
+        if (digger_in_idle && !digger_death) {
+            idx[d_idx] = (idle_augen ? digger_idle_augen : digger_idle_stampfen) + 0.1;
         }
 
-        //GEISTER STONE DIAMOND EXIT STAUB (280xloop)
-        //- Geister bewegen
-        //- Steine und Diamanten fallen lassen
-        //- Ausgang anzeigen, wenn genügend Diamanten gesammelte
-        //- Staub langsam auflösen
-        var ti = 1;
-        for (var l = 1; l < 281; l++) {
+        // === HAUPT-SPIELSCHLEIFE (280 Iterationen) ===
+        // Durchläuft das gesamte Spielfeld und behandelt alle Objekte
+        let ti = 1;
+        for (let l = 1; l < 281; l++) {
+            const val = idx[l];
 
-            // GEISTER 180 (43-46)
-            if (idx[l] >= 43 && idx[l] < 47) {
-                // Zum sterben markierte Geister(nn.2)?
-                if (idx[l] == 43.2 || idx[l] == 44.2 || idx[l] == 45.2 || idx[l] == 46.2) {
-                    // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                    if ([l-21,l-20,l-19,l-1,l+1,l+19,l+20,l+21].some(i => idx[i] >= 8 && idx[i] < 41))
-                        digger_death = true;
-                    // Geist zu Staub
+            // === GEISTER BEHANDLUNG ===
+            // Funktion für Geister-Explosion
+            const handleGhostExplosion = (ghostVals) => {
+                if (ghostVals.includes(val)) {
+                    // 3x3 Explosionsbereich um den Geist
+                    const explode = [l-21,l-20,l-19,l-1,l+1,l+19,l+20,l+21];
+                    if (explode.some(i => idx[i] >= 8 && idx[i] < 41)) digger_death = true; // Digger in Explosion
+                    explode.forEach(i => idx[i] = 0.1); // Explosionsbereich leeren
                     [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    sfx.stone = true;
+                    SFX.STONE = true;
+                    return true;
                 }
-                //GEISTER hin und her (43-46)
-                else {
-                    ti = l;
-                    let dirs = [
-                        [45, -20, 20, 45.1, 43.1, -40, 40], // HOCH
-                        [43, 20, -20, 43.1, 45.1, 40, -40], // RUNTER
-                        [44, 1, -1, 44.1, 46.1, 2, -2],     // RECHTS
-                        [46, -1, 1, 46.1, 44.1, -2, 2]      // LINKS
-                    ];
-                    
-                    for (let [ghost, dir1, dir2, set1, set2, check1, check2] of dirs) {
-                        if (idx[l] == ghost) {
-                            // Erste Richtung prüfen
-                            if (idx[l + dir1] == 1 || idx[l + dir1] == 1.1) {
-                                ti = l + dir1;
+                return false;
+            };
+
+            // Funktion für Geister-Bewegung
+            const moveGhost = (ghostConfigs) => {
+                for (const [ghost, ...checks] of ghostConfigs) {
+                    if (val === ghost) {
+                        for (const [dir, set, check] of checks) {
+                            const target = l + dir;
+                            if (idx[target] === 1 || idx[target] === 1.1) {
+                                // Geist kann sich bewegen
+                                ti = target;
                                 idx[l] = 1.1;
-                                idx[ti] = set1;
-                                if (idx[l + check1] >= 8 && idx[l + check1] < 41) digger_death = true;
-                            } else if (idx[l + dir1] >= 8 && idx[l + dir1] < 41) {
-                                digger_death = true;
-                            } 
-                            // Zweite Richtung prüfen
-                            else if (idx[l + dir2] == 1 || idx[l + dir2] == 1.1) {
-                                ti = l + dir2;
-                                idx[l] = 1.1;
-                                idx[ti] = set2;
-                                if (idx[l + check2] >= 8 && idx[l + check2] < 41) digger_death = true;
-                            } else if (idx[l + dir2] >= 8 && idx[l + dir2] < 41) {
+                                idx[ti] = set;
+                                if (idx[l + check] >= 8 && idx[l + check] < 41) digger_death = true;
+                                return;
+                            } else if (idx[target] >= 8 && idx[target] < 41) {
+                                // Geist berührt Digger direkt
                                 digger_death = true;
                             }
-                            break;
                         }
+                        return;
                     }
                 }
+            };
 
-                //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                //- bewegter Stein/Diamant: 3.2/7.2
-                //- zu toetender Geist: n + 0.2
-                if (idx[ti - 20] == 3.2 || idx[ti - 20] == 7.2)
+            // Geist stirbt wenn Stein/Diamant darauf fällt
+            const killGhostUnderFalling = () => {
+                if (idx[ti - 20] === 3.2 || idx[ti - 20] === 7.2) {
                     idx[ti] = (idx[ti] << 0) + 0.2;
-            }
-
-            // GEISTER 90L (47-50)
-            else if (idx[l] >= 47 && idx[l] < 51) {
-                // Zum sterben markierte Geister(nn.2)?
-                if (idx[l] == 47.2 || idx[l] == 48.2 || idx[l] == 49.2 || idx[l] == 50.2) {
-                    // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                    if ([l-21,l-20,l-19,l-1,l+1,l+19,l+20,l+21].some(i => idx[i] >= 8 && idx[i] < 41))
-                        digger_death = true;
-                    // Geist zu Staub
-                    [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    sfx.stone = true;
                 }
-                //Geister bewegen: 47=down, 49=up, 48=right, 50=left 90L
-                else {
+            };
+
+            // GEISTER TYP 180° (43-46) - drehen sich alle 180° um
+            if (val >= 43 && val < 47) {
+                if (!handleGhostExplosion([43.2, 44.2, 45.2, 46.2])) {
                     ti = l;
-                    let dirs = [
-                        [49, [-20,49.1,-40], [-1,50.1,-2], [1,48.1,2], [20,47.1,40]], // HOCH up left right down
-                        [47, [20,47.1,40], [1,48.1,2], [-1,50.1,-2], [-20,49.1,-40]], // RUNTER down right left up
-                        [48, [1,48.1,2], [-20,49.1,-40], [20,47.1,40], [-1,50.1,-2]], // RECHTS right up down left
-                        [50, [-1,50.1,-2], [20,47.1,40], [-20,49.1,-40], [1,48.1,2]]  // LINKS left down up right
-                    ];
-                    
-                    for (let [ghost, ...checks] of dirs) {
-                        if (idx[l] == ghost) {
-                            for (let [dir, set, check] of checks) {
-                                if (idx[l + dir] == 1 || idx[l + dir] == 1.1) {
-                                    ti = l + dir;
-                                    idx[l] = 1.1;
-                                    idx[ti] = set;
-                                    if (idx[l + check] >= 8 && idx[l + check] < 41) digger_death = true;
-                                    break;
-                                } else if (idx[l + dir] >= 8 && idx[l + dir] < 41) {
-                                    digger_death = true;
-                                }
-                            }
-                            break;
-                        }
-                    }
+                    moveGhost([
+                        [45, [-20, 45.1, -40], [-1, 46.1, -2], [1, 44.1, 2], [20, 43.1, 40]], // Geist 45: hoch, links, rechts, runter
+                        [43, [20, 43.1, 40], [1, 44.1, 2], [-1, 46.1, -2], [-20, 45.1, -40]], // Geist 43: runter, rechts, links, hoch
+                        [44, [1, 44.1, 2], [-20, 45.1, -40], [20, 43.1, 40], [-1, 46.1, -2]], // Geist 44: rechts, hoch, runter, links
+                        [46, [-1, 46.1, -2], [20, 43.1, 40], [-20, 45.1, -40], [1, 44.1, 2]]  // Geist 46: links, runter, hoch, rechts
+                    ]);
+                    killGhostUnderFalling();
                 }
-
-                //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                //- bewegter Stein/Diamant: 3.2/7.2
-                //- zu toetender Geist: n + 0.2
-                if (idx[ti - 20] == 3.2 || idx[ti - 20] == 7.2)
-                    idx[ti] = (idx[ti] << 0) + 0.2;
             }
-
-            // GEISTER 90R (51-54)
-            else if (idx[l] >= 51 && idx[l] < 55) {
-                // Zum sterben markierte Geister(nn.2)?
-                if (idx[l] == 51.2 || idx[l] == 52.2 || idx[l] == 53.2 || idx[l] == 54.2) {
-                    // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                    if ([l-21,l-20,l-19,l-1,l+1,l+19,l+20,l+21].some(i => idx[i] >= 8 && idx[i] < 41))
-                        digger_death = true;
-                    // Geist zu Staub
-                    [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    sfx.stone = true;
-                }
-                //Geister bewegen: 51=down, 53=up, 52=right, 54=left 90R
-                else {
+            // GEISTER TYP 90L (47-50) - drehen sich 90° nach links
+            else if (val >= 47 && val < 51) {
+                if (!handleGhostExplosion([47.2, 48.2, 49.2, 50.2])) {
                     ti = l;
-                    let dirs = [
-                        [53, [-20,53.1,-40], [1,52.1,2], [-1,54.1,-2], [20,51.1,40]], // HOCH up right left down
-                        [51, [20,51.1,40], [-1,54.1,-2], [1,52.1,2], [-20,53.1,-40]], // RUNTER down left right up
-                        [52, [1,52.1,2], [20,51.1,40], [-20,53.1,-40], [-1,54.1,-2]], // RECHTS right down up left
-                        [54, [-1,54.1,-2], [-20,53.1,-40], [20,51.1,40], [1,52.1,2]]  // LINKS left up down right
-                    ];
-                    
-                    for (let [ghost, ...checks] of dirs) {
-                        if (idx[l] == ghost) {
-                            for (let [dir, set, check] of checks) {
-                                if (idx[l + dir] == 1 || idx[l + dir] == 1.1) {
-                                    ti = l + dir;
-                                    idx[l] = 1.1;
-                                    idx[ti] = set;
-                                    if (idx[l + check] >= 8 && idx[l + check] < 41) digger_death = true;
-                                    break;
-                                } else if (idx[l + dir] >= 8 && idx[l + dir] < 41) {
-                                    digger_death = true;
-                                }
-                            }
-                            break;
-                        }
-                    }
+                    moveGhost([
+                        [49, [-20, 49.1, -40], [-1, 50.1, -2], [1, 48.1, 2], [20, 47.1, 40]],
+                        [47, [20, 47.1, 40], [1, 48.1, 2], [-1, 50.1, -2], [-20, 49.1, -40]],
+                        [48, [1, 48.1, 2], [-20, 49.1, -40], [20, 47.1, 40], [-1, 50.1, -2]],
+                        [50, [-1, 50.1, -2], [20, 47.1, 40], [-20, 49.1, -40], [1, 48.1, 2]]
+                    ]);
+                    killGhostUnderFalling();
                 }
-
-                //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                //- bewegter Stein/Diamant: 3.2/7.2
-                //- zu toetender Geist: n + 0.2
-                if (idx[ti - 20] == 3.2 || idx[ti - 20] == 7.2)
-                    idx[ti] = (idx[ti] << 0) + 0.2;
             }
-
-            // GEISTER 90LR (55-58) - Optimized
-            else if (idx[l] >= 55 && idx[l] < 59) {
-                // Zum sterben markierte Geister(nn.2)?
-                if (idx[l] == 55.2 || idx[l] == 56.2 || idx[l] == 57.2 || idx[l] == 58.2) {
-                    // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                    if ([l-21,l-20,l-19,l-1,l+1,l+19,l+20,l+21].some(i => idx[i] >= 8 && idx[i] < 41))
-                        digger_death = true;
-                    // Geist zu Staub
-                    [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    sfx.stone = true;
-                }
-                //Geister bewegen: 55=down, 57=up, 56=right, 58=left 90LR
-                else {
+            // GEISTER TYP 90R (51-54) - drehen sich 90° nach rechts
+            else if (val >= 51 && val < 55) {
+                if (!handleGhostExplosion([51.2, 52.2, 53.2, 54.2])) {
                     ti = l;
-                    let dirs = [
-                        [57, [-20,57.1,-40], [-1,62.1,-2], [1,60.1,2], [20,55.1,40]], // HOCH up left right down
-                        [55, [20,55.1,40], [1,60.1,2], [-1,62.1,-2], [-20,57.1,-40]], // RUNTER down right left up
-                        [56, [1,56.1,2], [-20,61.1,-40], [20,59.1,40], [-1,58.1,-2]], // RECHTS right up down left
-                        [58, [-1,58.1,-2], [20,59.1,40], [-20,61.1,-40], [1,56.1,2]]  // LINKS left down up right
-                    ];
-                    
-                    for (let [ghost, ...checks] of dirs) {
-                        if (idx[l] == ghost) {
-                            for (let [dir, set, check] of checks) {
-                                if (idx[l + dir] == 1 || idx[l + dir] == 1.1) {
-                                    ti = l + dir;
-                                    idx[l] = 1.1;
-                                    idx[ti] = set;
-                                    if (idx[l + check] >= 8 && idx[l + check] < 41) digger_death = true;
-                                    break;
-                                } else if (idx[l + dir] >= 8 && idx[l + dir] < 41) {
-                                    digger_death = true;
-                                }
-                            }
-                            break;
-                        }
-                    }
+                    moveGhost([
+                        [53, [-20, 53.1, -40], [1, 52.1, 2], [-1, 54.1, -2], [20, 51.1, 40]],
+                        [51, [20, 51.1, 40], [-1, 54.1, -2], [1, 52.1, 2], [-20, 53.1, -40]],
+                        [52, [1, 52.1, 2], [20, 51.1, 40], [-20, 53.1, -40], [-1, 54.1, -2]],
+                        [54, [-1, 54.1, -2], [-20, 53.1, -40], [20, 51.1, 40], [1, 52.1, 2]]
+                    ]);
+                    killGhostUnderFalling();
                 }
-
-                //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                //- bewegter Stein/Diamant: 3.2/7.2
-                //- zu toetender Geist: n + 0.2
-                if (idx[ti - 20] == 3.2 || idx[ti - 20] == 7.2)
-                    idx[ti] = (idx[ti] << 0) + 0.2;
             }
-
-            // GEISTER 90RL (59-62) - Optimized
-            else if (idx[l] >= 59 && idx[l] < 63) {
-                // Zum sterben markierte Geister(nn.2)?
-                if (idx[l] == 59.2 || idx[l] == 60.2 || idx[l] == 61.2 || idx[l] == 62.2) {
-                    // Wenn Digger in Explosionsnaehe, dann ihn auch killen!
-                    if ([l-21,l-20,l-19,l-1,l+1,l+19,l+20,l+21].some(i => idx[i] >= 8 && idx[i] < 41))
-                        digger_death = true;
-                    // Geist zu Staub
-                    [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    sfx.stone = true;
-                }
-                //Geister bewegen: 59=down, 61=up, 60=right, 62=left 90RL
-                else {
+            // GEISTER TYP 90LR (55-58) - wechseln zwischen links und rechts drehen
+            else if (val >= 55 && val < 59) {
+                if (!handleGhostExplosion([55.2, 56.2, 57.2, 58.2])) {
                     ti = l;
-                    let dirs = [
-                        [61, [-20,61.1,-40], [1,56.1,2], [-1,58.1,-2], [20,59.1,40]], // HOCH up right left down
-                        [59, [20,59.1,40], [-1,58.1,-2], [1,56.1,2], [-20,61.1,-40]], // RUNTER down left right up
-                        [60, [1,60.1,2], [20,55.1,40], [-20,57.1,-40], [-1,62.1,-2]], // RECHTS right down up left
-                        [62, [-1,62.1,-2], [-20,57.1,-40], [20,55.1,40], [1,60.1,2]]  // LINKS left up down right
-                    ];
-                    
-                    for (let [ghost, ...checks] of dirs) {
-                        if (idx[l] == ghost) {
-                            for (let [dir, set, check] of checks) {
-                                if (idx[l + dir] == 1 || idx[l + dir] == 1.1) {
-                                    ti = l + dir;
-                                    idx[l] = 1.1;
-                                    idx[ti] = set;
-                                    if (idx[l + check] >= 8 && idx[l + check] < 41) digger_death = true;
-                                    break;
-                                } else if (idx[l + dir] >= 8 && idx[l + dir] < 41) {
-                                    digger_death = true;
-                                }
-                            }
-                            break;
-                        }
-                    }
+                    moveGhost([
+                        [57, [-20, 57.1, -40], [-1, 62.1, -2], [1, 60.1, 2], [20, 55.1, 40]],
+                        [55, [20, 55.1, 40], [1, 60.1, 2], [-1, 62.1, -2], [-20, 57.1, -40]],
+                        [56, [1, 56.1, 2], [-20, 61.1, -40], [20, 59.1, 40], [-1, 58.1, -2]],
+                        [58, [-1, 58.1, -2], [20, 59.1, 40], [-20, 61.1, -40], [1, 56.1, 2]]
+                    ]);
+                    killGhostUnderFalling();
                 }
-
-                //Geist toeten, wenn unter fallenden (.2) aber nicht bewegten (.1) Stein/Diamant
-                //- bewegter Stein/Diamant: 3.2/7.2
-                //- zu toetender Geist: n + 0.2
-                if (idx[ti - 20] == 3.2 || idx[ti - 20] == 7.2)
-                    idx[ti] = (idx[ti] << 0) + 0.2;
             }
-
-            // Steine und Diamanten
-            else if (idx[l] === 7 || idx[l] === 3) {
-                // Stein in Diamant umwandeln
-                if (idx[l] === 7 && idx[l + 20] === 5 && idx[l + 40] === 1) {
-                    idx[l + 40] = 3.2;
-                    idx[l] = 1.1;
+            // GEISTER TYP 90RL (59-62) - wechseln zwischen rechts und links drehen
+            else if (val >= 59 && val < 63) {
+                if (!handleGhostExplosion([59.2, 60.2, 61.2, 62.2])) {
+                    ti = l;
+                    moveGhost([
+                        [61, [-20, 61.1, -40], [1, 56.1, 2], [-1, 58.1, -2], [20, 59.1, 40]],
+                        [59, [20, 59.1, 40], [-1, 58.1, -2], [1, 56.1, 2], [-20, 61.1, -40]],
+                        [60, [1, 60.1, 2], [20, 55.1, 40], [-20, 57.1, -40], [-1, 62.1, -2]],
+                        [62, [-1, 62.1, -2], [-20, 57.1, -40], [20, 55.1, 40], [1, 60.1, 2]]
+                    ]);
+                    killGhostUnderFalling();
+                }
+            }
+            // === STEINE UND DIAMANTEN ===
+            else if (val === 7 || val === 3) {
+                // Stein wird zu Diamant wenn er auf Dreck fällt
+                if (val === 7 && idx[l + 20] === 5 && idx[l + 40] === 1) {
+                    idx[l + 40] = 3.2; // Diamant erscheint unten
+                    idx[l] = 1.1; // Stein verschwindet
                     if (idx[l + 60] > 1) {
-                        sfx.stone = true;
-                        if (idx[l + 60] >= 8 && idx[l + 60] < 41) {
-                            digger_death = true;
-                        } else if (idx[l + 60] >= 43 && idx[l + 60] < 63) {
-                            idx[l + 60] = (idx[l + 60] << 0) + 0.2;
-                        }
+                        SFX.STONE = true;
+                        if (idx[l + 60] >= 8 && idx[l + 60] < 41) digger_death = true; // Digger getroffen
+                        else if (idx[l + 60] >= 43 && idx[l + 60] < 63) idx[l + 60] = (idx[l + 60] << 0) + 0.2; // Geist getroffen
                     }
                 }
-                // Fallen lassen
+                // Freier Fall nach unten
                 else if (idx[l + 20] === 1) {
-                    idx[l + 20] = idx[l] + 0.2;
-                    idx[l] = 1.1;
+                    idx[l + 20] = val + 0.2; // Stein/Diamant fällt
+                    idx[l] = 1.1; // Alte Position wird leer
                     if (idx[l + 40] >= 2) {
-                        sfx.stone = true;
-                        if (idx[l + 40] >= 8 && idx[l + 40] < 41) {
-                            digger_death = true;
-                        } else if (idx[l + 40] >= 43 && idx[l + 40] < 63) {
-                            idx[l + 40] = (idx[l + 40] << 0) + 0.2;
-                        }
+                        SFX.STONE = true;
+                        if (idx[l + 40] >= 8 && idx[l + 40] < 41) digger_death = true; // Digger getroffen
+                        else if (idx[l + 40] >= 43 && idx[l + 40] < 63) idx[l + 40] = (idx[l + 40] << 0) + 0.2; // Geist getroffen
                     }
                 }
-                // Rollen
+                // Rollen wenn Untergrund blockiert ist
                 else if (idx[l + 20] === 7 || idx[l + 20] === 3 || idx[l + 20] === 63) {
-                    // Prüfe links (-1) dann rechts (+1)
-                    for (var d = -1; d <= 1; d += 2) {
-                        if ((idx[l + d] === 1 || idx[l + d] === 7.2 || idx[l + d] === 3.2) 
-                            && idx[l + 20 + d] === 1) {
-                            idx[l + 20 + d] = idx[l] + 0.2;
+                    // Versuche links oder rechts zu rollen
+                    for (let d = -1; d <= 1; d += 2) {
+                        if ((idx[l + d] === 1 || idx[l + d] === 7.2 || idx[l + d] === 3.2) && idx[l + 20 + d] === 1) {
+                            idx[l + 20 + d] = val + 0.2; // Stein/Diamant rollt seitlich nach unten
                             idx[l] = 1.1;
                             if (idx[l + 40 + d] >= 2) {
-                                sfx.stone = true;
-                                if (idx[l + 40 + d] >= 8 && idx[l + 40 + d] < 41) {
-                                    digger_death = true;
-                                } else if (idx[l + 40 + d] >= 43 && idx[l + 40 + d] < 63) {
-                                    idx[l + 40 + d] = (idx[l + 40 + d] << 0) + 0.2;
-                                }
+                                SFX.STONE = true;
+                                if (idx[l + 40 + d] >= 8 && idx[l + 40 + d] < 41) digger_death = true;
+                                else if (idx[l + 40 + d] >= 43 && idx[l + 40 + d] < 63) idx[l + 40 + d] = (idx[l + 40 + d] << 0) + 0.2;
                             }
                             break;
                         }
                     }
                 }
             }
-
-            // mache den unsichtbaren/unbenutzbaren Ausgang (6) sichtbar (41), bei genuegent Diamanten
-            else if (idx[l] === 6 && score_ges >= score_dia) {
+            // === AUSGANG AKTIVIERUNG ===
+            // Ausgang öffnet sich wenn alle Diamanten eingesammelt wurden
+            else if (val === 6 && score_ges >= score_dia) {
                 idx[l] = 41.1;
-                exit_blink = 41; // Animationsanfang setzen
+                exit_blink = 41; // Blink-Animation für Ausgang
             }
-
-            // Staub(0.1) nach 3 Loops in Leere(1.1) aufloesen
-            else if (idx[l] >= 0.1 && idx[l] <= 0.4) {
+            // === STAUB AUFLÖSUNG ===
+            // Staub löst sich langsam auf (4 Stufen)
+            else if (val >= 0.1 && val <= 0.4) {
                 idx[l] += 0.1;
-                if (idx[l] === 0.4) {
-                    idx[l] = 1.1;
-                }
+                if (idx[l] === 0.4) idx[l] = 1.1; // Wird zu leerem Feld
             }
-
         }
     }
 
-    //LEVEL WECHSELN
+    // === LEVELWECHSEL ===
+    // Übergang zum nächsten Level oder Highscore
     if (next_raum) {
         if (score_raum == room.length) {
+            // Alle Level geschafft - Highscore anzeigen
             state = 'highscore';
             highscore_draw();
             score_raum = 1;
             score_leben = LEBENMAX;
             score_punkte = 0;
         } else {
+            // Nächstes Level laden
             score_raum++;
             state = 'init';
             init_room(score_raum);
         }
         next_raum = false;
-        storage_game_save();
+        storage_game_save(); // Spielstand speichern
     }
 
-    //Statuszeile und
-    //Softscroller aktualisieren
-    scorelineUpdate();
-    soft_scroll();
+    // === STATUS UPDATE ===
+    scorelineUpdate(); // Punktestand aktualisieren
+    soft_scroll(); // Weiche Kamera-Bewegung
 
-    //Ton abspielen
-    if (sfx.diamond) {
-        play_audio('Diamond');
-    } else if (sfx.stone) {
-        play_audio('Stone');
-        brumm = true;
-    } else if (sfx.step) {
-        play_audio('Step');
-    }
-    sfx.diamond = false;
-    sfx.step = false;
-    sfx.stone = false;
+    // === SOUND EFFEKTE ===
+    // Verschiedene Sounds basierend auf Spielereignissen
+    if (SFX.DIAMOND) play_audio('Diamond'); // Diamant eingesammelt
+    else if (SFX.STONE) { play_audio('Stone'); brumm = true; } // Stein gefallen/geschoben
+    else if (SFX.STEP) play_audio('Step'); // Digger-Schritt
+    SFX.DIAMOND = SFX.STEP = SFX.STONE = false; // Flags zurücksetzen
 
-    //Vibration (Gamepad/Handy/Tablet)
+    // === VIBRATION ===
+    // Controller- oder Handy-Vibration für haptisches Feedback
     if (brumm) {
-        //Gamepad
-        if (gamepad_dualrumble)
-            navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {startDelay:0,duration:48,weakMagnitude:1.0,strongMagnitude:0.0})
-        else
-            if (navigator.vibrate)
-                navigator.vibrate([50, 20, 50, 20, 50, 20, 30, 20, 20]); //navigator.vibrate(48);
+        if (gamepad_dualrumble) {
+            // Gamepad-Vibration
+            navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", 
+                {startDelay:0, duration:48, weakMagnitude:1.0, strongMagnitude:0.0});
+        } else if (navigator.vibrate) {
+            // Handy-Vibration
+            navigator.vibrate([50, 20, 50, 20, 50, 20, 30, 20, 20]);
+        }
         brumm = false;
     }
 
-    //DIGGER TOETEN
+    // === DIGGER TOD ===
+    // Behandlung wenn der Digger stirbt
     if (digger_death && !digger_is_dead) {
-        draw_digger_death();
-        digger_go = 'NONE';
-        score_leben--;
-        //spielstand sichern
-        storage_game_save();
+        draw_digger_death(); // Tod-Animation
+        digger_go = 'NONE'; // Bewegung stoppen
+        score_leben--; // Leben abziehen
+        storage_game_save(); // Spielstand speichern
     }
 
-    //Frame 1/2 --> Frame 2/2
+    // === FRAME ÜBERGANG ===
+    // Vorbereitung für nächsten Frame
     digger_half_step = true;
-    digger_start_up = false;
-    digger_start_down = false;
-    digger_start_left = false;
-    digger_start_right = false;
-
+    digger_start_up = digger_start_down = digger_start_left = digger_start_right = false;
 }
 
 //FRAME 2/2
@@ -1568,56 +1347,38 @@ function draw_frame2() {
 
 }
 
+
 function game_loop() {
-
-    //Gamepad#0 abfragen
+    // Gamepad abfragen
     gamepad_update();
-
-    if (state == 'look' || state == 'init' || state == 'play') {
-
-        //FRAME
-        //Spielfrequenz um die hälfte teilen
-        if (takt_teiler == 1) {
-
-            if (!digger_half_step) {
-                draw_frame1()
-            } else {
-                draw_frame2()
-            }
-
-            //FRAME 1und2
-            //Countdown
-            if ((state == 'play') && !digger_death) {
-                score_zeit--;
-                if (score_zeit <= 0)
-                    digger_death = true;
-            }
-
-        }
-
-        //SPIELFELD REFRESHEN
-        requestAnimationFrame(draw_field);
-
-        //Diamant Farbscrollsequenz (64 bis (max_diamond_blink-1))
-        diamond_blink++;
-        if (diamond_blink > (64 + max_diamond_blink - 1))
-            diamond_blink = 64;
-
-        //Exit Blinksequenz (41 exit <--> 42 wall)
-        exit_blink += 0.05;
-        if (exit_blink > 43)
-            exit_blink = 41;
-
+    
+    // Early Return: spart CPU/Akku wenn nicht im Spiel
+    if (state !== 'look' && state !== 'init' && state !== 'play') {
+        takt_teiler ^= 3;
+        setTimeout(game_loop, FPS);
+        return;
+    }
+    
+    // FRAME 1 und 2
+    if (takt_teiler === 1) {
+        // Wechsel zwischen Frame 1 und Frame 2
+        !digger_half_step ? draw_frame1() : draw_frame2();
+        // Countdown (in beiden FRAMEs)
+        if (state === 'play' && !digger_death) digger_death = (--score_zeit === 0);
     }
 
-    //halbiert die Spielfrequenz
-    if (takt_teiler == 1)
-        takt_teiler = 2;
-    else if (takt_teiler == 2)
-        takt_teiler = 1;
+    // Webbrowser-Rendering (60Hz)
+    requestAnimationFrame(draw_field);
 
+    // Diamant Farbscrollsequenz (64 bis max_diamond_blink)
+    diamond_blink = diamond_blink >= 64 + max_diamond_blink - 1 ? 64 : diamond_blink + 1;
+
+    // Exit Blinksequenz (41 exit <--> 42 wall)
+    exit_blink = exit_blink >= 43 ? 41 : exit_blink + 0.05;
+    
+    // Toggle zwischen 1(Frame1+Farbscroller) und 2(Frame2+Farbscroller)
+    takt_teiler ^= 3;  //  bitwise XOR, funktioniert nur bei 1/2
     setTimeout(game_loop, FPS);
-
 }
 
 

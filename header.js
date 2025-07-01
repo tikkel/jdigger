@@ -1,115 +1,122 @@
-// jdigger/header.js
+// jdigger/Digger.JS
 // Copyright (C) 2017–2025  Marko Klingner
 // GNU GPL v3 - http://www.gnu.org/licenses/
 
-// Parameter
-const LEBENMAX = 20
-const LEBENMIN = 1
-const FPS = 27  // Interruptschleife in Millisekunden
 const DIGGER_VERSION = '30.06.25'
 
-// KC-Farben
-const KCB_TUERKIS = "#028965"
-const KCF_GELB = "#E7E95D"
-const KCB_BLAU = "#04028f"
-const KCB_ROT = "#920205"
+//Parameter
+const LEBENMAX = 20;
+const LEBENMIN = 1;
+const FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 
-// Allgemeine Variablen
-let exit_blink = 41.1
-let diamond_blink = 64
-let zufall = 1
-let stone_l = false
-let stone_r = false
-let digger_idle_augen = 25
-let digger_idle_stampfen = 33
-let digger_step_up = 9
-let digger_step_down = 11
-let digger_step_left = 13
-let digger_step_right = 19
+// Erlaubte Zeichen für Highscore-Eingabe
+const ALLOWED_CHARS = /[^a-zA-Z0-9!"#$%&()*+,./:;<=>?@\-\s]+/g;
 
-let sfx = { 
-    step: false, 
-    stone: false, 
-    diamond: false 
-}
-let brumm = false
+//KC-Farben
+var KCB_TUERKIS = "#028965";
+var KCF_GELB = "#E7E95D";
+var KCB_BLAU = "#04028f";
+var KCB_ROT = "#920205";
 
-let next_raum = false
-let verz = 0  // 10 Sek. Verzoegerung
-let state = 'menu'  // look, menu, init, play, highscore, input
-let idx = new Array(281)
-let d_idx = 280
+//allgem. Variablen
+var exit_blink = 41.1;
+var diamond_blink = 64;
+var zufall = 1;
+var stone_l = false;
+var stone_r = false;
+var digger_idle_augen = 25;
+var digger_idle_stampfen = 33;
+var digger_step_up = 9;
+var digger_step_down = 11;
+var digger_step_left = 13;
+var digger_step_right = 19;
 
-let score_raum = 1
-let score_leben = LEBENMAX
-let score_zeit = 1500
-let score_punkte = 0
-let autoscore = 0
-let last_punkte = 0
-let score_dia = 0
-let score_ges = 0
-let last_ges = 0
-let highscore = new Array(20)
-let digger_x = 0
-let digger_y = 0
-let digger_left = false
-let digger_start_left = false
-let digger_up = false
-let digger_start_up = false
-let digger_right = false
-let digger_start_right = false
-let digger_down = false
-let digger_start_down = false
-let digger_idle = true
-let digger_in_idle = false
-let digger_animation_left = false
-let digger_animation_right = false
-let digger_animation_up = false
-let digger_animation_down = false
+var SFX = { STEP: false, STONE: false, DIAMOND: false, };
+var brumm = false;
 
-let digger_cheat = false
-let cheat_tmp = ''
-let digger_half_step = false
-let takt_teiler = 1  // siehe setTimeout(draw_frame, FPS)
-let digger_go = 'NONE'  // LEFT, RIGHT, UP, DOWN, NONE
-let digger_death = false
-let digger_is_dead = false
+var next_raum = false;
+var verz = 0; //10 Sek. Verzoegerung
+var state = 'menu'; //look, menu, init, play, highscore, input
+var idx = new Array(281);
+var d_idx = 280;
 
-let input
-let input_line = 0
-let input_alias = ""
-let taste = 0
-let ptaste = 0  // pressed-taste
-let lptaste = 0  // last-pressed-taste
-let llptaste = 0
-let lllptaste = 0
-let rtaste = 0  // released-taste
-let handled = true
-let virt_kbd_last_length
-let direction = 'stop'
-let last_direction = 'stop'
-let touch_flag = false
-let fullscreen_flag = false
-let single_touch = 0
+var score_raum = 1;
+var score_leben = LEBENMAX;
+var score_zeit = 1500;
+var score_punkte = 0;
+var autoscore = 0;
+var last_punkte = 0;
+var score_dia = 0;
+var score_ges = 0;
+var last_ges = 0;
+var highscore = new Array(20);
+var digger_x = 0;
+var digger_y = 0;
+var digger_left = false;
+var digger_start_left = false;
+var digger_up = false;
+var digger_start_up = false;
+var digger_right = false;
+var digger_start_right = false;
+var digger_down = false;
+var digger_start_down = false;
+var digger_idle = true;
+var digger_in_idle = false;
+var digger_animation_left = false;
+var digger_animation_right = false;
+var digger_animation_up = false;
+var digger_animation_down = false;
+
+var digger_cheat = false;
+var cheat_tmp = '';
+var digger_half_step = false;
+var takt_teiler = 1; //siehe setTimeout(draw_frame, FPS)
+var digger_go = 'NONE'; //LEFT, RIGHT, UP, DOWN, NONE
+var digger_death = false;
+var digger_is_dead = false;
+
+var input;
+var input_line = 0;
+var input_alias = "";
+var taste = 0;
+var ptaste = 0; //pressed-taste
+var lptaste = 0; //last-pressed-taste
+var llptaste = 0;
+var lllptaste = 0;
+var rtaste = 0; //released-taste
+var handled = true;
+var virt_kbd_last_length;
+var touchX;
+var touchY;
+var direction = 'stop';
+var last_direction = 'stop';
+var touch_flag = false;
+var fullscreen_flag = false;
+var single_touch = 0;
+var mouseIsDown = false;
+var joyOn = false;
+var joyX = 0;
+var joyY = 0;
+
 var action = 0;
 var laction = 0;
 
-let diggerdiv_height = 14
-let diggerdiv_width = 20
-let scale = 1
+var diggerdiv_height = 14;
+var diggerdiv_width = 20;
+var scale = 1;
 
-let pre_icon_size = scale
-let pre_max_w_offset = -(pre_icon_size * 20 - diggerdiv_width)
-let pre_max_h_offset = -(pre_icon_size * 14 - diggerdiv_height)
+var pre_icon_size = scale;
+var pre_max_w_offset = -(pre_icon_size * 20 - diggerdiv_width);
+var pre_max_h_offset = -(pre_icon_size * 14 - diggerdiv_height);
 
-let body_width
-let body_height
-let field_width
-let field_height
+var body_width;
+var body_height;
+var field_width;
+var field_height;
 
-let rescale = false
+var rescale = false;
 
-let max_diamond_blink = 10
+var max_diamond_blink = 10;
 var sprites = [
     0, // 0=Explode
     1, // 1=Nothing
@@ -200,51 +207,51 @@ var sprites = [
     17,
     18,
     19 //73 == sprites.length-1
-]
+];
 
-let rd_in = false  // Highscore Input
-let rd_yn = false  // Highscore YesNo
+var rd_in = false; //Highscore Input
+var rd_yn = false; //Highscore YesNo
 
-let viewport_x = 0
-let viewport_y = 0
-let actual_margin_left = 0
-let actual_margin_top = 0
-let duration_x = 0
-let duration_y = 0
+var viewport_x = 0;
+var viewport_y = 0;
+var actual_marginLeft = 0;
+var actual_marginTop = 0;
+var duration_x = 0;
+var duration_y = 0;
 
-let canvas_scoreline = document.getElementById('scoreline')
-let context_scoreline = canvas_scoreline.getContext('2d', { alpha: false })
+var canvas_scoreline = document.getElementById('scoreline');
+var context_scoreline = canvas_scoreline.getContext('2d', { alpha: false });
 
-let canvas_digger = document.getElementById('digger')
-let context_digger = canvas_digger.getContext('2d', { alpha: false })
+var canvas_digger = document.getElementById('digger');
+var context_digger = canvas_digger.getContext('2d', { alpha: false });
 
-let canvas_menuimg = document.getElementById('menuimg')
-let context_menuimg = canvas_menuimg.getContext('2d', { alpha: false })
+var canvas_menuimg = document.getElementById('menuimg');
+var context_menuimg = canvas_menuimg.getContext('2d', { alpha: false });
 
 //Offscreen-Buffer fuer "Menu/Highscore"
 // - wird den Vorgerenderten Titelscreen oder Highscore enthalten
-let buffer_menu_canvas = document.createElement('canvas')
-let buffer_menu_context = buffer_menu_canvas.getContext('2d', { alpha: true })
+var buffer_menuCanvas = document.createElement('canvas');
+var buffer_menuContext = buffer_menuCanvas.getContext('2d', { alpha: true });
 // - in original KC85/3/4-Auflösung
-buffer_menu_canvas.width = 320
-buffer_menu_canvas.height = 240
+buffer_menuCanvas.width = 320;
+buffer_menuCanvas.height = 240;
 
 //Offscreen-Buffer fuer "Zeichensatz"
 // - soll die korrekt vorskalierten Zeichen enthalten
 // - mit KCB_ROT als Hintergrundfarbe
-let buffer_chars_canvas = document.createElement('canvas')
-let buffer_chars_context = buffer_chars_canvas.getContext('2d', { alpha: true })
+var buffer_charsCanvas = document.createElement('canvas');
+var buffer_charsContext = buffer_charsCanvas.getContext('2d', { alpha: true });
 
 //Offscreen-Buffer fuer "Sprites"
 // - soll die korrekt vorskalierten Sprites enthalten
 // - um sie dann performanter im Spielfeld darzustellen
-let buffer_sprites_canvas = document.createElement('canvas')
-let buffer_sprites_context = buffer_sprites_canvas.getContext('2d', { alpha: false })
+var buffer_spritesCanvas = document.createElement('canvas');
+var buffer_spritesContext = buffer_spritesCanvas.getContext('2d', { alpha: false });
 
-// "Zeichensatz" laden
-let chars_image = new Image()
-chars_image.src = 'chars.png'
+//"Zeichensatz" laden
+var charsImage = new Image();
+charsImage.src = 'chars.png';
 
-// "Sprites" laden
-let sprites_image = new Image()
-sprites_image.src = 'sprites.png'
+//"Sprites" laden
+var spritesImage = new Image();
+spritesImage.src = 'sprites.png';
