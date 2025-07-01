@@ -2,7 +2,7 @@
 // Copyright (C) 2017–2025  Marko Klingner
 // GNU GPL v3 - http://www.gnu.org/licenses/
 
-const DIGGER_VERSION = '30.06.25'
+const DIGGER_VERSION = '01.07.25'
 
 //Parameter
 const LEBENMAX = 20;
