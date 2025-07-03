@@ -318,6 +318,11 @@ function highscoreYesNo() {
         rd_yn = true;
     }
 
+        // Virtuelle Tastatur ausblenden
+        document.body.removeEventListener('click', vkb_focus, false);
+        document.body.removeEventListener('input', vkb_input, false);
+        virt_kbd.blur();
+
     // Eingabe verarbeiten
     const key = input?.toLowerCase();
     if (key === 'y' || key === 'n') {

@@ -20,7 +20,7 @@ function touch_down(e) {
 	} else if (touches > 1) {
 		if (state === 'play')
 			digger_death = true
-		else if (state === 'highscore' || state === 'look') {
+		else if ( state === 'look' || state === 'highscore' || state === 'input' ) {
 			state = 'menu'
 			menu_draw()
 		}
@@ -39,6 +39,10 @@ function touch_down(e) {
 			init_room(score_raum)
 		}
 		storage_game_save()
+	/* 1 Finger Tap - im Input */
+	} else if (state === 'input' && input === undefined) {
+		state = 'menu'
+		menu_draw()
 	/* Im Spiel - Richtungsgesten */
 	} else {
 		mouse_is_down = joy_on = true
