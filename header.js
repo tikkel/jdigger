@@ -2,10 +2,10 @@
 // Copyright (C) 2017–2025  Marko Klingner
 // GNU GPL v3 - http://www.gnu.org/licenses/
 
-const DIGGER_VERSION = '03.07.25'
+const DIGGER_VERSION = '04.07.25'
 
 //Parameter
-const LEBENMAX = 1;
+const LEBENMAX = 20;
 const LEBENMIN = 1;
 const FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
 
