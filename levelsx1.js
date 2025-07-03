@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-// jdigger/levelsx1.js - original Leveldatei von http://lanale.de/
+// jdigger/levelsx1.js - original XDigger-Leveldatei von https://zenway.ru/page/xdigger
 // Copyright (C) 2017–2025  Marko Klingner
 
 room = [

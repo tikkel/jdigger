@@ -199,9 +199,10 @@ function detect_controller_type(gamepad) {
 	const id = gamepad.id.toLowerCase()
 
 	/* Durchsuche Controller-Typen nach Mustern */
-	for (const [type, config] of Object.entries(CONTROLLER_TYPES)) {
-		if (config.patterns.some(pattern => id.includes(pattern)))
-			return config
+	for (const config of Object.values(CONTROLLER_TYPES)) {
+		if (config.patterns.some(pattern => id.includes(pattern))) {
+			return config;
+		}
 	}
 
 	return CONTROLLER_TYPES.xbox /* Fallback */
