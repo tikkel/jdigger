@@ -242,21 +242,26 @@ function gamepad_connect(e) {
 	/* Vibration testen */
 	if (!gamepad_dualrumble) {
 		try {
-			if (e.gamepad.vibrationActuator && 
-			    typeof e.gamepad.vibrationActuator.playEffect === 'function') {
+			if (e.gamepad.vibrationActuator &&
+				typeof e.gamepad.vibrationActuator.playEffect === 'function') {
 				e.gamepad.vibrationActuator.playEffect("dual-rumble", {
 					startDelay: 0,
 					duration: 100,
 					weakMagnitude: 1.0,
 					strongMagnitude: 1.0
-				})
-				gamepad_dualrumble = true
+				}).then(() => {
+					gamepad_dualrumble = true;
+					console.log('Vibration wird unterstützt!');
+				}).catch(error => {
+					gamepad_dualrumble = false;
+					console.log('Vibration nicht unterstützt:', error.message);
+				});
 			} else {
-				gamepad_dualrumble = false
+				gamepad_dualrumble = false;
 			}
 		} catch (error) {
-			gamepad_dualrumble = false
-			console.log('Vibration nicht unterstützt:', error.message)
+			gamepad_dualrumble = false;
+			console.log('Vibration nicht unterstützt:', error.message);
 		}
 	}
 
@@ -269,9 +274,9 @@ function gamepad_connect(e) {
 	if (state === 'menu')
 		menu_draw()
 
-	console.log('Gamepad #%d verbunden: "%s" | Buttons: %d, Achsen: %d, Typ: %s, Marke: %s', 
+	console.log('Gamepad #%d verbunden:\n"%s"\nButtons: %d\nAchsen: %d\nTyp: %s\nMarke: %s\nDual-Rumble: %s', 
 		e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, 
-		e.gamepad.axes.length, gamepad_type, current_controller.name)
+		e.gamepad.axes.length, gamepad_type, current_controller.name, gamepad_dualrumble)
 }
 
 /* Gamepad Disconnect Handler */

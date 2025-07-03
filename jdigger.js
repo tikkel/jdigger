@@ -74,8 +74,8 @@ function scaleReload() {
   menuimg.height = body_height;
   scalePixelated(context_menuimg);
   
-  if (state == 'menu') menu_draw();
-  else if (state == 'highscore') highscore_draw();
+  if (state === 'menu') menu_draw();
+  else if (state === 'highscore') highscore_draw();
   
   rd_in = rd_yn = false;
   
@@ -100,7 +100,7 @@ function scaleReload() {
   // Drawflags setzen (idx[1-280])
   for (let l = 1; l < 281; l++) {
     const i = idx[l] << 0;
-    if (idx[l] == i) idx[l] += 0.1;
+    if (idx[l] === i) idx[l] += 0.1;
   }
 }
 
@@ -226,7 +226,7 @@ function highscore_draw() {
   document.getElementById('menudiv').style.visibility = "visible";
   
   // Eventl. neuen Alias abfragen
-  if (state == 'input') setTimeout(highscoreInput, 50);
+  if (state === 'input' && digger_is_dead) setTimeout(highscoreInput, 50);
 }
 
 function highscoreInput() {
@@ -254,8 +254,8 @@ function highscoreInput() {
   }
   
   // Tasteneingabe verarbeiten
-  if (input != undefined) {
-    if (input == 'Enter') {
+  if (input !== undefined) {
+    if (input === 'Enter') {
       // Enter -> Eingabe abschließen
       rd_in = false;
       input = undefined;
@@ -265,10 +265,10 @@ function highscoreInput() {
       resetGame();
       setTimeout(highscoreYesNo, 100);
       return;
-    } else if (input == 'Backspace') {
+    } else if (input === 'Backspace') {
       // Backspace -> letztes Zeichen löschen
       if (input_alias.length > 0) {
-        input_alias = input_alias.substr(0, input_alias.length - 1);
+        input_alias = input_alias.slice(0, -1);
         rd_in = false;
       }
     } else {
@@ -277,7 +277,7 @@ function highscoreInput() {
       rd_in = false;
       
       // Max. 14 Zeichen -> automatisch abschließen
-      if (input_alias.length == 14) {
+      if (input_alias.length === 14) {
         highscore[input_line] += "  " + input_alias;
         storageHighscoreSave();
         resetGame();
@@ -335,10 +335,12 @@ function highscoreYesNo() {
 
         if (key === 'y') {
             // Neues Spiel starten
+            digger_is_dead = false;
             state = 'init';
             init_room(score_raum);
         } else {
             // Zurück zum Menü
+            digger_is_dead = false;
             idle_stop();
             state = 'menu';
             menu_draw();
@@ -362,17 +364,17 @@ function storageHighscoreUpdate() {
         var ca = document.cookie.split(';');
         for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0) == ' ') {
+            while (c.charAt(0) === ' ') {
                 c = c.substring(1);
             }
-            if (c.indexOf(name) == 0) {
+            if (c.indexOf(name) === 0) {
                 highscore = JSON.parse(c.substring(name.length, c.length));
             }
         }
     }
 
     //highscore[] vorbelegen
-    if (highscore[0] == undefined) {
+    if (highscore[0] === undefined) {
         console.log('storageHighscoreUpdate: generiere Default-Highscore');
         highscore[0] = "10000  --------------";
         highscore[1] = "09000  Digger";
@@ -494,20 +496,20 @@ function storage_game_restore() {
         ca = document.cookie.split(';');
         for (i = 0; i < ca.length; i++) {
             c = ca[i];
-            while (c.charAt(0) == ' ') {
+            while (c.charAt(0) === ' ') {
                 c = c.substring(1);
             }
-            if (c.indexOf(name) == 0)
+            if (c.indexOf(name) === 0)
                 score_raum = Number(c.substring(name.length, c.length));
         }
         name = "lives=";
         ca = document.cookie.split(';');
         for (i = 0; i < ca.length; i++) {
             c = ca[i];
-            while (c.charAt(0) == ' ') {
+            while (c.charAt(0) === ' ') {
                 c = c.substring(1);
             }
-            if (c.indexOf(name) == 0) {
+            if (c.indexOf(name) === 0) {
                 score_leben = Number(c.substring(name.length, c.length));
             }
         }
@@ -515,10 +517,10 @@ function storage_game_restore() {
         ca = document.cookie.split(';');
         for (i = 0; i < ca.length; i++) {
             c = ca[i];
-            while (c.charAt(0) == ' ') {
+            while (c.charAt(0) === ' ') {
                 c = c.substring(1);
             }
-            if (c.indexOf(name) == 0) {
+            if (c.indexOf(name) === 0) {
                 score_punkte = Number(c.substring(name.length, c.length));
             }
         }
@@ -549,14 +551,14 @@ function mo_press(ev) {
             try { audioContext.resume(); } catch (e) { init_audio(); }
 
             //Menu actions
-            if (mausY == 20 && mausX >= 9 && mausX <= 15) {         // P: Play
+            if (mausY === 20 && mausX >= 9 && mausX <= 15) {         // P: Play
                 storage_game_restore();
                 state = 'init';
                 init_room(score_raum);
-            } else if (mausY == 20 && mausX >= 19 && mausX <= 30) { // H: Highscore
+            } else if (mausY === 20 && mausX >= 19 && mausX <= 30) { // H: Highscore
                 state = 'highscore';
                 highscore_draw();
-            } else if (mausY == 22 && mausX >= 9 && mausX <= 30) {  // L: Look at rooms
+            } else if (mausY === 22 && mausX >= 9 && mausX <= 30) {  // L: Look at rooms
                 state = 'look';
                 storage_game_restore();
                 init_room(score_raum);
@@ -733,7 +735,7 @@ function init_room(level) {
     document.getElementById('menudiv').style.visibility = "hidden";
 
     // Spiel verzögert starten (wenn Status init)
-    if (state == 'init') {
+    if (state === 'init') {
         verz = setTimeout(idle_start, 3000);
     }
 }
@@ -765,20 +767,20 @@ function soft_scroll() {
     var duration = 90;
 
     //hin- und herscrollen bei der Raumvorschau "look"
-    if (state == 'look') {
+    if (state === 'look') {
         duration = 15; //sehr langsames (15) Scrollen
-        if (viewport_x == 0)
+        if (viewport_x === 0)
             digger_x = field_width;
         else
             digger_x = 0;
-        if (viewport_y == 0)
+        if (viewport_y === 0)
             digger_y = field_height;
         else
             digger_y = 0;
     }
 
     //links, Randabstand < 2 Spritebreiten?
-    if (((digger_x + viewport_x) < (pre_abstand)) && (actual_marginLeft <= viewport_x) && (viewport_x != 0)) {
+    if (((digger_x + viewport_x) < (pre_abstand)) && (actual_marginLeft <= viewport_x) && (viewport_x !== 0)) {
         //scroll nach rechts, -x..0
         viewport_x = (diggerdiv_width / 2 - digger_x - pre_icon_size / 2) << 0;
         if (viewport_x > 0)
@@ -788,7 +790,7 @@ function soft_scroll() {
         canvas_digger.style.marginLeft = viewport_x + "px";
     }
     //rechts, Randabstand < 2 Spritebreiten?
-    else if (((digger_x + pre_icon_size + viewport_x) > (diggerdiv_width - pre_abstand)) && (actual_marginLeft >= viewport_x) && (viewport_x != pre_max_w_offset)) {
+    else if (((digger_x + pre_icon_size + viewport_x) > (diggerdiv_width - pre_abstand)) && (actual_marginLeft >= viewport_x) && (viewport_x !== pre_max_w_offset)) {
         //scroll nach links, 0..+x
         viewport_x = (diggerdiv_width / 2 - digger_x - pre_icon_size / 2) << 0;
         if (viewport_x < pre_max_w_offset)
@@ -801,7 +803,7 @@ function soft_scroll() {
     }
 
     //oben, Randabstand < 2 Spritehöhen
-    if (((digger_y + viewport_y) < (pre_abstand)) && (actual_marginTop <= viewport_y) && (viewport_y != 0)) {
+    if (((digger_y + viewport_y) < (pre_abstand)) && (actual_marginTop <= viewport_y) && (viewport_y !== 0)) {
         //scroll nach unten, -y..0
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y > 0)
@@ -811,7 +813,7 @@ function soft_scroll() {
         canvas_digger.style.marginTop = viewport_y + "px";
     }
     //unten, Randabstand < 2 Spritehöhen
-    else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_marginTop >= viewport_y) && (viewport_y != pre_max_h_offset)) {
+    else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_marginTop >= viewport_y) && (viewport_y !== pre_max_h_offset)) {
         //scroll nach oben, 0--+y
         viewport_y = (diggerdiv_height / 2 - digger_y - pre_icon_size / 2) << 0;
         if (viewport_y < pre_max_h_offset)
@@ -911,8 +913,6 @@ function scorelineChar(s, x, y) {
 
 // belege die ganze Scoreline vor
 function scorelinePrewrite() {
-    const PADDING = 2;
-    const SCORE_LENGTH = 5;
     const LIFE_LENGTH = 2;
     const DIAMOND_LENGTH = 2;
 
@@ -1072,7 +1072,7 @@ function draw_frame1() {
     }
 
     // === SPIELFELD AKTIVITÄTEN ===
-    if (state == 'play') {
+    if (state === 'play') {
         // === DIGGER IDLE ===
         // Spezielle Animationen wenn der Digger stillsteht
         if (digger_idle) {
@@ -1273,7 +1273,7 @@ function draw_frame1() {
     // === LEVELWECHSEL ===
     // Übergang zum nächsten Level oder Highscore
     if (next_raum) {
-        if (score_raum == room.length) {
+        if (score_raum === room.length) {
             // Alle Level geschafft - Highscore anzeigen
             state = 'highscore';
             highscore_draw();
@@ -1304,14 +1304,22 @@ function draw_frame1() {
     if (brumm) {
         if (gamepad_dualrumble) {
             // Gamepad-Vibration
-            navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", 
-                {startDelay:0, duration:48, weakMagnitude:1.0, strongMagnitude:0.0});
-        } else if (navigator.vibrate) {
-            // Handy-Vibration
-            navigator.vibrate([50, 20, 50, 20, 50, 20, 30, 20, 20]);
-        }
+            navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {
+                startDelay: 0,
+                duration: 48,
+                weakMagnitude: 1.0,
+                strongMagnitude: 0.0
+                }).then(() => {
+                    // Dual-Rumble erfolgreich
+                }).catch(error => {
+                    console.error('Dual-Rumble Fehler:', error.message);
+                });
+            } else if (navigator.vibrate) {
+                // Handy-Vibration
+                navigator.vibrate([50, 20, 50, 20, 50, 20, 30, 20, 20]);
+            }
         brumm = false;
-    }
+        }
 
     // === DIGGER TOD ===
     // Behandlung wenn der Digger stirbt

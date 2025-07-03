@@ -2,7 +2,7 @@
 // Copyright (C) 2017–2025  Marko Klingner
 // GNU GPL v3 - http://www.gnu.org/licenses/
 
-const DIGGER_VERSION = '01.07.25'
+const DIGGER_VERSION = '03.07.25'
 
 //Parameter
 const LEBENMAX = 20;
@@ -68,9 +68,9 @@ var digger_animation_up = false;
 var digger_animation_down = false;
 
 var digger_cheat = false;
-var cheat_tmp = '';
+let cheat_tmp = '';
 var digger_half_step = false;
-var takt_teiler = 1; //siehe setTimeout(draw_frame, FPS)
+let takt_teiler = 1; //siehe setTimeout(draw_frame, FPS)
 var digger_go = 'NONE'; //LEFT, RIGHT, UP, DOWN, NONE
 var digger_death = false;
 var digger_is_dead = false;
@@ -84,19 +84,19 @@ var lptaste = 0; //last-pressed-taste
 var llptaste = 0;
 var lllptaste = 0;
 var rtaste = 0; //released-taste
-var handled = true;
+let handled = true;
 var virt_kbd_last_length;
-var touchX;
-var touchY;
+let touch_x;
+let touch_y;
 var direction = 'stop';
 var last_direction = 'stop';
 var touch_flag = false;
 var fullscreen_flag = false;
 var single_touch = 0;
-var mouseIsDown = false;
-var joyOn = false;
-var joyX = 0;
-var joyY = 0;
+let mouse_is_down = false;
+let joy_on = false;
+let joy_x = 0;
+let joy_y = 0;
 
 var action = 0;
 var laction = 0;
@@ -212,8 +212,8 @@ var sprites = [
 var rd_in = false; //Highscore Input
 var rd_yn = false; //Highscore YesNo
 
-var viewport_x = 0;
-var viewport_y = 0;
+let viewport_x = 0;
+let viewport_y = 0;
 var actual_marginLeft = 0;
 var actual_marginTop = 0;
 var duration_x = 0;

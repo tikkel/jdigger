@@ -152,7 +152,7 @@ function set_pos() {
 	}
 }
 
-function touch_cancel(e) {
+function touch_cancel() {
 	mouse_is_down = false
 	direction = 'stop'
 	joy_on = false
