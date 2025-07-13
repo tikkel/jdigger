@@ -39,6 +39,14 @@ const change_level = delta => {
 function key_down(event) {
     const key = event.key;
     
+    // Nur für relevante Tasten preventDefault() aufrufen
+    const relevant_keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 
+                          'q', 'h', '9', 'd', 'Escape', 'Enter', ' ', 'p', 'Home', 'l', 'L'];
+    
+    if (!relevant_keys.includes(key)) {
+        return; // Taste ignorieren, keine preventDefault()
+    }
+    
     // Cursor-Tasten haben höchste Priorität - nur im Spiel aktiv
     return direction_map[key] && state === 'play' ? (
         event.preventDefault(),
