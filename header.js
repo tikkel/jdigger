@@ -1,13 +1,13 @@
-// jdigger/Digger.JS
+// SPDX-License-Identifier: GPL-3.0
+// jdigger/header.js - globale Variable und Konstanten
 // Copyright (C) 2017–2025  Marko Klingner
-// GNU GPL v3 - http://www.gnu.org/licenses/
 
-const DIGGER_VERSION = '04.07.25'
+const DIGGER_VERSION = '13.07.25'
 
 //Parameter
 const LEBENMAX = 20;
 const LEBENMIN = 1;
-const FPS = 27; //Interruptschleife in Millisekunden, siehe setTimeout(draw_frame, FPS), 27ms^37Hz
+const FPS = 28; //Interruptschleife in Millisekunden, siehe setTimeout(game_loop, FPS), 27ms^37,04Hz, 27ms^35,71Hz
 
 // Erlaubte Zeichen für Highscore-Eingabe
 const ALLOWED_CHARS = /[^a-zA-Z0-9!"#$%&()*+,./:;<=>?@\-\s]+/g;

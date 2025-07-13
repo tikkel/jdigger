@@ -1,6 +1,6 @@
-// jdigger/Digger.JS
+// SPDX-License-Identifier: GPL-3.0
+// jdigger/jdigger.js === KC85-DIGGER ===
 // Copyright (C) 2019–2025  Marko Klingner
-// GNU GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 
 //wenn möglich, schönen Pixelsalat zeichnen
 function scalePixelated(ctx) {
