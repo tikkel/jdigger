@@ -1,194 +1,290 @@
 // SPDX-License-Identifier: GPL-3.0
-// jdigger/gamepad.js - Gamepad Steuerung
+// jdigger/gamepad.js - GC-Optimierte Gamepad Steuerung
 // Copyright (C) 2022–2025  Marko Klingner
 
-/* Gamepad State - Globale Variablen für Controller-Status */
-var gamepad_connected = false, gamepad_type = 'none', gamepad_brand = 'keyboard', gamepad_dualrumble = false, gamepad_index = 0
+/* Gamepad State - Minimale Variablen */
+let gp_connected = false, gp_type = 0, gp_brand = 'keyboard', 
+    gp_rumble = false, gp_idx = 0, gp_obj = null;
 
-/* Button States - Vorheriger und aktueller Zustand aller Tasten */
-var prev_buttons = {left: false, right: false, up: false, down: false, A: false, B: false, X: false, Y: false, L1: false, R1: false}
-var curr_buttons = {left: false, right: false, up: false, down: false, A: false, B: false, X: false, Y: false, L1: false, R1: false}
+/* Button States - GC-optimiert mit TypedArrays */
+const btn_names = ['left', 'right', 'up', 'down', 'A', 'B', 'X', 'Y', 'L1', 'R1'];
+const btn_count = btn_names.length;
 
-/* Controller-Typen - Verschiedene Gamepad-Konfigurationen mit Button-Mapping */
-var CONTROLLER_TYPES = {
-    xbox: {name: 'Xbox', patterns: ['xbox', '045e', 'microsoft'], buttons: {action: 1, back: 0, option1: 3, option2: 2, shoulder_l: 4, shoulder_r: 5}},
-    sony: {name: 'PlayStation', patterns: ['054c', 'sony', 'playstation', 'dualshock', 'dualsense'], buttons: {action: 1, back: 0, option1: 2, option2: 3, shoulder_l: 4, shoulder_r: 5}},
-    nintendo: {name: 'Nintendo', patterns: ['nintendo', 'switch', 'joy-con', '057e'], buttons: {action: 1, back: 0, option1: 3, option2: 2, shoulder_l: 4, shoulder_r: 5}},
-    generic: {name: 'Generic', patterns: ['generic', 'unknown'], buttons: {action: 0, back: 1, option1: 3, option2: 2, shoulder_l: 4, shoulder_r: 5}}
+// Verwende TypedArrays für bessere Performance
+const prev_btns_array = new Uint8Array(btn_count);
+const curr_btns_array = new Uint8Array(btn_count);
+
+// Lookup-Maps für schnellen Zugriff
+const btn_indices = {};
+for (let i = 0; i < btn_count; i++) btn_indices[btn_names[i]] = i;
+
+// Helper-Funktionen für Button-Zugriff
+const get_btn = (name) => curr_btns_array[btn_indices[name]];
+const get_prev_btn = (name) => prev_btns_array[btn_indices[name]];
+const set_btn = (name, value) => curr_btns_array[btn_indices[name]] = value ? 1 : 0;
+
+/* Wiederverwendbare Objekte - Keine GC-Allokationen */
+const dirs_cache = {left: false, right: false, up: false, down: false};
+
+/* Controller-Typen - Optimiert mit TypedArrays */
+const CTRL_TYPES = [
+    {name: 'Xbox', patterns: ['xbox', '045e', 'microsoft'], btns: new Uint8Array([0,1,2,3,4,5])},
+    {name: 'PlayStation', patterns: ['054c','sony','playstation','dualshock','dualsense'], btns: new Uint8Array([0,1,3,2,4,5])},
+    {name: 'Nintendo', patterns: ['nintendo','switch','057e'], btns: new Uint8Array([0,1,2,3,4,5])},
+    {name: 'Generic', patterns: ['generic','unknown'], btns: new Uint8Array([1,0,2,3,4,5])}
+];
+
+let ctrl_idx = 0; // Index des aktuellen Controllers
+
+/* Richtungserkennung - GC-optimiert */
+function gp_get_dirs(gp) {
+    const axes = gp.axes;
+    
+    // Objekt zurücksetzen statt neu erstellen
+    dirs_cache.left = dirs_cache.right = dirs_cache.up = dirs_cache.down = false;
+    
+    // Typ 0: 8+ Achsen, Typ 1: 4 Achsen + D-Pad Buttons, Typ 2: 2 Achsen
+    if (gp_type === 0) {
+        // 8-Achsen Controller: Alle Analog-Sticks prüfen
+        for (let i = 0; i < 8; i += 3) {
+            if (axes[i] < -0.5) dirs_cache.left = true;
+            if (axes[i] > 0.5) dirs_cache.right = true;
+            if (axes[i+1] < -0.5) dirs_cache.up = true;
+            if (axes[i+1] > 0.5) dirs_cache.down = true;
+        }
+    } else if (gp_type === 1) {
+        // 4-Achsen + D-Pad Buttons
+        const btns = gp.buttons;
+        dirs_cache.left = btns[14]?.pressed || axes[0] < -0.5 || axes[2] < -0.5;
+        dirs_cache.right = btns[15]?.pressed || axes[0] > 0.5 || axes[2] > 0.5;
+        dirs_cache.up = btns[12]?.pressed || axes[1] < -0.5 || axes[3] < -0.5;
+        dirs_cache.down = btns[13]?.pressed || axes[1] > 0.5 || axes[3] > 0.5;
+    } else if (gp_type === 2) {
+        // 2-Achsen Standard
+        dirs_cache.left = axes[0] < -0.5;
+        dirs_cache.right = axes[0] > 0.5;
+        dirs_cache.up = axes[1] < -0.5;
+        dirs_cache.down = axes[1] > 0.5;
+    }
+    
+    return dirs_cache;
 }
 
-var current_controller = CONTROLLER_TYPES.xbox
-
-/* Richtungserkennung - Liest D-Pad und Analog-Sticks je nach Controller-Typ */
-function gamepad_get_directions(gp) {
-    var left = false, right = false, up = false, down = false
+/* Movement-Behandlung - Optimiert ohne splice() */
+function gp_handle_movement() {
+    if (state !== 'play') return;
     
-    // 8-Achsen Controller: 3 Analog-Stick-Paare prüfen
-    gamepad_type === '8axes' && [0, 3, 6].forEach(i => (
-        left = left || gp.axes[i] < -0.5,
-        right = right || gp.axes[i] > 0.5,
-        up = up || gp.axes[i + 1] < -0.5,
-        down = down || gp.axes[i + 1] > 0.5
-    ))
+    const dir_map = [
+        ['left', 'ArrowLeft'], ['right', 'ArrowRight'], 
+        ['up', 'ArrowUp'], ['down', 'ArrowDown']
+    ];
     
-    // 4-Achsen Controller: D-Pad Buttons + 2 Analog-Sticks
-    gamepad_type === '4axes' && (
-        left = gp.buttons[14]?.pressed || gp.axes[0] < -0.5 || gp.axes[2] < -0.5,
-        right = gp.buttons[15]?.pressed || gp.axes[0] > 0.5 || gp.axes[2] > 0.5,
-        up = gp.buttons[12]?.pressed || gp.axes[1] < -0.5 || gp.axes[3] < -0.5,
-        down = gp.buttons[13]?.pressed || gp.axes[1] > 0.5 || gp.axes[3] > 0.5
-    )
-    
-    // 2-Achsen Controller: Nur 1 Analog-Stick
-    gamepad_type === '2axes' && (
-        left = gp.axes[0] < -0.5,
-        right = gp.axes[0] > 0.5,
-        up = gp.axes[1] < -0.5,
-        down = gp.axes[1] > 0.5
-    )
-    
-    return {left, right, up, down}
-}
-
-/* Movement-Behandlung - Verwaltet Tastenstapel für Richtungsbewegungen */
-function gamepad_handle_movement() {
-    // Mapping von Gamepad-Buttons zu Tastatur-Äquivalenten
-    [{curr: 'left', prev: 'left', key: 'ArrowLeft'}, {curr: 'right', prev: 'right', key: 'ArrowRight'}, 
-     {curr: 'up', prev: 'up', key: 'ArrowUp'}, {curr: 'down', prev: 'down', key: 'ArrowDown'}].forEach(({curr, prev, key}) => {
+    for (let i = 0; i < dir_map.length; i++) {
+        const [dir, key] = dir_map[i];
+        const pressed = get_btn(dir);
+        const was_pressed = get_prev_btn(dir);
         
-        // Button gedrückt: Taste zu Stack hinzufügen
-        curr_buttons[curr] && !prev_buttons[prev] && state === 'play' && (
-            keys_stack.splice(keys_stack.indexOf(key), keys_stack.indexOf(key) !== -1 ? 1 : 0), // Doppelte entfernen
-            keys_stack.push(key), // Neue Taste hinzufügen
-            digger_idle = false,
-            digger_go = direction_map[keys_stack[keys_stack.length - 1]], // Letzte Taste aktivieren
-            digger_go_handled = false
-        )
-        
-        // Button losgelassen: Taste aus Stack entfernen
-        !curr_buttons[curr] && prev_buttons[prev] && (
-            keys_stack.splice(keys_stack.indexOf(key), keys_stack.indexOf(key) !== -1 ? 1 : 0),
-            keys_stack.length > 0 && ( // Vorherige Taste reaktivieren falls Stack nicht leer
-                digger_idle = false,
-                digger_go = direction_map[keys_stack[keys_stack.length - 1]],
-                digger_go_handled = false
-            )
-        )
-    })
+        if (pressed && !was_pressed) {
+            // Button gedrückt
+            remove_key(key);
+            add_key(key);
+            digger_idle = false;
+            digger_go = direction_map[key];
+            digger_go_handled = false;
+        } else if (!pressed && was_pressed) {
+            // Button losgelassen
+            remove_key(key);
+            if (keys_stack.length > 0) {
+                digger_idle = false;
+                digger_go = direction_map[keys_stack[keys_stack.length - 1]];
+                digger_go_handled = false;
+            }
+        }
+    }
 }
 
-/* Gamepad Connect - Initialisiert Controller beim Anschließen */
-function gamepad_connect(e) {
-    gamepad_connected = true
-    gamepad_index = e.gamepad.index
+/* Gamepad Connect - Optimiert */
+function gamepad_connect(event) {
+    const gp = event.gamepad;
+    if (!gp) return;
     
-    // Audio Context für Sounds aktivieren
-    try { audio_context.resume() } catch (err) { init_audio() }
+    gp_connected = true;
+    gp_idx = gp.index;
+    gp_obj = gp; // Cache für schnelleren Zugriff
     
-    // Controller-Typ anhand der ID erkennen
-    current_controller = Object.values(CONTROLLER_TYPES).find(config => 
-        config.patterns.some(pattern => e.gamepad.id.toLowerCase().includes(pattern))
-    ) || CONTROLLER_TYPES.xbox
+    // Audio Context aktivieren
+    (audio_context || (init_audio(), audio_context))?.resume()?.catch(init_audio);
     
-    gamepad_brand = current_controller.name.toLowerCase()
+    // Controller-Typ ermitteln - Optimiert
+    const id = gp.id.toLowerCase();
+    ctrl_idx = CTRL_TYPES.findIndex(c => c.patterns.some(p => id.includes(p)));
+    if (ctrl_idx === -1) ctrl_idx = 0; // Default zu Xbox
     
-    // Gamepad-Typ nach Anzahl Achsen und Buttons bestimmen
-    gamepad_type = e.gamepad.axes.length >= 8 ? '8axes' : 
-                  e.gamepad.buttons.length >= 16 && e.gamepad.axes.length === 4 ? '4axes' :
-                  e.gamepad.buttons.length >= 6 && e.gamepad.axes.length === 2 ? '2axes' : 'none'
+    gp_brand = CTRL_TYPES[ctrl_idx].name.toLowerCase();
     
-    // Vibration testen falls verfügbar
-    !gamepad_dualrumble && e.gamepad.vibrationActuator?.playEffect && (
-        e.gamepad.vibrationActuator.playEffect("dual-rumble", {startDelay: 0, duration: 100, weakMagnitude: 1.0, strongMagnitude: 1.0})
-            .then(() => (gamepad_dualrumble = true, console.log('Vibration wird unterstützt!')))
-            .catch(error => (gamepad_dualrumble = false, console.log('Vibration nicht unterstützt:', error.message)))
-    )
+    // Gamepad-Typ bestimmen (0=8axes, 1=4axes, 2=2axes)
+    gp_type = gp.axes.length >= 8 ? 0 : 
+              gp.buttons.length >= 16 && gp.axes.length === 4 ? 1 : 2;
     
-    // Button States zurücksetzen (außer Richtungstasten)
-    Object.keys(curr_buttons).forEach(key => 
-        !['left', 'right', 'up', 'down'].includes(key) && (prev_buttons[key] = curr_buttons[key] = true)
-    )
+    // Vibration testen (einmalig)
+    if (!gp_rumble && gp.vibrationActuator?.playEffect) {
+        gp.vibrationActuator.playEffect("dual-rumble", {
+            startDelay: 0, duration: 100, weakMagnitude: 1.0, strongMagnitude: 1.0
+        }).then(() => gp_rumble = true).catch(() => {}); // Fehler ignorieren
+    }
     
-    // Menu neu zeichnen falls im Menu-Modus
-    state === 'menu' && menu_draw()
+    // Button States zurücksetzen - GC-optimiert
+    prev_btns_array.fill(0);
+    curr_btns_array.fill(0);
     
-    console.log('Gamepad #%d verbunden:\n"%s"\nButtons: %d\nAchsen: %d\nTyp: %s\nMarke: %s\nDual-Rumble: %s', 
-        e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, 
-        e.gamepad.axes.length, gamepad_type, current_controller.name, gamepad_dualrumble)
+    // Keys-Stack zurücksetzen
+    keys_stack.length = 0;
+    keys_set.clear();
+    
+    if (state === 'menu') menu_draw();
+    console.log('Gamepad connected:', gp.id);
 }
 
-/* Gamepad Disconnect - Räumt auf wenn Controller getrennt wird */
-function gamepad_disconnect(e) {
-    gamepad_connected = false
-    gamepad_dualrumble = false
-    gamepad_brand = 'keyboard'
-    gamepad_index = 0
+/* Gamepad Disconnect - Optimiert */
+function gamepad_disconnect(event) {
+    if (!event.gamepad) return;
     
-    // Menu neu zeichnen falls im Menu-Modus
-    state === 'menu' && menu_draw()
-    console.log('Gamepad #%d getrennt: "%s"', e.gamepad.index, e.gamepad.id)
+    gp_connected = gp_rumble = false;
+    gp_brand = 'keyboard';
+    gp_obj = null;
+    
+    // Arrays zurücksetzen
+    prev_btns_array.fill(0);
+    curr_btns_array.fill(0);
+    keys_stack.length = 0;
+    keys_set.clear();
+    
+    if (state === 'menu') menu_draw();
+    console.log('Gamepad disconnected');
 }
 
-/* Hauptupdate - Wird jeden Frame aufgerufen, liest Controller-Input und verarbeitet Game-States */
+/* Hauptupdate - Maximale GC-Optimierung */
 function gamepad_update() {
-    // Früher Ausstieg: Nur wenn Controller verbunden und nicht im Input-Modus
-    const gp = gamepad_connected && state !== 'input' && navigator.getGamepads()[gamepad_index]
+    if (!gp_connected || state === 'input') return;
     
-    gp && gp.connected && (
-        // Previous state sichern
-        Object.assign(prev_buttons, curr_buttons),
-        // Neue Richtungen einlesen
-        Object.assign(curr_buttons, gamepad_get_directions(gp)),
+    // Gamepad-Objekt aus Cache oder neu holen
+    const gp = gp_obj?.connected ? gp_obj : navigator.getGamepads()[gp_idx];
+    if (!gp?.connected) return;
+    
+    gp_obj = gp; // Cache aktualisieren
+    
+    // Button States kopieren - Extrem schnell mit TypedArrays
+    prev_btns_array.set(curr_btns_array);
+    
+    // Richtungen lesen - Verwendet cached Objekt
+    const dirs = gp_get_dirs(gp);
+    set_btn('left', dirs.left);
+    set_btn('right', dirs.right);
+    set_btn('up', dirs.up);
+    set_btn('down', dirs.down);
+    
+    // Action-Buttons lesen - Optimiert mit direktem Array-Zugriff
+    const ctrl_btns = CTRL_TYPES[ctrl_idx].btns;
+    const btns = gp.buttons;
+    
+    // Inline-Funktion für bessere Performance
+    const read_btn = (idx) => {
+        const btn = btns[idx];
+        return btn ? (btn.pressed || btn.value > 0.5) : false;
+    };
+    
+    set_btn('A', read_btn(ctrl_btns[0]));   // back
+    set_btn('B', read_btn(ctrl_btns[1]));   // action  
+    set_btn('X', read_btn(ctrl_btns[2]));   // option2
+    set_btn('Y', read_btn(ctrl_btns[3]));   // option1
+    set_btn('L1', read_btn(ctrl_btns[4]));  // shoulder_l
+    set_btn('R1', read_btn(ctrl_btns[5]));  // shoulder_r
+    
+    // Zustandsbehandlung - Optimiert mit Inline-Prüfung
+    const btn_pressed = (btn) => get_btn(btn) && !get_prev_btn(btn);
+    
+    // State-Handler - Lookup-Table für bessere Performance
+    const state_handlers = {
+        'play': () => {
+            gp_handle_movement();
+            if (btn_pressed('B')) {
+                if (digger_death) {
+                    if (score_leben < LEBENMIN) {
+                        state = 'highscore';
+                        highscore_draw();
+                    } else {
+                        state = 'init';
+                        init_room(score_raum);
+                    }
+                    storage_game_save();
+                } else {
+                    digger_death = true;
+                }
+            }
+            if (btn_pressed('A')) {
+                idle_stop();
+                resetGame();
+                storage_game_save();
+                state = 'menu';
+                init_room(score_raum);
+                menu_draw();
+            }
+        },
         
-        // Action-Buttons einlesen (mit Analog-Trigger Support)
-        curr_buttons.A = gp.buttons[current_controller.buttons.back]?.pressed || gp.buttons[current_controller.buttons.back]?.value > 0.5,
-        curr_buttons.B = gp.buttons[current_controller.buttons.action]?.pressed || gp.buttons[current_controller.buttons.action]?.value > 0.5,
-        curr_buttons.X = gp.buttons[current_controller.buttons.option2]?.pressed || gp.buttons[current_controller.buttons.option2]?.value > 0.5,
-        curr_buttons.Y = gp.buttons[current_controller.buttons.option1]?.pressed || gp.buttons[current_controller.buttons.option1]?.value > 0.5,
-        curr_buttons.L1 = gp.buttons[current_controller.buttons.shoulder_l]?.pressed || gp.buttons[current_controller.buttons.shoulder_l]?.value > 0.5,
-        curr_buttons.R1 = gp.buttons[current_controller.buttons.shoulder_r]?.pressed || gp.buttons[current_controller.buttons.shoulder_r]?.value > 0.5,
+        'init': () => {
+            if (btn_pressed('A')) {
+                idle_stop();
+                resetGame();
+                storage_game_save();
+                state = 'menu';
+                init_room(score_raum);
+                menu_draw();
+            }
+        },
         
-        /* State Handlers - Verschiedene Game-Modi */
+        'menu': () => {
+            if (btn_pressed('B')) {
+                storage_game_restore();
+                state = 'init';
+                init_room(score_raum);
+            } else if (btn_pressed('X')) {
+                state = 'highscore';
+                highscore_draw();
+            } else if (btn_pressed('Y')) {
+                state = 'look';
+                storage_game_restore();
+                init_room(score_raum);
+            }
+        },
         
-        // PLAY-Modus: Spiel läuft
-        state === 'play' && (
-            gamepad_handle_movement(), // Bewegung verarbeiten
-            // B-Button: Escape/Weiter nach Tod
-            curr_buttons.B && !prev_buttons.B && (
-                digger_death ? (
-                    score_leben < LEBENMIN ? (state = 'highscore', highscore_draw()) : (state = 'init', init_room(score_raum)),
-                    storage_game_save()
-                ) : (digger_death = true) // Sofortiger Tod
-            ),
-            // A-Button: Zurück zum Menu
-            curr_buttons.A && !prev_buttons.A && (
-                idle_stop(), resetGame(), storage_game_save(), state = 'menu', init_room(score_raum), menu_draw()
-            )
-        ),
+        'look': () => {
+            if (btn_pressed('Y') || btn_pressed('R1')) {
+                if (score_raum < room.length) {
+                    score_raum++;
+                    init_room(score_raum);
+                }
+            }
+            if (btn_pressed('L1')) {
+                if (score_raum > 1) {
+                    score_raum--;
+                    init_room(score_raum);
+                }
+            }
+            if (btn_pressed('A')) {
+                state = 'menu';
+                menu_draw();
+            }
+        },
         
-        // INIT-Modus: Level wird geladen
-        state === 'init' && curr_buttons.A && !prev_buttons.A && (
-            idle_stop(), resetGame(), storage_game_save(), state = 'menu', init_room(score_raum), menu_draw()
-        ),
-        
-        // MENU-Modus: Hauptmenu
-        state === 'menu' && (
-            curr_buttons.B && !prev_buttons.B && (storage_game_restore(), state = 'init', init_room(score_raum)), // Spiel starten
-            curr_buttons.X && !prev_buttons.X && (state = 'highscore', highscore_draw()), // Highscore anzeigen
-            curr_buttons.Y && !prev_buttons.Y && (state = 'look', storage_game_restore(), init_room(score_raum)) // Look-Modus
-        ),
-        
-        // LOOK-Modus: Level durchblättern
-        state === 'look' && (
-            // Y oder R1: Nächstes Level
-            (curr_buttons.Y && !prev_buttons.Y || curr_buttons.R1 && !prev_buttons.R1) && score_raum < room.length && (score_raum++, init_room(score_raum)),
-            // L1: Vorheriges Level
-            curr_buttons.L1 && !prev_buttons.L1 && score_raum > 1 && (score_raum--, init_room(score_raum)),
-            // A: Zurück zum Menu
-            curr_buttons.A && !prev_buttons.A && (state = 'menu', menu_draw())
-        ),
-        
-        // HIGHSCORE-Modus: Highscore-Liste
-        state === 'highscore' && curr_buttons.A && !prev_buttons.A && (state = 'menu', menu_draw())
-    )
+        'highscore': () => {
+            if (btn_pressed('A')) {
+                state = 'menu';
+                menu_draw();
+            }
+        }
+    };
+    
+    // State-Handler ausführen
+    const handler = state_handlers[state];
+    if (handler) handler();
 }

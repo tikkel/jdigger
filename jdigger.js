@@ -190,7 +190,7 @@ function getGamepadText() {
         nintendo: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" }
     };
     
-    return controlMaps[gamepad_brand] || 
+    return controlMaps[gp_brand] || 
            { play: "P: PLAY   H: HIGHSCORE", rooms: "L: A LOOK AT THE ROOMS" };
 }
 
@@ -1306,7 +1306,7 @@ function draw_frame1() {
     // === VIBRATION ===
     // Controller- oder Handy-Vibration für haptisches Feedback
     if (brumm) {
-        if (gamepad_dualrumble) {
+        if (gp_rumble) {
             // Gamepad-Vibration
             navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {
                 startDelay: 0,
@@ -1405,10 +1405,11 @@ function game_loop() {
 function init_events() {
 
     //Touch aktivieren (Handy, Tablet)
-    document.body.addEventListener('touchstart', touch_down, false);
-    document.body.addEventListener('touchend', touch_up, false);
-    document.body.addEventListener('touchcancel', touch_up, false);
-    document.body.addEventListener('touchmove', touch_xy, true);
+    // Beim Registrieren der Touch-Events explizit passive: false setzen
+    document.body.addEventListener('touchstart', touch_down, { passive: false });
+    document.body.addEventListener('touchmove', touch_xy, { passive: false });
+    document.body.addEventListener('touchend', touch_up, { passive: false });
+    document.body.addEventListener('touchcancel', touch_cancel, { passive: false });
     
     // Verhindert Zoomen durch Doppeltipp
     document.body.style.touchAction = 'manipulation';
