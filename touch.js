@@ -8,7 +8,7 @@ const DIRECTION_MAP = {'links': 'ArrowLeft', 'rechts': 'ArrowRight', 'hoch': 'Ar
 function touch_down(event) {
     event.cancelable && event.preventDefault();
     
-    // 3-Finger: Zurück zum Menü
+    // 3-Finger: Abbruch zum Menü [q]
     if (event.touches.length > 2 && (state === 'play' || state === 'init')) {
         idle_stop();
         resetGame();
@@ -19,7 +19,7 @@ function touch_down(event) {
         return;
     }
     
-    // 2-Finger: Level restart oder Menü
+    // 2-Finger: Level restart oder Zurück zum Menü [Esc]
     if (event.touches.length > 1) {
         if (state === 'play') {
             digger_death = true;
@@ -84,24 +84,24 @@ function set_pos() {
             (deltaY < -TOUCH_THRESHOLD ? 'runter' : deltaY > TOUCH_THRESHOLD ? 'hoch' : null);
         
         // Richtung ändern wenn Schwellwert überschritten
-        const shouldChangeDirection = new_direction && direction !== new_direction;
-        shouldChangeDirection && (direction = new_direction, touch_begin_x = touch_current_x, touch_begin_y = touch_current_y);
+        new_direction && direction !== new_direction && (
+            direction = new_direction, touch_begin_x = touch_current_x, touch_begin_y = touch_current_y);
     })();
     
-    // Tastatur-Events bei Richtungsänderung
-    const directionChanged = direction !== last_direction;
-    directionChanged && (
+    // Tastatur-Events simulieren, bei Richtungsänderung
+    direction !== last_direction && (
         direction === 'stop' ? keys_stack.length = 0 : (() => {
             const key = DIRECTION_MAP[direction];
-            const keyIndex = keys_stack.indexOf(key);
+            const key_stack_index = keys_stack.indexOf(key);
             
             // Key aus Stack entfernen und hinzufügen (keine doppelten Gesten)
-            keyIndex !== -1 && keys_stack.splice(keyIndex, 1);
+            key_stack_index !== -1 && keys_stack.splice(key_stack_index, 1);
             keys_stack.push(key);
             
-            // Digger-Bewegung starten
-            const isPlayState = state === 'play';
-            isPlayState && (digger_idle = false, digger_go = direction_map[key], digger_go_handled = false);
+            // Digger-Bewegung setzen (digger_go wird in game_loop() ausgewertet)
+            state === 'play' && (digger_idle = false,
+                digger_go = direction_map[key],
+                digger_go_handled = false);
         })(),
         last_direction = direction
     );
