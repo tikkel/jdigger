@@ -107,7 +107,7 @@ function set_pos() {
     );
 }
 
-function touch_up(event) {
+function touch_up() {
     // Touch beenden, Bewegung stoppen
     touch_is_active = false;
     touch_is_begin = false;

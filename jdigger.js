@@ -1359,7 +1359,7 @@ function init_events() {
     // Touch-Optimierungen
     document.body.style.touchAction = 'none';
     document.body.style.userSelect = 'none';
-    document.body.style.webkitUserSelect = 'none';
+    //document.body.style.webkitUserSelect = 'none';
     document.body.style.webkitTouchCallout = 'none';
     document.body.style.webkitTapHighlightColor = 'transparent';
     // Verhindert Kontext-Menu bei langem Touch
