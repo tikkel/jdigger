@@ -161,8 +161,8 @@ function menu_draw() {
     menuLine("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
     menuLine("         BERLIN         \247\250", 7, 18);
 
-    // Gamepad-spezifische Steuerung
-    const controls = getGamepadText();
+    // Gamepad-spezifische Symbole holen
+    const controls = menu_get_gamepad_symbols();
     menuLine(controls.play, 9, 20);
     menuLine(controls.rooms, 9, 22);
 
@@ -182,15 +182,16 @@ function menu_draw() {
     document.getElementById('menudiv').style.visibility = "visible";
 }
 
-// Hilfsfunktion für Gamepad-spezifische Texte
-function getGamepadText() {
+// zeige Gamepad-spezifische Symbole (wenn angeschlossen)
+function menu_get_gamepad_symbols() {
     const controlMaps = {
-        sony: { play: "\330: PLAY   \333: HIGHSCORE", rooms: "\332: A LOOK AT THE ROOMS" },
+        playstation: { play: "\330: PLAY   \333: HIGHSCORE", rooms: "\332: A LOOK AT THE ROOMS" },
         xbox: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" },
-        nintendo: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" }
+        nintendo: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" },
+        generic: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" }
     };
     
-    return controlMaps[gp_brand] || 
+    return controlMaps[gamepad_brand] || 
            { play: "P: PLAY   H: HIGHSCORE", rooms: "L: A LOOK AT THE ROOMS" };
 }
 
@@ -345,6 +346,9 @@ function highscoreYesNo() {
             state = 'menu';
             menu_draw();
         }
+        // aktiviere wieder game_loop Tastatureingabe
+        document.body.removeEventListener('keydown', highscore_input);
+        document.body.addEventListener('keydown', key_down);
         return;
     }
 
@@ -405,7 +409,11 @@ function storageHighscoreUpdate() {
                 sp = "0" + sp;
             highscore[h] = sp;
 
+            // aktiviere normale Tastatureingabe
             state = 'input';
+            document.body.removeEventListener('keydown', key_down);
+            document.body.addEventListener('keydown', highscore_input);
+
             break;
         }
     }
@@ -425,10 +433,27 @@ function storageHighscoreSave() {
 }
 
 // Highscore-Eingabe über Tastatur (PC)
-function kb_input(taste) {
-    if (state === 'input') {
-        input = taste.key.replace(ALLOWED_CHARS, '');
+function highscore_input(event) {
+    event.preventDefault();
+    const key = event.key;
+
+    // Erlaubt:
+    // 1. Alle "normale" Tasten, die ein Zeichen erzeugen (inkl. Umlaute ß,ä,ö,ü)
+    // 2. Explizit: Backspace und Enter
+    const isPrintableKey = (
+        key.length === 1 &&  // Einzelzeichen (keine Steuertaste)
+        !event.ctrlKey &&    // Keine Ctrl-Kombination
+        !event.altKey &&     // Keine Alt-Kombination
+        !event.metaKey      // Keine Cmd/Win-Kombination
+    );
+    const isAllowedControlKey = key === "Backspace" || key === "Enter";
+
+    if (!isPrintableKey && !isAllowedControlKey) {
+        return; // Blockiere unerwünschte Tasten (z. B. Pfeiltasten, F1-F12)
     }
+
+    input = event.key;
+    console.log(`Inputkey: ${input}`);
 }
 
 // Highscore-Eingabe über virtuelle Tastatur (Mobile/Smart TV)
@@ -527,76 +552,6 @@ function storage_game_restore() {
         if (score_leben < LEBENMIN) resetGame()
         console.log('storage_game_restore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
     }
-}
-
-
-//MOUSE_CLICK
-function mo_press(ev) {
-    //Fullscreen
-    if (!fullscreen_flag) fullscreen();
-
-    if (touch_flag) {
-        touch_flag = false;
-        return;
-    }
-
-    //Mausposition
-    const mausX = (ev.pageX / (body_width / 40)) << 0;
-    const mausY = (ev.pageY / (body_height / 30)) << 0;
-
-    //State handlers
-    const handlers = {
-        menu: () => {
-            //Resume or Init audioContext
-            try { audioContext.resume(); } catch (e) { init_audio(); }
-
-            //Menu actions
-            if (mausY === 20 && mausX >= 9 && mausX <= 15) {         // P: Play
-                storage_game_restore();
-                state = 'init';
-                init_room(score_raum);
-            } else if (mausY === 20 && mausX >= 19 && mausX <= 30) { // H: Highscore
-                state = 'highscore';
-                highscore_draw();
-            } else if (mausY === 22 && mausX >= 9 && mausX <= 30) {  // L: Look at rooms
-                state = 'look';
-                storage_game_restore();
-                init_room(score_raum);
-            }
-        },
-
-        look: () => {
-            if (score_raum < room.length) {
-                score_raum++;
-                init_room(score_raum);
-            } else {
-                state = 'menu';
-                init_room(score_raum);
-                menu_draw();
-            }
-        },
-
-        play: () => {
-            if (digger_death) {
-                if (score_leben < LEBENMIN) {
-                    state = 'highscore';
-                    highscore_draw();
-                    resetGame();
-                } else {
-                    state = 'init';
-                    init_room(score_raum);
-                }
-                storage_game_save();
-            }
-        },
-
-        highscore: () => {
-            state = 'menu';
-            menu_draw();
-        }
-    };
-
-    handlers[state]?.();
 }
 
 // Fullscreen aktivieren
@@ -1306,24 +1261,17 @@ function draw_frame1() {
     // === VIBRATION ===
     // Controller- oder Handy-Vibration für haptisches Feedback
     if (brumm) {
-        if (gp_rumble) {
-            // Gamepad-Vibration
+        if (gamepad_rumble) {
+            // Chrome
             navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {
-                startDelay: 0,
-                duration: 48,
-                weakMagnitude: 1.0,
-                strongMagnitude: 0.0
-                }).then(() => {
-                    // Dual-Rumble erfolgreich
-                }).catch(error => {
-                    console.error('Dual-Rumble Fehler:', error.message);
-                });
-            } else if (navigator.vibrate) {
-                // Handy-Vibration
-                navigator.vibrate([50, 20, 50, 20, 50, 20, 30, 20, 20]);
-            }
-        brumm = false;
+                startDelay:0, duration:FPS*2, strongMagnitude:1.0, weakMagnitude:1.0});
+        } else if (navigator.vibrate) {
+            // Handy
+            navigator.vibrate([
+                15, 10, 15]); 
         }
+        brumm = false;
+    }
 
     // === DIGGER TOD ===
     // Behandlung wenn der Digger stirbt
@@ -1403,30 +1351,32 @@ function game_loop() {
 
 
 function init_events() {
+    // Touch aktivieren (Handy, Tablet)
+    document.body.addEventListener('touchstart', touch_down);
+    document.body.addEventListener('touchmove', touch_xy);
+    document.body.addEventListener('touchend', touch_up);
+    document.body.addEventListener('touchcancel', touch_cancel);
+    // Touch-Optimierungen
+    document.body.style.touchAction = 'none';
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+    document.body.style.webkitTouchCallout = 'none';
+    document.body.style.webkitTapHighlightColor = 'transparent';
+    // Verhindert Kontext-Menu bei langem Touch
+    document.body.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    //Touch aktivieren (Handy, Tablet)
-    // Beim Registrieren der Touch-Events explizit passive: false setzen
-    document.body.addEventListener('touchstart', touch_down, { passive: false });
-    document.body.addEventListener('touchmove', touch_xy, { passive: false });
-    document.body.addEventListener('touchend', touch_up, { passive: false });
-    document.body.addEventListener('touchcancel', touch_cancel, { passive: false });
-    
-    // Verhindert Zoomen durch Doppeltipp
-    document.body.style.touchAction = 'manipulation';
+    // Maus und Tastatur aktivieren (PC, LG-SmartTV)
+    document.body.addEventListener('click', mouse_click);
+    document.body.addEventListener('keydown', key_down);
+    document.body.addEventListener('keyup', key_up);
 
-    //Maus und Tastatur aktivieren (PC, LG-SmartTV)
-    document.body.addEventListener('click', mo_press, false);
-    document.body.addEventListener('keydown', key_down, false);
-    document.body.addEventListener('keyup', key_up, false);
-    document.body.addEventListener('keypress', kb_input, false);
+    // Bildschirm und Buffer neu skalieren
+    window.addEventListener('resize', scaleReload);
 
-    //Bildschirm und Buffer neu skalieren
-    window.addEventListener('resize', scaleReload, false);
-
-    //Gamepad verbunden|abgesteckt
+    // Gamepad verbunden|abgesteckt
     if (navigator.getGamepads) {
-        window.addEventListener('gamepadconnected', gamepad_connect, false);
-        window.addEventListener('gamepaddisconnected', gamepad_disconnect, false);
+        window.addEventListener('gamepadconnected', gamepad_connect);
+        window.addEventListener('gamepaddisconnected', gamepad_disconnect);
     }
     
 }
