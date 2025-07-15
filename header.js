@@ -86,16 +86,15 @@ var lllptaste = 0;
 var rtaste = 0; //released-taste
 let handled = true;
 var virt_kbd_last_length;
-let touch_x;
-let touch_y;
+let touch_is_begin = false;
+let touch_begin_x = 0;
+let touch_begin_y = 0;
+let touch_current_x;
+let touch_current_y;
+let touch_is_active = false;
 var direction = 'stop';
 var last_direction = 'stop';
 var fullscreen_flag = false;
-let mouse_is_down = false;
-let joy_on = false;
-let joy_x = 0;
-let joy_y = 0;
-
 var action = 0;
 var laction = 0;
 

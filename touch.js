@@ -1,31 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
-// jdigger/touch.js - TouchSteuerung auf Smartphone/Tablet - GC-optimierte Version
+// jdigger/touch.js - TouchSteuerung auf Smartphone/Tablet
 // Copyright (C) 2019–2025  Marko Klingner
 
-// Konstanten für bessere Performance
 const TOUCH_THRESHOLD = 30;
-const DIRECTION_MAP = {
-    'links': 'ArrowLeft',
-    'rechts': 'ArrowRight', 
-    'hoch': 'ArrowUp',
-    'runter': 'ArrowDown'
-};
-
-// Wiederverwendbare Objekte zur GC-Vermeidung
-const touchCache = {
-    deltaX: 0,
-    deltaY: 0,
-    absDeltaX: 0,
-    absDeltaY: 0,
-    key: '',
-    keyIndex: -1
-};
+const DIRECTION_MAP = {'links': 'ArrowLeft', 'rechts': 'ArrowRight', 'hoch': 'ArrowUp', 'runter': 'ArrowDown'};
 
 function touch_down(event) {
-    // Verhindere das Standard-Touch-Verhalten, wenn möglich
     event.cancelable && event.preventDefault();
-
-    // 3-Finger-Geste: Zurück zum Menü
+    
+    // 3-Finger: Zurück zum Menü
     if (event.touches.length > 2 && (state === 'play' || state === 'init')) {
         idle_stop();
         resetGame();
@@ -36,7 +19,7 @@ function touch_down(event) {
         return;
     }
     
-    // 2-Finger-Geste: Level restart oder Menü
+    // 2-Finger: Level restart oder Menü
     if (event.touches.length > 1) {
         if (state === 'play') {
             digger_death = true;
@@ -47,7 +30,7 @@ function touch_down(event) {
         return;
     }
     
-    // 1-Finger-Geste: Continue oder Richtungsgeste
+    // 1-Finger: Continue nach Tod
     if (event.touches.length === 1 && state === 'play' && digger_death) {
         if (score_leben < LEBENMIN) {
             document.body.removeEventListener('click', vkb_focus, false);
@@ -64,86 +47,78 @@ function touch_down(event) {
         return;
     }
     
-    // Normale Touch-Behandlung (nur wenn keine der obigen Bedingungen zutraf)
-    mouse_is_down = joy_on = true;
+    // Normale Touch-Steuerung initialisieren
+    touch_is_active = touch_is_begin = true;
     touch_xy(event);
 }
 
 function touch_xy(event) {
-    // Verhindere das Standard-Touch-Verhalten, wenn möglich
     event.cancelable && event.preventDefault();
-
-    // Direkte Zuweisung ohne Zwischenvariablen
-    touch_x = event.targetTouches[0].pageX;
-    touch_y = event.targetTouches[0].pageY;
-
-    if (joy_on) {
-        joy_x = touch_x;
-        joy_y = touch_y;
-        joy_on = false;
+    
+    // Touch-Position aktualisieren
+    touch_current_x = event.targetTouches[0].pageX;
+    touch_current_y = event.targetTouches[0].pageY;
+    
+    // Touch-Anfangsposition setzen
+    if (touch_is_begin) {
+        touch_begin_x = touch_current_x;
+        touch_begin_y = touch_current_y;
+        touch_is_begin = false;
     }
     
     set_pos();
 }
 
-// Vorsichtige GC-Optimierung - minimale Änderungen zur ursprünglichen Version
 function set_pos() {
-    mouse_is_down && (() => {
-        // Lokale Variablen statt Cache-Objekt (weniger GC-Druck)
-        const deltaX = joy_x - touch_x;
-        const deltaY = joy_y - touch_y;
+    // Bewegungsberechnung nur bei aktivem Touch
+    touch_is_active && (() => {
+        const deltaX = touch_begin_x - touch_current_x;
+        const deltaY = touch_begin_y - touch_current_y;
         const absDeltaX = Math.abs(deltaX);
         const absDeltaY = Math.abs(deltaY);
         
-        // Bestimme dominante Achse und Richtung (identisch zum Original)
+        // Dominante Achse bestimmen und Richtung ableiten
         const is_horizontal = absDeltaX > absDeltaY;
         const new_direction = is_horizontal ? 
             (deltaX < -TOUCH_THRESHOLD ? 'rechts' : deltaX > TOUCH_THRESHOLD ? 'links' : null) :
             (deltaY < -TOUCH_THRESHOLD ? 'runter' : deltaY > TOUCH_THRESHOLD ? 'hoch' : null);
         
-        // Richtung setzen wenn Schwellwert überschritten und Richtung neu (identisch)
+        // Richtung ändern wenn Schwellwert überschritten
         const shouldChangeDirection = new_direction && direction !== new_direction;
-        shouldChangeDirection && (
-            direction = new_direction,
-            joy_x = touch_x,
-            joy_y = touch_y
-        );
+        shouldChangeDirection && (direction = new_direction, touch_begin_x = touch_current_x, touch_begin_y = touch_current_y);
     })();
     
-    // Touch-Events bei Richtungsänderung (identisch zum Original)
+    // Tastatur-Events bei Richtungsänderung
     const directionChanged = direction !== last_direction;
     directionChanged && (
         direction === 'stop' ? keys_stack.length = 0 : (() => {
-            // Minimale Optimierung: eine Variable für Map-Lookup
             const key = DIRECTION_MAP[direction];
             const keyIndex = keys_stack.indexOf(key);
             
-            // Optimierte Stack-Manipulation (identisch)
+            // Key aus Stack entfernen und hinzufügen (keine doppelten Gesten)
             keyIndex !== -1 && keys_stack.splice(keyIndex, 1);
             keys_stack.push(key);
             
-            // Digger-Richtung setzen (identisch)
+            // Digger-Bewegung starten
             const isPlayState = state === 'play';
-            isPlayState && (
-                digger_idle = false,
-                digger_go = direction_map[key],
-                digger_go_handled = false
-            );
+            isPlayState && (digger_idle = false, digger_go = direction_map[key], digger_go_handled = false);
         })(),
         last_direction = direction
     );
 }
 
 function touch_up(event) {
-    mouse_is_down = false;
+    // Touch beenden, Bewegung stoppen
+    touch_is_active = false;
+    touch_is_begin = false;
     direction = 'stop';
-    joy_on = false;
     set_pos();
 }
 
 function touch_cancel() {
-    mouse_is_down = false;
+    // Touch abgebrochen, Bewegung stoppen
+    touch_is_active = false;
+    touch_is_begin = false;
     direction = 'stop';
-    joy_on = false;
     set_pos();
 }
