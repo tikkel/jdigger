@@ -1,0 +1,5 @@
+- canvas/scale() umstellen auf CSSscalierten canvas
+  https://webgpufundamentals.org/webgpu/lessons/webgpu-resizing-the-canvas.html
+  https://webgpufundamentals.org/webgpu/lessons
+
+- weiter modularisieren (in Dateien aufsplitten) und globale Variablen zuordnen (und header.js auflösen)
