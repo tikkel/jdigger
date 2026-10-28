@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 // jdigger/header.js - globale Variable und Konstanten
-// Copyright (C) 2017–2025  Marko Klingner
+// Copyright (C) 2017–2026  Marko Klingner
 
 const DIGGER_VERSION = '28.10.26'
 

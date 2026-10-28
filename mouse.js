@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 // jdigger/mouse.js - Maus Steuerung
-// Copyright (C) 2022–2025  Marko Klingner
+// Copyright (C) 2022–2026  Marko Klingner
 
 function mouse_click(event) {
     //Fullscreen

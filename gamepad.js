@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: GPL-3.0 - GC-optimierte Gamepad Steuerung
-// Copyright (C) 2022–2025 Marko Klingner
+// SPDX-License-Identifier: GPL-3.0
+// jdigger/gamepad.js - GC-optimierte Gamepad Steuerung
+// Copyright (C) 2022–2026 Marko Klingner
 
 const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
 
@@ -120,7 +121,7 @@ function gamepad_connect(event) {
     gamepad_idx = gp.index;
     
     // Audio Context aktivieren
-    (audio_context || (init_audio(), audio_context))?.resume()?.catch(init_audio);
+    audio_unlock();
     
     // Controller-Typ ermitteln
     const id = gp.id.toLowerCase();

@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 // jdigger/touch.js - TouchSteuerung auf Smartphone/Tablet
-// Copyright (C) 2019–2025  Marko Klingner
+// Copyright (C) 2019–2026  Marko Klingner
 
 const TOUCH_THRESHOLD = 30;
 const DIRECTION_MAP = {'links': 'ArrowLeft', 'rechts': 'ArrowRight', 'hoch': 'ArrowUp', 'runter': 'ArrowDown'};
 
 function touch_down(event) {
     event.cancelable && event.preventDefault();
+
+    // Audio freischalten - auf iOS ist touchstart DIE Gesten-Quelle;
+    // preventDefault oben kann den synthetischen click unterdruecken,
+    // dann bliebe das Spiel sonst stumm.
+    audio_unlock();
     
     // 3-Finger: Abbruch zum Menü [q]
     if (event.touches.length > 2 && (state === 'play' || state === 'init')) {

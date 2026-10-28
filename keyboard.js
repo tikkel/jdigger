@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 // jdigger/keyboard.js - Tastatur Steuerung (CPU & GC-optimiert)
-// Copyright (C) 2025–2025  Marko Klingner
+// Copyright (C) 2025–2026  Marko Klingner
 
 /* GC-Optimierte Datenstrukturen */
 const keys_stack = []; // Stapel für gedrückte Cursor-Tasten (letzte = aktuelle Richtung)
@@ -149,7 +149,7 @@ const key_handlers = {
     // Spiel starten: 'p' im Menü
     play: () => {
         if (state === 'menu') {
-            (audio_context || (init_audio(), audio_context))?.resume()?.catch(init_audio);
+            audio_unlock();
             storage_game_restore();
             state = 'init';
             init_room(score_raum);

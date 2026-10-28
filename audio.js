@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 // jdigger/audio.js - KC85 Soundemulation mit WebAudio
-// Copyright (C) 2017–2025  Marko Klingner
+// Copyright (C) 2017–2026  Marko Klingner
 
 let sound_type = 'no';
 let gain_node;
