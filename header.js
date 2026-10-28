@@ -2,7 +2,7 @@
 // jdigger/header.js - globale Variable und Konstanten
 // Copyright (C) 2017–2025  Marko Klingner
 
-const DIGGER_VERSION = '15.07.25'
+const DIGGER_VERSION = '28.10.26'
 
 //Parameter
 const LEBENMAX = 20;

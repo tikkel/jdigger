@@ -14,7 +14,7 @@ function mouse_click(event) {
     const handlers = {
         menu: () => {
             //Resume or Init audioContext
-            try { audioContext.resume(); } catch (e) { init_audio(); }
+            audio_unlock();
 
             //Menu actions
             if (mausY === 20 && mausX >= 9 && mausX <= 15) {         // P: Play

@@ -27,6 +27,10 @@ function init_audio() {
 	if (!AC)
 		return;
 
+	// alten Context sauber schliessen (sonst leckt er bei jedem erneuten Init)
+	if (audio_context) {
+		try { audio_context.close(); } catch (e) {}
+	}
 	audio_context = new AC();
 	gain_node = audio_context.createGain();
 	gain_node.gain.value = 0.2;
@@ -120,4 +124,23 @@ function play_audio(ton) {
 		(ton === 'Step' || ton === 'Diamond') ? 1 : 0
 	);
 	source.start(0);
+}
+
+/*
+ * Apple-Safe Audio-Freischaltung: muss aus User-Gesten-Handlern
+ * (click/touchstart/keydown) aufgerufen werden. Ersetzt den frueheren
+ * Workaround "Context bei jedem Klick neu erzeugen" (alte iOS-Safari-
+ * Blockade) - resume() im Gesten-Kontext reicht auf allen aktuellen
+ * Apple-Geraeten. Fuer uralte iOS-Versionen bleibt der catch-Fallback.
+ */
+function audio_unlock() {
+	try {
+		if (!audio_context || audio_context.state === 'closed') {
+			init_audio();
+		} else if (audio_context.state === 'suspended' || audio_context.state === 'interrupted') {
+			audio_context.resume();
+		}
+	} catch (e) {
+		init_audio();
+	}
 }

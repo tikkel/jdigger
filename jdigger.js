@@ -104,6 +104,153 @@ function scaleReload() {
   }
 }
 
+// ============================================================
+// Geister-Konstanten & -Funktionen (Modulebene, hoisted)
+// - keine Closure-Allokationen mehr im 280er-Spielfeld-Loop
+// ============================================================
+
+// Geister im Zustand .2 (Explosion) - O(1) Drawflag-Lookup in draw_field()
+const GHOST_DRAW_SET = new Set([43.2, 44.2, 45.2, 46.2, 47.2, 48.2, 49.2, 50.2,
+                                51.2, 52.2, 53.2, 54.2, 55.2, 56.2, 57.2, 58.2,
+                                59.2, 60.2, 61.2, 62.2]);
+
+// 8 Felder um den Geist / alle 9 inkl. Geistposition
+const EXPLODE_AROUND = [-21, -20, -19, -1, 1, 19, 20, 21];
+const EXPLODE_ALL    = [-21, -20, -19, -1, 0, 1, 19, 20, 21];
+
+// Bewegungstabellen der 5 Geistertypen:
+// [Geist-Id, [Richtungs-Offset, Setze-Wert, Check-Offset], ...]
+const GHOST_CFG_180 = [
+    [46, [-1, 46.1, -2], [1, 44.1, 2]],
+    [44, [1, 44.1, 2], [-1, 46.1, -2]],
+    [45, [-20, 45.1, -40], [20, 43.1, 40]],
+    [43, [20, 43.1, 40], [-20, 45.1, -40]]
+];
+
+const GHOST_CFG_90L = [
+    [50, [-1, 50.1, -2], [20, 47.1, 40], [-20, 49.1, -40], [1, 48.1, 2]],
+    [48, [1, 48.1, 2], [-20, 49.1, -40], [20, 47.1, 40], [-1, 50.1, -2]],
+    [49, [-20, 49.1, -40], [-1, 50.1, -2], [1, 48.1, 2], [20, 47.1, 40]],
+    [47, [20, 47.1, 40], [1, 48.1, 2], [-1, 50.1, -2], [-20, 49.1, -40]]
+];
+
+const GHOST_CFG_90R = [
+    [54, [-1, 54.1, -2], [-20, 53.1, -40], [20, 51.1, 40], [1, 52.1, 2]],
+    [52, [1, 52.1, 2], [20, 51.1, 40], [-20, 53.1, -40], [-1, 54.1, -2]],
+    [53, [-20, 53.1, -40], [1, 52.1, 2], [-1, 54.1, -2], [20, 51.1, 40]],
+    [51, [20, 51.1, 40], [-1, 54.1, -2], [1, 52.1, 2], [-20, 53.1, -40]]
+];
+
+const GHOST_CFG_90LR = [
+    [58, [-1, 58.1, -2], [-20, 57.1, -40], [20, 55.1, 40], [1, 60.1, 2]],
+    [56, [1, 56.1, 2], [20, 55.1, 40], [-20, 57.1, -40], [-1, 62.1, -2]],
+    [57, [-20, 57.1, -40], [1, 56.1, 2], [-1, 58.1, -2], [20, 59.1, 40]],
+    [55, [20, 55.1, 40], [-1, 58.1, -2], [1, 56.1, 2], [-20, 61.1, -40]]
+];
+
+const GHOST_CFG_90RL = [
+    [62, [-1, 62.1, -2], [20, 59.1, 40], [-20, 61.1, -40], [1, 56.1, 2]],
+    [60, [1, 60.1, 2], [-20, 61.1, -40], [20, 59.1, 40], [-1, 58.1, -2]],
+    [61, [-20, 61.1, -40], [-1, 62.1, -2], [1, 60.1, 2], [20, 55.1, 40]],
+    [59, [20, 59.1, 40], [1, 60.1, 2], [-1, 62.1, -2], [-20, 57.1, -40]]
+];
+
+// Erkennt alle Explosionszustaende (43.2 bis 62.2) - keine Arrays/Closures
+function handleGhostExplosion(l, val) {
+    if (val < 43.2 || val > 62.2) return false;
+    const whole = val | 0;
+    if (Math.abs(val - whole - 0.2) > 1e-9) return false; // Float-sicher
+
+    // Digger in der 3x3-Zone? (VOR dem Leeren pruefen - wie im Original)
+    for (let k = 0; k < EXPLODE_AROUND.length; k++) {
+        const v = idx[l + EXPLODE_AROUND[k]];
+        if (v >= 8 && v < 41) { digger_death = true; break; }
+    }
+
+    for (let k = 0; k < EXPLODE_ALL.length; k++) {
+        idx[l + EXPLODE_ALL[k]] = 0.1;
+    }
+
+    SFX.STONE = true;
+    return true;
+}
+
+// Bewege einen Geist laut Tabelle; liefert die Position fuer den
+// anschliessenden Falling-Check (Zielfeld oder Geist selbst)
+function moveGhost(l, val, cfg) {
+    for (let g = 0; g < cfg.length; g++) {
+        const entry = cfg[g];
+        if (val !== entry[0]) continue;
+
+        for (let c = 1; c < entry.length; c++) {
+            const dir   = entry[c][0];
+            const set   = entry[c][1];
+            const check = entry[c][2];
+            const target = l + dir;
+
+            if (idx[target] === 1 || idx[target] === 1.1) {
+                idx[l] = 1.1;
+                idx[target] = set;
+                if (idx[l + check] >= 8 && idx[l + check] < 41) digger_death = true;
+                return target;
+            } else if (idx[target] >= 8 && idx[target] < 41) {
+                digger_death = true;
+            }
+        }
+        return l; // Geist gefunden, aber nicht bewegt
+    }
+    return l;
+}
+
+// Geist stirbt, wenn ein fallender Stein/Diamant auf ihn faellt
+function killGhostUnderFalling(ti) {
+    const above = idx[ti - 20];
+    if (above === 3.2 || above === 7.2) {
+        idx[ti] = (idx[ti] << 0) + 0.2;
+    }
+}
+
+// ============================================================
+// Softscroll-Margin-Status (ersetzt getComputedStyle pro Frame)
+// - die CSS-Transition ist linear -> Wert exakt interpolierbar
+// - actual_margin* entspricht damit exakt dem alten Verhalten,
+//   inkl. "Animation laeuft noch"-Erkennung durch die Gates
+// ============================================================
+var margin_anim_x = { from: 0, to: 0, t0: 0, dur: 0 };
+var margin_anim_y = { from: 0, to: 0, t0: 0, dur: 0 };
+
+// Aktuellen (interpolierten) Margin-Wert einer Achse ermitteln
+function marginValue(anim) {
+    if (anim.dur <= 0) return anim.to;
+    const p = (Date.now() - anim.t0) / (anim.dur * 1000);
+    return p >= 1 ? anim.to : anim.from + (anim.to - anim.from) * p;
+}
+
+// Am Anfang von draw_field() und soft_scroll() aufrufen (|0 wie parseInt)
+function updateActualMargins() {
+    actual_marginLeft = marginValue(margin_anim_x) | 0;
+    actual_marginTop  = marginValue(margin_anim_y) | 0;
+}
+
+// Margin setzen: Transition startet vom aktuellen interpolierten Wert,
+// exakt wie ein Browser bei einem Neusetzen waehrend einer Transition
+function setMarginX(v, dur) {
+    margin_anim_x.from = actual_marginLeft;
+    margin_anim_x.to = v;
+    margin_anim_x.t0 = Date.now();
+    margin_anim_x.dur = dur;
+    actual_marginLeft = v;
+    canvas_digger.style.marginLeft = v + "px";
+}
+function setMarginY(v, dur) {
+    margin_anim_y.from = actual_marginTop;
+    margin_anim_y.to = v;
+    margin_anim_y.t0 = Date.now();
+    margin_anim_y.dur = dur;
+    actual_marginTop = v;
+    canvas_digger.style.marginTop = v + "px";
+}
+
 // Eine Zeile in den Menu-Puffer zeichnen
 function menuLine(strg, x, y) {
     const dy = y * 8;
@@ -197,7 +344,7 @@ function menu_get_gamepad_symbols() {
 
 function highscore_draw() {
   if (!charsImage.complete) {
-    setTimeout(menu_draw, 1000);
+    setTimeout(highscore_draw, 1000);
     return;
   }
   
@@ -689,6 +836,12 @@ function init_room(level) {
     // Menu-Bild unsichtbar
     document.getElementById('menudiv').style.visibility = "hidden";
 
+    // Altes Feld sofort uebermalen: Im Menue laeuft draw_field nicht, das
+    // Canvas behalte sonst 1-2 Frames den Stand des letzten Levels
+    // (incl. Digger) - in Zeitlupe sichtbarer "Digger-Blitz".
+    context_digger.clearRect(0, 0, field_width, field_height);
+    draw_field();
+
     // Spiel verzögert starten (wenn Status init)
     if (state === 'init') {
         verz = setTimeout(idle_start, 3000);
@@ -697,10 +850,9 @@ function init_room(level) {
 
 function draw_digger_death() {
     var positions = [-21, -20, -19, -1, 0, 1, 19, 20, 21];
-    var diamondIndices = [0, 1, 2, 3, 4, 5, 6, 7];
 
     for (var i = 0; i < positions.length; i++) {
-        idx[d_idx + positions[i]] = (diamondIndices.indexOf(i) !== -1 && score_ges > i) ? 3.1 : 0.1;
+        idx[d_idx + positions[i]] = (i < 8 && score_ges > i) ? 3.1 : 0.1;
     }
 
     idx[d_idx] = 63.1;
@@ -718,6 +870,7 @@ function draw_digger_death() {
 // via "CSS3 transition"
 // Canvas-Verschiebung innerhalb des div-Containers (marginTop, marginLeft)
 function soft_scroll() {
+    updateActualMargins();
     var pre_abstand = pre_icon_size * 2;
     var duration = 90;
 
@@ -742,7 +895,7 @@ function soft_scroll() {
             viewport_x = 0;
         duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
-        canvas_digger.style.marginLeft = viewport_x + "px";
+        setMarginX(viewport_x, duration_x);
     }
     //rechts, Randabstand < 2 Spritebreiten?
     else if (((digger_x + pre_icon_size + viewport_x) > (diggerdiv_width - pre_abstand)) && (actual_marginLeft >= viewport_x) && (viewport_x !== pre_max_w_offset)) {
@@ -754,7 +907,7 @@ function soft_scroll() {
             viewport_x = 0;
         duration_x = Math.abs(viewport_x - actual_marginLeft) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
-        canvas_digger.style.marginLeft = viewport_x + "px";
+        setMarginX(viewport_x, duration_x);
     }
 
     //oben, Randabstand < 2 Spritehöhen
@@ -765,7 +918,7 @@ function soft_scroll() {
             viewport_y = 0;
         duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
-        canvas_digger.style.marginTop = viewport_y + "px";
+        setMarginY(viewport_y, duration_y);
     }
     //unten, Randabstand < 2 Spritehöhen
     else if (((digger_y + pre_icon_size + viewport_y) > (diggerdiv_height - pre_abstand)) && (actual_marginTop >= viewport_y) && (viewport_y !== pre_max_h_offset)) {
@@ -777,21 +930,16 @@ function soft_scroll() {
             viewport_y = 0;
         duration_y = Math.abs(viewport_y - actual_marginTop) / duration / (pre_icon_size / 16);
         canvas_digger.style.transitionDuration = duration_y + "s" + ", " + duration_x + "s";
-        canvas_digger.style.marginTop = viewport_y + "px";
+        setMarginY(viewport_y, duration_y);
     }
 
 }
 
 function draw_field() {
-    // Style-Werte nur einmal pro Frame berechnen
-    actual_marginLeft = parseInt(window.getComputedStyle(canvas_digger).marginLeft, 10);
-    actual_marginTop = parseInt(window.getComputedStyle(canvas_digger).marginTop, 10);
-    
-    // Geister-Set für O(1) Lookup statt wiederholten Vergleichen
-    const ghostSet = new Set([43.2, 44.2, 45.2, 46.2, 47.2, 48.2, 49.2, 50.2, 
-                              51.2, 52.2, 53.2, 54.2, 55.2, 56.2, 57.2, 58.2, 
-                              59.2, 60.2, 61.2, 62.2]);
-    
+    // Margin-Werte aus der linearen CSS-Transition interpolieren
+    // (exakt wie getComputedStyle, aber ohne Layout-Flush pro Frame)
+    updateActualMargins();
+
     // Viewport-Grenzen vorberechnen
     const viewLeft = -actual_marginLeft;
     const viewRight = diggerdiv_width - actual_marginLeft;
@@ -808,7 +956,7 @@ function draw_field() {
         if (!(idx_val > i || idx_val === 3 || idx_val === 41)) continue;
         
         // Drawflag löschen (außer bei Staub und Geistern)
-        if (i > 0 && !ghostSet.has(idx_val)) {
+        if (i > 0 && !GHOST_DRAW_SET.has(idx_val)) {
             idx[l] = i;
         }
         
@@ -1055,124 +1203,20 @@ function draw_frame1() {
 
         // === HAUPT-SPIELSCHLEIFE (280 Iterationen) ===
         // Durchläuft das gesamte Spielfeld und behandelt alle Objekte
-        let ti = 1;
+        // (Geister-Funktionen & Tabellen liegen auf Modulebene - siehe oben)
         for (let l = 1; l < 281; l++) {
             const val = idx[l];
 
-            // === GEISTER BEHANDLUNG ===
-            // Funktion für Geister-Explosion
-            const handleGhostExplosion = (ghostVals) => {
-                if (ghostVals.includes(val)) {
-                    // 3x3 Explosionsbereich um den Geist
-                    const explode = [l-21,l-20,l-19,l-1,l+1,l+19,l+20,l+21];
-                    if (explode.some(i => idx[i] >= 8 && idx[i] < 41)) digger_death = true; // Digger in Explosion
-                    explode.forEach(i => idx[i] = 0.1); // Explosionsbereich leeren
-                    [l-21,l-20,l-19,l-1,l,l+1,l+19,l+20,l+21].forEach(i => idx[i] = 0.1);
-                    SFX.STONE = true;
-                    return true;
-                }
-                return false;
-            };
-
-            // Funktion für Geister-Bewegung
-            const moveGhost = (ghostConfigs) => {
-                for (const [ghost, ...checks] of ghostConfigs) {
-                    if (val === ghost) {
-                        for (const [dir, set, check] of checks) {
-                            const target = l + dir;
-                            if (idx[target] === 1 || idx[target] === 1.1) {
-                                // Geist kann sich bewegen
-                                ti = target;
-                                idx[l] = 1.1;
-                                idx[ti] = set;
-                                if (idx[l + check] >= 8 && idx[l + check] < 41) digger_death = true;
-                                return;
-                            } else if (idx[target] >= 8 && idx[target] < 41) {
-                                // Geist berührt Digger direkt
-                                digger_death = true;
-                            }
-                        }
-                        return;
-                    }
-                }
-            };
-
-            // Geist stirbt wenn Stein/Diamant darauf fällt
-            const killGhostUnderFalling = () => {
-                if (idx[ti - 20] === 3.2 || idx[ti - 20] === 7.2) {
-                    idx[ti] = (idx[ti] << 0) + 0.2;
-                }
-            };
-
-            // GEISTER TYP 180° (0x3 43-46) - drehen sich immer um 180°
-            // 43=down,  45=up,  44=right,  46=left  180
-            if (val >= 43 && val < 47) {
-                if (!handleGhostExplosion([43.2, 44.2, 45.2, 46.2])) {
-                    ti = l;
-                    moveGhost([
-                        [46, [-1, 46.1, -2], [1, 44.1, 2]],      // links: links rechts
-                        [44, [1, 44.1, 2], [-1, 46.1, -2]],      // rechts: recht links
-                        [45, [-20, 45.1, -40], [20, 43.1, 40]],  // hoch: hoch runter
-                        [43, [20, 43.1, 40], [-20, 45.1, -40]]   // runter: runter hoch
-                        
-                    ]);
-                    killGhostUnderFalling();
-                }
-            }
-            // GEISTER TYP 90L (0x7 47-50) - drehen sich primär 90° nach links
-            // 47=down,  49=up,  48=right,  50=left  90L
-            else if (val >= 47 && val < 51) {
-                if (!handleGhostExplosion([47.2, 48.2, 49.2, 50.2])) {
-                    ti = l;
-                    moveGhost([
-                        [50, [-1, 50.1, -2], [20, 47.1, 40], [-20, 49.1, -40], [1, 48.1, 2]],  // links: links runter hoch rechts
-                        [48, [1, 48.1, 2], [-20, 49.1, -40], [20, 47.1, 40], [-1, 50.1, -2]],  // rechts: rechts hoch runter links
-                        [49, [-20, 49.1, -40], [-1, 50.1, -2], [1, 48.1, 2], [20, 47.1, 40]],  // hoch: hoch links rechts runter
-                        [47, [20, 47.1, 40], [1, 48.1, 2], [-1, 50.1, -2], [-20, 49.1, -40]]   // runter: runter rechts links hoch
-                    ]);
-                    killGhostUnderFalling();
-                }
-            }
-            // GEISTER TYP 90R (0xB 51-54) - drehen sich primär 90° nach rechts
-            // 51=down,  53=up,  52=right,  54=left  90R
-            else if (val >= 51 && val < 55) {
-                if (!handleGhostExplosion([51.2, 52.2, 53.2, 54.2])) {
-                    ti = l;
-                    moveGhost([
-                        [54, [-1, 54.1, -2], [-20, 53.1, -40], [20, 51.1, 40], [1, 52.1, 2]],  // links: links hoch runter rechts
-                        [52, [1, 52.1, 2], [20, 51.1, 40], [-20, 53.1, -40], [-1, 54.1, -2]],  // rechts: rechts runter hoch links
-                        [53, [-20, 53.1, -40], [1, 52.1, 2], [-1, 54.1, -2], [20, 51.1, 40]],  // hoch: hoch rechts links runter
-                        [51, [20, 51.1, 40], [-1, 54.1, -2], [1, 52.1, 2], [-20, 53.1, -40]]   // runter: runter links rechts hoch
-                    ]);
-                    killGhostUnderFalling();
-                }
-            }
-            // GEISTER TYP 90LR (0xF 55-58) - wechseln zwischen links und rechts drehen
-            // 55=down,  57=up,  56=right,  58=left  90LR  zuletzt links abgebogen
-            else if (val >= 55 && val < 59) {
-                if (!handleGhostExplosion([55.2, 56.2, 57.2, 58.2])) {
-                    ti = l;
-                    moveGhost([
-                        [58, [-1, 58.1, -2], [-20, 57.1, -40], [20, 55.1, 40], [1, 60.1, 2]],  // links: links hoch runter rechts(90RL)
-                        [56, [1, 56.1, 2], [20, 55.1, 40], [-20, 57.1, -40], [-1, 62.1, -2]],  // rechts: rechts runter hoch links(90RL)
-                        [57, [-20, 57.1, -40], [1, 56.1, 2], [-1, 58.1, -2], [20, 59.1, 40]],  // hoch: hoch rechts links runter(90RL)
-                        [55, [20, 55.1, 40], [-1, 58.1, -2], [1, 56.1, 2], [-20, 61.1, -40]]   // runter: runter links rechts hoch(90RL)
-                    ]);
-                    killGhostUnderFalling();
-                }
-            }
-            // GEISTER TYP 90RL (59-62) - wechseln zwischen rechts und links drehen
-            // 59=down,  61=up,  60=right,  62=left  90RL  zuletzt rechts abgebogen
-            else if (val >= 59 && val < 63) {
-                if (!handleGhostExplosion([59.2, 60.2, 61.2, 62.2])) {
-                    ti = l;
-                    moveGhost([
-                        [62, [-1, 62.1, -2], [20, 59.1, 40], [-20, 61.1, -40], [1, 56.1, 2]],  // links: links runter hoch rechts
-                        [60, [1, 60.1, 2], [-20, 61.1, -40], [20, 59.1, 40], [-1, 58.1, -2]],  // rechts: rechts hoch runter links
-                        [61, [-20, 61.1, -40], [-1, 62.1, -2], [1, 60.1, 2], [20, 55.1, 40]],  // hoch: hoch links rechts runter
-                        [59, [20, 59.1, 40], [1, 60.1, 2], [-1, 62.1, -2], [-20, 57.1, -40]]   // runter: runter rechts links hoch
-                    ]);
-                    killGhostUnderFalling();
+            // === GEISTER (alle 5 Typen in einem Zweig) ===
+            if (val >= 43 && val < 63) {
+                if (!handleGhostExplosion(l, val)) {
+                    const cfg = val < 47 ? GHOST_CFG_180 :
+                                val < 51 ? GHOST_CFG_90L :
+                                val < 55 ? GHOST_CFG_90R :
+                                val < 59 ? GHOST_CFG_90LR :
+                                           GHOST_CFG_90RL;
+                    const ti = moveGhost(l, val, cfg);
+                    killGhostUnderFalling(ti);
                 }
             }
             // === STEINE UND DIAMANTEN ===
@@ -1342,7 +1386,11 @@ function game_loop() {
     diamond_blink = diamond_blink >= 64 + max_diamond_blink - 1 ? 64 : diamond_blink + 1;
 
     // Exit Blinksequenz (41 exit <--> 42 wall)
-    exit_blink = exit_blink >= 43 ? 41 : exit_blink + 0.05;
+    // Float-Rundung noetig: 0.05 ist binaer nicht exakt, sonst landet der
+    // Zaehler zwischendurch bei z.B. 43.0499.. -> <<0 ergibt 43 ->
+    // sprites[43] = 38 -> ein Geist-Frame blitzt im Exit auf
+    exit_blink = Math.round((exit_blink + 0.05) * 100) / 100;
+    if (exit_blink >= 43) exit_blink = 41;
     
     // Die Spiellogik nur bei jedem 2. Durchlauf (takt_teiler==1) ausführen
     takt_teiler ^= 3;  //  XOR mit 3, Wechselt zwischen 1 und 2, 1^3=2, 2^3=1
