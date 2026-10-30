@@ -116,6 +116,17 @@ const GHOST_DRAW_SET = new Set([43.2, 44.2, 45.2, 46.2, 47.2, 48.2, 49.2, 50.2,
 
 // 8 Felder um den Geist / alle 9 inkl. Geistposition
 const EXPLODE_AROUND = [-21, -20, -19, -1, 1, 19, 20, 21];
+
+// Bewegungstabelle Digger (ehemals pro Tick neu allokiert)
+const DIRS = {
+    LEFT:  { off: -1,  stone_off: -2, init: 13, isLeft:  true },
+    RIGHT: { off: 1,   stone_off: 2,  init: 19, isRight: true },
+    UP:    { off: -20, stone_off: 0,  init: 9,  isUp:    true },
+    DOWN:  { off: 20,  stone_off: 0,  init: 11 }
+};
+
+// Zeilenphase der Diamant-Animation (ehemals pro Diamant neu gerechnet)
+const ROW_PHASE = [0, 6, 2, 8, 4, 0, 6, 2, 8, 4, 0, 6, 2, 8, 4];
 const EXPLODE_ALL    = [-21, -20, -19, -1, 0, 1, 19, 20, 21];
 
 // Bewegungstabellen der 5 Geistertypen:
@@ -277,14 +288,12 @@ function menu_draw() {
     buffer_menuContext.globalCompositeOperation = "source-over";
 
     // Rahmen zeichnen
-    const border = [
-        "\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236",
-        "\237\240\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\241\242\237",
-        "\237\243\234\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\236\251\237"
-    ];
-    
-    border.forEach((line, i) => menuLine(line, 0, i));
-    
+        // Rahmen zeichnen (Wiederholungszeichen generiert)
+    menuLine("\234" + "\235".repeat(38) + "\236", 0, 0);
+    menuLine("\237\240" + "\241".repeat(36) + "\242\237", 0, 1);
+    menuLine("\237\243\234" + "\235".repeat(34) + "\236\251\237", 0, 2);
+
+
     // Seitenrahmen
     for (let i = 3; i < 27; i++) {
         menuLine("\237\243\237", 0, i);
@@ -320,9 +329,9 @@ function menu_draw() {
     menuLine("BERLIN", 29, 26);
 
     // Unterer Rahmen
-    menuLine("\237\243\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310\251\237", 0, 27);
-    menuLine("\237\312\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\313\314\237", 0, 28);
-    menuLine("\306\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\235\310", 0, 29);
+    menuLine("\237\243\306" + "\235".repeat(34) + "\310\251\237", 0, 27);
+    menuLine("\237\312" + "\313".repeat(36) + "\314\237", 0, 28);
+    menuLine("\306" + "\235".repeat(38) + "\310", 0, 29);
 
     // Canvas aktualisieren und anzeigen
     context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
@@ -503,64 +512,59 @@ function highscoreYesNo() {
     setTimeout(highscoreYesNo, 50);
 }
 
+// ============================================================
+// Speicher-Helfer: localStorage mit Cookie-Fallback
+// (ersetzt 4x identisches try/catch-Boilerplate)
+// ============================================================
+function storage_get(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        var m = document.cookie.match(new RegExp("(?:^|; )" + key + "=([^;]*)"));
+        return m ? m[1] : null;
+    }
+}
+
+function storage_set(key, value) {
+    try {
+        localStorage.setItem(key, value);
+        return;
+    } catch (e) { /* Fallback: Cookie */ }
+    var d = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    document.cookie = key + "=" + value + "; expires=" + d.toUTCString();
+}
+
 //Highscore laden und aktualisieren
 function storageHighscoreUpdate() {
-    //lade Array
-    var h;
-    try { //wird localStorage unterstützt?
-        if (localStorage.getItem("highscore"))
-            highscore = JSON.parse(localStorage.getItem("highscore"));
-    } catch (e) { //ansonsten Cookies benutzen
-        var name = "highscore=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) === 0) {
-                highscore = JSON.parse(c.substring(name.length, c.length));
-            }
-        }
-    }
+    var stored = storage_get("highscore");
+    if (stored)
+        highscore = JSON.parse(stored);
 
     //highscore[] vorbelegen
     if (highscore[0] === undefined) {
-        console.log('storageHighscoreUpdate: generiere Default-Highscore');
         highscore[0] = "10000  --------------";
         highscore[1] = "09000  Digger";
         highscore[2] = "08000  (c) 1988 by";
         highscore[3] = "07000  Alexander Lang";
         highscore[4] = "06000  --------------";
-        for (h = 5; h < 20; h++) {
+        for (var h = 5; h < 20; h++) {
             highscore[h] = "00000";
         }
     }
 
     //über alle 20 Einträge iterieren
     for (h = 0; h < 20; h++) {
-        //aktueller score > als aktueller Highscore-Eintrag
         if (score_punkte > Number(highscore[h].substring(0, 5))) {
-
-            //Zeile merken für highscoreInput()
             input_line = h;
-
-            //Array bis zum aktuellen Eintrag nach unten verschieben
             for (var m = 19; m > h; m--)
                 highscore[m] = highscore[m - 1];
-
-            //Highscore-Eintrag mit neuen Score überschreiben
-            //"score_punkte" auf 5 Stellen trimmen
             var sp = "" + score_punkte;
             while (sp.length < 5)
                 sp = "0" + sp;
             highscore[h] = sp;
-
-            // aktiviere normale Tastatureingabe
             state = 'input';
             document.body.removeEventListener('keydown', key_down);
             document.body.addEventListener('keydown', highscore_input);
-
             break;
         }
     }
@@ -568,15 +572,7 @@ function storageHighscoreUpdate() {
 
 //Highscore sichern
 function storageHighscoreSave() {
-    //schreibe Array
-    try { //wird localStorage unterstützt?
-        localStorage.setItem("highscore", JSON.stringify(highscore));
-    } catch (e) { //ansonsten Cookies benutzen
-        var d = new Date();
-        d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
-        var expires = "expires=" + d.toUTCString();
-        document.cookie = "highscore=" + JSON.stringify(highscore) + "; " + expires;
-    }
+    storage_set("highscore", JSON.stringify(highscore));
 }
 
 // Highscore-Eingabe über Tastatur (PC)
@@ -633,72 +629,17 @@ function resetGame () {
 
 //Spielstand sichern
 function storage_game_save() {
-    try { //wird localStorage unterstützt?
-        localStorage.setItem("level", score_raum);
-        localStorage.setItem("lives", score_leben);
-        localStorage.setItem("score", score_punkte);
-        console.log('storage_game_save: nach localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
-    } catch (e) { //ansonsten Cookies benutzen
-        var d = new Date();
-        d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
-        var expires = "expires=" + d.toUTCString();
-        document.cookie = "level=" + score_raum + "; " + expires;
-        document.cookie = "lives=" + score_leben + "; " + expires;
-        document.cookie = "score=" + score_punkte + "; " + expires;
-        console.log('storage_game_save: nach Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
-    }
+    storage_set("level", score_raum);
+    storage_set("lives", score_leben);
+    storage_set("score", score_punkte);
 }
 
 //Spielstand restaurieren
 function storage_game_restore() {
-    var ca;
-    var i;
-    var c;
-    try { //wird localStorage unterstützt?
-        if (localStorage.getItem("level"))
-            score_raum = Number(localStorage.getItem("level"));
-        if (localStorage.getItem("lives"))
-            score_leben = Number(localStorage.getItem("lives"));
-        if (localStorage.getItem("score"))
-            score_punkte = Number(localStorage.getItem("score"));
-        if (score_leben < LEBENMIN) resetGame()
-        console.log('storage_game_restore: von localStorage: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
-    } catch (e) { //ansonsten Cookies benutzen
-        var name = "level=";
-        ca = document.cookie.split(';');
-        for (i = 0; i < ca.length; i++) {
-            c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) === 0)
-                score_raum = Number(c.substring(name.length, c.length));
-        }
-        name = "lives=";
-        ca = document.cookie.split(';');
-        for (i = 0; i < ca.length; i++) {
-            c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) === 0) {
-                score_leben = Number(c.substring(name.length, c.length));
-            }
-        }
-        name = "score=";
-        ca = document.cookie.split(';');
-        for (i = 0; i < ca.length; i++) {
-            c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) === 0) {
-                score_punkte = Number(c.substring(name.length, c.length));
-            }
-        }
-        if (score_leben < LEBENMIN) resetGame()
-        console.log('storage_game_restore: von Cookies: Raum:' + score_raum + ' Leben:' + score_leben + ' Punkte:' + score_punkte);
-    }
+    var v = storage_get("level"); if (v) score_raum = Number(v);
+    v = storage_get("lives");     if (v) score_leben = Number(v);
+    v = storage_get("score");     if (v) score_punkte = Number(v);
+    if (score_leben < LEBENMIN) resetGame();
 }
 
 // Fullscreen aktivieren
@@ -753,21 +694,12 @@ function init_room(level) {
     // Spielstand initialisieren
     score_ges = 0; last_ges = -1; score_zeit = 5000;
 
-    // Raum(level) initialisieren(idx[])
-    // orig. NOTHING=0 STONE=1 GROUND=2 GHOST=0x3,0x7,0xB,0xF LDIGGER=4 DIAMOND=5 WALL=6 UVSTONE=9 DIGGER=10 EXIT=12 CHANGER=14 FSTODMD=15
-    // meins NOTHING=1 STONE=7 GROUND=2 GHOST=43, 47, 51, 55  LDIGGER=  DIAMOND=3 WALL=4 UVSTONE=7 DIGGER=8  EXIT=6  CHANGER=5  FSTODMD=
-    // 1=room 2= 3= 4= 5=
-    // 6=diggerX 7=diggerY
-    // 8=diamonds
-    // 9=ghost1_dir, ghost2_dir 10= 11= 12= 13= 14= 15= 16= // byteweise auslesen (9-16), initial Richtung des Geistes
-    // orig. 0x0=down, 0x1=up, 0x2=right, 0x3=left  ausgelesener Parameter: Geister-Richtung
-    // meins  43=down,  45=up,  44=right,  46=left  180
-    // meins  47=down,  49=up,  48=right,  50=left  90L
-    // meins  51=down,  53=up,  52=right,  54=left  90R
-    // trans       +0,     +2,        +1,       +3  Geisttyp und Richtung errechnen
-    // meins  55=down,  57=up,  56=right,  58=left  90LR    zuletzt rechts abgebogen
-    // meins  59=down,  61=up,  60=right,  62=left  90RL    zuletzt links abgebogen
-
+    // Raum(level) initialisieren (idx[], 1-basiert, je 20 Zellen/Zeile):
+    //  0 Staub, 1 leer, 2 Boden, 3 Diamant, 4 Wand, 5 Changer, 6 Exit,
+    //  7 Stein, 8 Digger, 41 versteckter Exit (= Diggerstart), 63 Kreuz,
+    //  43-62 Geister (je 4er-Block: 180, 90L, 90R, 90LR, 90RL; Richtung +0..+3)
+    // Leveldaten (room_data): 140 Bytes Feld (2 Nibbles/Zelle), ab Offset 139:
+    //  +6/+7 Diggerposition (BCD), +8 Diamantenziel (BCD), ab +16 Geisterrichtungen
     var room_data = room[level - 1];
     
     // Lookup-Table für Transformationen (viel schneller als if-else-Ketten)
@@ -968,7 +900,7 @@ function draw_field() {
         
         // Diamant Blinksequenz
         if (i === 3) {
-            i = diamond_blink + (z * 6) - ((z * 6 / 10) << 0) * 10;
+            i = diamond_blink + ROW_PHASE[z];   // zeilenversetzte Phase
             if (i > 73) i -= 10;
         }
         
@@ -1109,53 +1041,52 @@ function draw_frame1() {
 
     // === DIGGER BEWEGUNG ===
     // Behandelt die Bewegung des Diggers in alle vier Richtungen
+    // (Konfiguration auf Modulebene - keine Allokationen, keine window[]-Lookups)
     if (state === 'play' && !digger_death && !digger_idle) {
         // Stein-Schiebe-Flags zurücksetzen wenn Richtung gewechselt wird
         if (stone_l && digger_go !== 'LEFT') stone_l = false;
         if (stone_r && digger_go !== 'RIGHT') stone_r = false;
-        
-        // Konfiguration für alle Bewegungsrichtungen
-        const dirs = {
-            'LEFT': { off: -1, stone_off: -2, stone_flag: 'stone_l', step: 'digger_step_left', init: 13, anim: 'digger_animation_left' },
-            'UP': { off: -20, stone_off: null, stone_flag: null, step: 'digger_step_up', init: 9, anim: 'digger_animation_up' },
-            'RIGHT': { off: 1, stone_off: 2, stone_flag: 'stone_r', step: 'digger_step_right', init: 19, anim: 'digger_animation_right' },
-            'DOWN': { off: 20, stone_off: null, stone_flag: null, step: 'digger_step_down', init: 11, anim: 'digger_animation_down' }
-        };
-        
-        const dir = dirs[digger_go];
+
+        const dir = DIRS[digger_go];
         if (dir) {
             const target = d_idx + dir.off;
             const val = idx[target];
-            
+
             // Interaktionen mit Spielelementen behandeln
             if (val === 3) { score_ges++; score_punkte += 3; SFX.DIAMOND = true; } // Diamant einsammeln
             else if (val === 41) { autoscore = 100; state = 'init'; verz = window.setTimeout(idle_exit, 3000); } // Ausgang erreicht
             else if (val >= 43 && val < 63) digger_death = true; // Geist berührt - Tod
-            
-            // Steine schieben (nur links/rechts möglich)
-            if (val === 7 && dir.stone_off && idx[d_idx + dir.stone_off] === 1) {
-                if (window[dir.stone_flag]) {
+
+            // Steine schieben (nur links/rechts möglich, stone_off = 0 heißt "nicht möglich")
+            if (val === 7 && dir.stone_off !== 0 && idx[d_idx + dir.stone_off] === 1) {
+                if (dir.isLeft ? stone_l : stone_r) {
                     // Stein wird geschoben
                     idx[d_idx + dir.stone_off] = 7.1;
                     idx[target] = 1.1;
-                    window[dir.stone_flag] = false;
+                    if (dir.isLeft) stone_l = false; else stone_r = false;
                     brumm = true; // Vibration aktivieren
                 } else {
-                    window[dir.stone_flag] = true; // Stein-Schiebe-Flag setzen
+                    if (dir.isLeft) stone_l = true; else stone_r = true; // Stein-Schiebe-Flag setzen
                 }
             }
-            
+
             // Bewegung ausführen wenn Zielfeld frei ist
-            if (val < 4 || val === 41 || (val === 7 && dir.stone_off && idx[target] === 1.1)) {
+            if (val < 4 || val === 41 || (val === 7 && dir.stone_off !== 0 && idx[target] === 1.1)) {
                 idx[d_idx] = 1.1; // Alte Position leeren
                 d_idx += dir.off; // Neue Position setzen
                 SFX.STEP = true; // Schritt-Sound aktivieren
             }
-            
-            // Animation starten
-            if (window[dir.step] === dir.init) {
+
+            // Animation starten (Schrittzähler der aktuellen Richtung prüfen)
+            const stepVal = dir.isLeft ? digger_step_left :
+                            dir.isRight ? digger_step_right :
+                            dir.isUp ? digger_step_up : digger_step_down;
+            if (stepVal === dir.init) {
                 digger_animation_left = digger_animation_right = digger_animation_up = digger_animation_down = false;
-                window[dir.anim] = true;
+                if (dir.isLeft) digger_animation_left = true;
+                else if (dir.isRight) digger_animation_right = true;
+                else if (dir.isUp) digger_animation_up = true;
+                else digger_animation_down = true;
                 digger_step_left = 13; digger_step_up = 9; digger_step_right = 19; digger_step_down = 11;
             }
         }
