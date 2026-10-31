@@ -127,6 +127,10 @@ const DIRS = {
 
 // Zeilenphase der Diamant-Animation (ehemals pro Diamant neu gerechnet)
 const ROW_PHASE = [0, 6, 2, 8, 4, 0, 6, 2, 8, 4, 0, 6, 2, 8, 4];
+
+// Symboltabelle ASCII-Karte -> Zellenwert-Nibble (levels*_map.js)
+const SYM = { ' ': 0, 'S': 1, '.': 2, 'g': 3, '4': 4, 'D': 5, '#': 6, 'l': 7,
+              '8': 8, 'U': 9, 'P': 10, 'r': 11, 'E': 12, 'd': 13, 'C': 14, 't': 15 };
 const EXPLODE_ALL    = [-21, -20, -19, -1, 0, 1, 19, 20, 21];
 
 // Bewegungstabellen der 5 Geistertypen:
@@ -289,24 +293,24 @@ function menu_draw() {
 
     // Rahmen zeichnen
         // Rahmen zeichnen (Wiederholungszeichen generiert)
-    menuLine("\234" + "\235".repeat(38) + "\236", 0, 0);
-    menuLine("\237\240" + "\241".repeat(36) + "\242\237", 0, 1);
-    menuLine("\237\243\234" + "\235".repeat(34) + "\236\251\237", 0, 2);
+    menuLine("\x9c" + "\x9d".repeat(38) + "\x9e", 0, 0);
+    menuLine("\x9f\xa0" + "\xa1".repeat(36) + "\xa2\x9f", 0, 1);
+    menuLine("\x9f\xa3\x9c" + "\x9d".repeat(34) + "\x9e\xa9\x9f", 0, 2);
 
 
     // Seitenrahmen
     for (let i = 3; i < 27; i++) {
-        menuLine("\237\243\237", 0, i);
-        menuLine("\237\251\237", 37, i);
+        menuLine("\x9f\xa3\x9f", 0, i);
+        menuLine("\x9f\xa9\x9f", 37, i);
     }
 
     // Spieltitel
     const title = [
-        "\200\201\202\203 \210 \211\212\213\214 \211\212\213\214 \200\201\215\215 \133\215\221\222",
-        "\133 \206\207 \133 \133  \215 \133  \215 \133    \133 \223\224",
-        "\133  \133 \133 \133 \244\216 \133 \244\216 \133\217\220  \133\225\226\227",
-        "\133 \260\261 \133 \133 \316\133 \133 \316\133 \133    \133 \230\231",
-        "\252\253\254\255 \262 \263\264\265\266 \263\264\265\266 \252\253\267\267 \133 \232\233"
+        "\x80\x81\x82\x83 \x88 \x89\x8a\x8b\x8c \x89\x8a\x8b\x8c \x80\x81\x8d\x8d \x5b\x8d\x91\x92",
+        "\x5b \x86\x87 \x5b \x5b  \x8d \x5b  \x8d \x5b    \x5b \x93\x94",
+        "\x5b  \x5b \x5b \x5b \xa4\x8e \x5b \xa4\x8e \x5b\x8f\x90  \x5b\x95\x96\x97",
+        "\x5b \xb0\xb1 \x5b \x5b \xce\x5b \x5b \xce\x5b \x5b    \x5b \x98\x99",
+        "\xaa\xab\xac\xad \xb2 \xb3\xb4\xb5\xb6 \xb3\xb4\xb5\xb6 \xaa\xab\xb7\xb7 \x5b \x9a\x9b"
     ];
     
     title.forEach((line, i) => menuLine(line, 7, 6 + i));
@@ -314,8 +318,8 @@ function menu_draw() {
     // Credits
     menuLine("WRITTEN BY  ALEXANDER LANG", 7, 13);
     menuLine("GRAPHIX BY  STEFAN  DAHLKE", 7, 15);
-    menuLine("HUMBOLDT-UNIVERSITY     \245\246", 7, 17);
-    menuLine("         BERLIN         \247\250", 7, 18);
+    menuLine("HUMBOLDT-UNIVERSITY     \xa5\xa6", 7, 17);
+    menuLine("         BERLIN         \xa7\xa8", 7, 18);
 
     // Gamepad-spezifische Symbole holen
     const controls = menu_get_gamepad_symbols();
@@ -324,14 +328,14 @@ function menu_draw() {
 
     // Version und Copyright
     menuLine("JSv " + DIGGER_VERSION, 5, 25);
-    menuLine("\140 1988", 29, 25);
+    menuLine("\x60 1988", 29, 25);
     menuLine("by TIKKEL", 5, 26);
     menuLine("BERLIN", 29, 26);
 
     // Unterer Rahmen
-    menuLine("\237\243\306" + "\235".repeat(34) + "\310\251\237", 0, 27);
-    menuLine("\237\312" + "\313".repeat(36) + "\314\237", 0, 28);
-    menuLine("\306" + "\235".repeat(38) + "\310", 0, 29);
+    menuLine("\x9f\xa3\xc6" + "\x9d".repeat(34) + "\xc8\xa9\x9f", 0, 27);
+    menuLine("\x9f\xca" + "\xcb".repeat(36) + "\xcc\x9f", 0, 28);
+    menuLine("\xc6" + "\x9d".repeat(38) + "\xc8", 0, 29);
 
     // Canvas aktualisieren und anzeigen
     context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
@@ -341,10 +345,10 @@ function menu_draw() {
 // zeige Gamepad-spezifische Symbole (wenn angeschlossen)
 function menu_get_gamepad_symbols() {
     const controlMaps = {
-        playstation: { play: "\330: PLAY   \333: HIGHSCORE", rooms: "\332: A LOOK AT THE ROOMS" },
-        xbox: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" },
-        nintendo: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" },
-        generic: { play: "\334: PLAY   \337: HIGHSCORE", rooms: "\336: A LOOK AT THE ROOMS" }
+        playstation: { play: "\xd8: PLAY   \xdb: HIGHSCORE", rooms: "\xda: A LOOK AT THE ROOMS" },
+        xbox: { play: "\xdc: PLAY   \xdf: HIGHSCORE", rooms: "\xde: A LOOK AT THE ROOMS" },
+        nintendo: { play: "\xdc: PLAY   \xdf: HIGHSCORE", rooms: "\xde: A LOOK AT THE ROOMS" },
+        generic: { play: "\xdc: PLAY   \xdf: HIGHSCORE", rooms: "\xde: A LOOK AT THE ROOMS" }
     };
     
     return controlMaps[gamepad_brand] || 
@@ -365,7 +369,7 @@ function highscore_draw() {
   // KCF_WEISS aus KCB_TUERKIS ausschneiden (destination-out für Transparenz)
   buffer_menuContext.globalCompositeOperation = "destination-out";
   menuLine("HIGHSCORE :", 8, 4);
-  menuLine("\217\217\217\217\217\217\217\217\217\217\217", 8, 5);
+  menuLine("\x8f\x8f\x8f\x8f\x8f\x8f\x8f\x8f\x8f\x8f\x8f", 8, 5);
   
   // Highscore laden und 20 Zeilen zeichnen
   storageHighscoreUpdate();
@@ -398,7 +402,7 @@ function highscoreInput() {
     buffer_menuContext.fillStyle = KCB_TUERKIS;
     buffer_menuContext.fillRect(17 * 8, (7 + input_line) * 8, 15 * 8, 8);
     buffer_menuContext.globalCompositeOperation = "destination-out";
-    menuLine(input_alias + "\177", 17, 7 + input_line);
+    menuLine(input_alias + "\x7f", 17, 7 + input_line);
     
     // Puffer skaliert ins Menu-Canvas kopieren
     context_menuimg.globalCompositeOperation = "copy";
@@ -700,7 +704,21 @@ function init_room(level) {
     //  43-62 Geister (je 4er-Block: 180, 90L, 90R, 90LR, 90RL; Richtung +0..+3)
     // Leveldaten (room_data): 140 Bytes Feld (2 Nibbles/Zelle), ab Offset 139:
     //  +6/+7 Diggerposition (BCD), +8 Diamantenziel (BCD), ab +16 Geisterrichtungen
-    var room_data = room[level - 1];
+    // Leveldaten: ASCII-Karte + Kopfzeile dekodieren (levels*_map.js)
+    // 14 Zeilen à 20 Zeichen Spielfeld + 1 Kopfzeile mit 16 Header-Bytes
+    // (Diggerposition BCD, Diamantenziel BCD, Geisterrichtungen ab Byte 148)
+    var lines = room[level - 1].split('\n');
+    var head = lines[14].slice(1).split(',');
+    var room_data = new Array(156);
+    // 280 Zellen (2 pro Byte) aus der 14x20-Karte zusammensetzen
+    for (var d = 0; d < 140; d++) {
+        var k = d * 2;
+        room_data[d] = SYM[lines[(k / 20) | 0].charAt(k % 20)] << 4
+                     | SYM[lines[(k + 1) / 20 | 0].charAt((k + 1) % 20)];
+    }
+    for (var d = 0; d < 16; d++) {
+        room_data[140 + d] = Number(head[d]);
+    }
     
     // Lookup-Table für Transformationen (viel schneller als if-else-Ketten)
     var trans_map = {0:1.1, 1:7.1, 2:2.1, 3:43.1, 5:3.1, 6:4.1, 7:47.1, 9:7.1, 10:41.1, 11:55.1, 12:6.1, 14:5.1, 15:51.1};
@@ -958,7 +976,7 @@ function scorelinePrewrite() {
 
     // \324\325 --> Herz
     // \326\327 --> Diamant
-    scorelineChar("  " + sr + "   " + sl + "\324\325    5000" + "      \326\327" + sd + "              ", 0, 0);
+    scorelineChar("  " + sr + "   " + sl + "\xd4\xd5    5000" + "      \xd6\xd7" + sd + "              ", 0, 0);
     
     // gesammelte Diamanten und Punkte-Refresh aktivieren, weil last_ != score_
     last_ges = score_ges - 1;
