@@ -8,6 +8,7 @@
 	<!-- Icons -->
 	<link rel="icon" href="favicon.ico">
 	<link rel="apple-touch-icon" sizes="144x144" href="icon_digger_ipad.png">
+	<link rel="canonical" href="https://tikkel.de/digger/jdigger/jdigger.html">
 	
 	<!-- SEO Meta Tags -->
 	<meta name="author" content="Marko Klingner">
@@ -19,7 +20,7 @@
 	<meta property="og:title" content="Digger - Klassisches KC85 Retro-Spiel">
 	<meta property="og:description" content="Das originale Digger-Spiel aus der KC85-Ära - jetzt kostenlos im Browser spielen! 80 Level voller Diamanten und Monster.">
 	<meta property="og:type" content="game">
-	<meta property="og:url" content="https://tikkel.de">
+	<meta property="og:url" content="https://tikkel.de/digger/jdigger/jdigger.html">
 	<meta property="og:image" content="https://tikkel.de/digger/digger-screenshot.png">
 	<meta property="og:locale" content="de_DE">
 	<meta property="og:site_name" content="KC85 Digger Game">
@@ -30,12 +31,11 @@
 	<meta name="twitter:description" content="Das originale Digger-Spiel aus der KC85-Ära - jetzt kostenlos im Browser spielen!">
 	<meta name="twitter:image" content="https://tikkel.de/digger/digger-screenshot.png">
 	
-	<title>Digger - KC85</title>
+	<title>Digger – Klassisches KC85 Retro-Spiel | Kostenlos im Browser</title>
 	
 	<!-- Strukturierte Daten -->
 	<script type="application/ld+json">
-	{"@context":"https://schema.org","@type":"Game","name":"Digger","description":"Klassisches Digger-Spiel aus der KC85/3 und KC85/4 Computer-Ära. Sammeln Sie Diamanten, weichen Sie Monstern aus und meistern Sie 80 herausfordernde Level.","genre":"Arcade","gamePlatform":"Web Browser","operatingSystem":"Any","author":{"@type":"Person","name":"Marko Klingner"},"gameLocation":"Online","applicationCategory":"Game","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.5","ratingCount":"100"},"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
-	</script>
+	{"@context":"https://schema.org","@type":"VideoGame","name":"Digger","url":"https://tikkel.de/digger/jdigger/jdigger.html","image":"https://tikkel.de/digger/digger-screenshot.png","description":"Klassisches Digger-Spiel aus der KC85/3 und KC85/4 Computer-Ära. Sammeln Sie Diamanten, weichen Sie Monstern aus und meistern Sie 80 herausfordernde Level.","genre":"Arcade","gamePlatform":"Web Browser","operatingSystem":"Any","author":{"@type":"Person","name":"Marko Klingner"},"applicationCategory":"Game","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}</script>
 	
 	<style>
 		/* Pixel-perfect rendering */
@@ -60,15 +60,38 @@
 		
 		/* Virtual keyboard */
 		#virt_kbd{display:block;position:absolute;left:-1000px}
+
+		/* KC85-Zeichensatz, selbst gehostet (Cache-Buster bei Font-Updates hochsetzen) */
+		@font-face{
+			font-family:'KC85';
+			src:url('kc85.woff?v=1.8') format('woff');
+			font-display:swap;
+		}
+
+		/* Rechtliche Links im Menuestil */
+		#legal a{color:#F3F0F9;text-decoration:none;opacity:.85}
+		#legal a:hover{font-weight:bold;opacity:1}
 	</style>
 </head>
 
 <body id='body'>
+	<h1 style="position:absolute;left:-9999px;top:auto">Digger – Klassisches KC85 Retro-Spiel</h1>
+	<noscript>
+		<p><strong>Digger</strong> – das originale Arcade-Spiel aus der KC85/3- und KC85/4-Ära (1988, Alexander Lang / Stefan Dahlke).
+		Sammle Diamanten, weiche den Monstern aus und meistere 80 Level. Steuerung: Pfeiltasten, Touch oder Gamepad.
+		Dieses Browser-Spiel benötigt aktiviertes JavaScript.</p>
+	</noscript>
 	<!-- Menu Canvas -->
 	<div id='menudiv'>
 		<canvas id='menuimg' moz-opaque></canvas>
+		<!-- Rechtliche Links -->
+		<div id="legal" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;z-index:1;
+			font:16px/1.4 'KC85','Courier New',monospace;
+			letter-spacing:1px;text-transform:uppercase">
+			<a href="impressum.html">Impressum</a> & <a href="datenschutz.html">Datenschutz</a>
+		</div>
 	</div>
-	
+
 	<div id='gamediv'>
 		<!-- Score Display -->
 		<div id='scorelinediv'>
@@ -84,13 +107,13 @@
 	<input id='virt_kbd'>
 	
 	<!-- Game Scripts -->
-	<script src="header.js"></script>
-	<script src="levels30_map.js"></script> <!-- Levels: from "xdigger": xd1,xd2 from "lanale.de": 30,50,68,80 -->
-	<script src="audio.js"></script>
-	<script src="keyboard.js"></script>
-	<script src="touch.js"></script>
-	<script src="gamepad.js"></script>
-	<script src="mouse.js"></script>
-	<script src="jdigger.js"></script>
+	<script src="header.js?v=2"></script>
+	<script src="levels30_map.js?v=2"></script> <!-- Levels: from "xdigger": xd1,xd2 from "lanale.de": 30,50,68,80 -->
+	<script src="audio.js?v=2"></script>
+	<script src="keyboard.js?v=2"></script>
+	<script src="touch.js?v=2"></script>
+	<script src="gamepad.js?v=2"></script>
+	<script src="mouse.js?v=2"></script>
+	<script src="jdigger.js?v=2"></script>
 </body>
 </html>

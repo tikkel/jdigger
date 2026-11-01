@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>KC85-Schrift – Demo</title>
+<style>
+	@font-face{
+		font-family:'KC85';
+		src:url('kc85.woff?v=1.8') format('woff');
+		font-display:swap;
+	}
+	body{margin:0;padding:2em;background:#04028f;color:#F3F0F9;
+		font-family:'KC85','Courier New',monospace;text-align:center;text-transform:uppercase}
+	.sample{margin:1.2em 0;line-height:1.9}
+	.s16{font-size:16px}.s24{font-size:24px}.s32{font-size:32px}
+	.turk{background:#028965;color:#E7E95D;padding:1em;margin:1.5em -2em}
+	a{color:#F3F0F9}
+</style>
+</head>
+<body>
+	<div class="sample s16">Impressum · Datenschutz</div>
+	<div class="sample s24">Digger – Klassisches KC85 Retro-Spiel</div>
+	<div class="sample s32">ABCDEFGHIJKLM</div>
+	<div class="sample s32">NOPQRSTUVWXYZ</div>
+	<div class="sample s32">0123456789 ÄÖÜ <span style="text-transform:none">ß</span> !?§$%&</div>
+	<div class="turk sample s24">Highscore-Farben: Türkis auf Gelb</div>
+	<div class="sample s16"><a href="jdigger.html"><- Zum Spiel</a></div>
+</body>
+</html>
