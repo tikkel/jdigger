@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-// jdigger/keyboard.js - Tastatur Steuerung (CPU & GC-optimiert)
+// jdigger/keyboard.js - Tastatur Steuerung
 // Copyright (C) 2025–2026  Marko Klingner
 
 /* GC-Optimierte Datenstrukturen */

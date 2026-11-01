@@ -23,7 +23,8 @@ const TONE_HIGH = 1;
 const TONE_RATE = 44100;	// WebAudio-API-Samplefreq.
 
 function init_audio() {
-	const AC = window.AudioContext || window.webkitAudioContext;
+	//const AC = window.AudioContext || window.webkitAudioContext;
+	const AC = window.AudioContext || /** @type {any} */ (window).webkitAudioContext;
 	if (!AC)
 		return;
 

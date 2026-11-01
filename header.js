@@ -2,7 +2,7 @@
 // jdigger/header.js - globale Variable und Konstanten
 // Copyright (C) 2017–2026  Marko Klingner
 
-const DIGGER_VERSION = '28.10.26'
+const DIGGER_VERSION = '01.11.26'
 
 //Parameter
 const LEBENMAX = 20;
@@ -24,8 +24,11 @@ var diamond_blink = 64;
 var zufall = 1;
 var stone_l = false;
 var stone_r = false;
+
 var digger_idle_augen = 25;
 var digger_idle_stampfen = 33;
+var idle_augen = true;   // Idle-Animationsmodus: true = Augen, false = Stampfen
+
 var digger_step_up = 9;
 var digger_step_down = 11;
 var digger_step_left = 13;
@@ -85,7 +88,11 @@ var llptaste = 0;
 var lllptaste = 0;
 var rtaste = 0; //released-taste
 let handled = true;
+
+/** @type {HTMLInputElement} */
+var virt_kbd;            // verstecktes Eingabefeld (virtuelle Tastatur, Mobile)
 var virt_kbd_last_length;
+
 let touch_is_begin = false;
 let touch_begin_x = 0;
 let touch_begin_y = 0;
@@ -216,19 +223,19 @@ var actual_marginTop = 0;
 var duration_x = 0;
 var duration_y = 0;
 
-var canvas_scoreline = document.getElementById('scoreline');
-var context_scoreline = canvas_scoreline.getContext('2d', { alpha: false });
+var canvas_scoreline = /** @type {!HTMLCanvasElement} */ (document.getElementById('scoreline'));
+var context_scoreline = /** @type {!CanvasRenderingContext2D} */ (canvas_scoreline.getContext('2d', { alpha: false }));
 
-var canvas_digger = document.getElementById('digger');
-var context_digger = canvas_digger.getContext('2d', { alpha: false });
+var canvas_digger = /** @type {!HTMLCanvasElement} */ (document.getElementById('digger'));
+var context_digger = /** @type {!CanvasRenderingContext2D} */ (canvas_digger.getContext('2d', { alpha: false }));
 
-var canvas_menuimg = document.getElementById('menuimg');
-var context_menuimg = canvas_menuimg.getContext('2d', { alpha: false });
+var canvas_menuimg = /** @type {!HTMLCanvasElement} */ (document.getElementById('menuimg'));
+var context_menuimg = /** @type {!CanvasRenderingContext2D} */ (canvas_menuimg.getContext('2d', { alpha: false }));
 
 //Offscreen-Buffer fuer "Menu/Highscore"
 // - wird den Vorgerenderten Titelscreen oder Highscore enthalten
 var buffer_menuCanvas = document.createElement('canvas');
-var buffer_menuContext = buffer_menuCanvas.getContext('2d', { alpha: true });
+var buffer_menuContext = /** @type {!CanvasRenderingContext2D} */ (buffer_menuCanvas.getContext('2d', { alpha: true }));
 // - in original KC85/3/4-Auflösung
 buffer_menuCanvas.width = 320;
 buffer_menuCanvas.height = 240;
@@ -237,13 +244,13 @@ buffer_menuCanvas.height = 240;
 // - soll die korrekt vorskalierten Zeichen enthalten
 // - mit KCB_ROT als Hintergrundfarbe
 var buffer_charsCanvas = document.createElement('canvas');
-var buffer_charsContext = buffer_charsCanvas.getContext('2d', { alpha: true });
+var buffer_charsContext = /** @type {!CanvasRenderingContext2D} */ (buffer_charsCanvas.getContext('2d', { alpha: true }));
 
 //Offscreen-Buffer fuer "Sprites"
 // - soll die korrekt vorskalierten Sprites enthalten
 // - um sie dann performanter im Spielfeld darzustellen
 var buffer_spritesCanvas = document.createElement('canvas');
-var buffer_spritesContext = buffer_spritesCanvas.getContext('2d', { alpha: false });
+var buffer_spritesContext = /** @type {!CanvasRenderingContext2D} */ (buffer_spritesCanvas.getContext('2d', { alpha: false }));
 
 //"Zeichensatz" laden
 var charsImage = new Image();

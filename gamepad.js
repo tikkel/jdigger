@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-// jdigger/gamepad.js - GC-optimierte Gamepad Steuerung
+// jdigger/gamepad.js - Gamepad Steuerung
 // Copyright (C) 2022–2026 Marko Klingner
 
 const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
@@ -7,6 +7,83 @@ const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
 // Gamepad State - Minimale Variablen
 let gamepad_connected = false, gamepad_type = 0, gamepad_brand = 'keyboard', 
     gamepad_rumble = false, gamepad_idx = 0, gamepad_first_input_handled = false;
+
+// === State-Handler (Modulebene: einmal erzeugt, nie wieder allokiert) ===
+const gamepad_state_handlers = {
+    'play': () => {
+        gamepad_handle_movement();
+        if (get_btn('B') && !get_prev_btn('B')) {
+            if (digger_death) {
+                if (score_leben < LEBENMIN) {
+                    state = 'highscore';
+                    highscore_draw();
+                } else {
+                    state = 'init';
+                    init_room(score_raum);
+                }
+                storage_game_save();
+            } else {
+                digger_death = true;
+            }
+        }
+        if (get_btn('A') && !get_prev_btn('A')) {
+            idle_stop();
+            resetGame();
+            storage_game_save();
+            state = 'menu';
+            init_room(score_raum);
+            menu_draw();
+        }
+    },
+    'init': () => {
+        if (get_btn('A') && !get_prev_btn('A')) {
+            idle_stop();
+            resetGame();
+            storage_game_save();
+            state = 'menu';
+            init_room(score_raum);
+            menu_draw();
+        }
+    },
+    'menu': () => {
+        if (get_btn('B') && !get_prev_btn('B')) {
+            storage_game_restore();
+            state = 'init';
+            init_room(score_raum);
+        } else if (get_btn('X') && !get_prev_btn('X')) {
+            state = 'highscore';
+            highscore_draw();
+        } else if (get_btn('Y') && !get_prev_btn('Y')) {
+            state = 'look';
+            storage_game_restore();
+            init_room(score_raum);
+        }
+    },
+    'look': () => {
+        if ((get_btn('Y') && !get_prev_btn('Y')) || (get_btn('R1') && !get_prev_btn('R1'))) {
+            if (score_raum < room.length) {
+                score_raum++;
+                init_room(score_raum);
+            }
+        }
+        if (get_btn('L1') && !get_prev_btn('L1')) {
+            if (score_raum > 1) {
+                score_raum--;
+                init_room(score_raum);
+            }
+        }
+        if (get_btn('A') && !get_prev_btn('A')) {
+            state = 'menu';
+            menu_draw();
+        }
+    },
+    'highscore': () => {
+        if (get_btn('A') && !get_prev_btn('A')) {
+            state = 'menu';
+            menu_draw();
+        }
+    }
+};
 
 // Button States - GC-optimiert mit TypedArrays
 const btn_names = ['left', 'right', 'up', 'down', 'A', 'B', 'X', 'Y', 'L1', 'R1'];
@@ -82,26 +159,26 @@ function gamepad_get_dirs(gp) {
     return dirs_cache;
 }
 
-// Movement-Behandlung - Optimiert ohne splice()
+// Richtungs-Tasten - Modulebene (einmalig, keine Allokation pro Tick)
+const GAMEPAD_DIR_NAMES = ['left', 'right', 'up', 'down'];
+const GAMEPAD_DIR_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+
+// Movement-Behandlung - Optimiert ohne splice() und ohne pro-Tick-Allokation
 function gamepad_handle_movement() {
     if (state !== 'play' || !gamepad_connected) return;
-    
-    const dir_map = [['left', 'ArrowLeft'], ['right', 'ArrowRight'], 
-                     ['up', 'ArrowUp'], ['down', 'ArrowDown']];
-    
-    for (let i = 0; i < dir_map.length; i++) {
-        const [dir, key] = dir_map[i];
-        const pressed = get_btn(dir);
-        const was_pressed = get_prev_btn(dir);
-        
+
+    for (let i = 0; i < 4; i++) {
+        const pressed = get_btn(GAMEPAD_DIR_NAMES[i]);
+        const was_pressed = get_prev_btn(GAMEPAD_DIR_NAMES[i]);
+
         if (pressed && !was_pressed) { // Button gedrückt
-            remove_key(key);
-            add_key(key);
+            remove_key(GAMEPAD_DIR_KEYS[i]);
+            add_key(GAMEPAD_DIR_KEYS[i]);
             digger_idle = false;
-            digger_go = direction_map[key];
+            digger_go = direction_map[GAMEPAD_DIR_KEYS[i]];
             digger_go_handled = false;
         } else if (!pressed && was_pressed) { // Button losgelassen
-            remove_key(key);
+            remove_key(GAMEPAD_DIR_KEYS[i]);
             if (keys_stack.length > 0) {
                 digger_idle = false;
                 digger_go = direction_map[keys_stack[keys_stack.length - 1]];
@@ -158,6 +235,14 @@ function gamepad_update() {
     
     const gp = navigator.getGamepads()[gamepad_idx];
     if (!gp) return;
+
+    // Vibration-Faehigkeit nachfassen: Nach Reconnect kann der Actuator
+    // erst verzoegert am Pad-Objekt auftauchen - deshalb bis zum ersten
+    // Erfolg pruefen statt nur einmal beim ersten Tastendruck.
+    if (!gamepad_rumble) {
+        gamepad_rumble = typeof gp.vibrationActuator?.playEffect === 'function';
+        if (gamepad_rumble) console.log(`Rumble: ${gamepad_rumble}`);
+    }
     
     // Button States kopieren - Extrem schnell mit TypedArrays
     prev_btns_array.set(curr_btns_array);
@@ -188,100 +273,15 @@ function gamepad_update() {
     set_btn('L1', read_btn(ctrl_btns[4]));  // shoulder_l
     set_btn('R1', read_btn(ctrl_btns[5]));  // shoulder_r
 
-    // Ersten Tastendruck nach Verbindung ignorieren, Vibration testen
+    // Ersten Tastendruck nach Verbindung ignorieren (Button-Zustand syncen)
     if (!gamepad_first_input_handled) {
         gamepad_first_input_handled = true;
-        prev_btns_array.set(curr_btns_array); // Zustand synchronisieren
-        if (gp?.vibrationActuator?.playEffect) gamepad_rumble = true;
-        console.log(`Rumble: ${gamepad_rumble}`);
+        prev_btns_array.set(curr_btns_array);
         return;
     }
     
-    // Zustandsbehandlung - Optimiert mit Inline-Prüfung
-    const btn_pressed = btn => get_btn(btn) && !get_prev_btn(btn);
-    
-    // State-Handler - Lookup-Table für bessere Performance
-    const state_handlers = {
-        'play': () => {
-            gamepad_handle_movement();
-            if (btn_pressed('B')) {
-                if (digger_death) {
-                    if (score_leben < LEBENMIN) {
-                        state = 'highscore';
-                        highscore_draw();
-                    } else {
-                        state = 'init';
-                        init_room(score_raum);
-                    }
-                    storage_game_save();
-                } else {
-                    digger_death = true;
-                }
-            }
-            if (btn_pressed('A')) {
-                idle_stop();
-                resetGame();
-                storage_game_save();
-                state = 'menu';
-                init_room(score_raum);
-                menu_draw();
-            }
-        },
-        
-        'init': () => {
-            if (btn_pressed('A')) {
-                idle_stop();
-                resetGame();
-                storage_game_save();
-                state = 'menu';
-                init_room(score_raum);
-                menu_draw();
-            }
-        },
-        
-        'menu': () => {
-            if (btn_pressed('B')) {
-                storage_game_restore();
-                state = 'init';
-                init_room(score_raum);
-            } else if (btn_pressed('X')) {
-                state = 'highscore';
-                highscore_draw();
-            } else if (btn_pressed('Y')) {
-                state = 'look';
-                storage_game_restore();
-                init_room(score_raum);
-            }
-        },
-        
-        'look': () => {
-            if (btn_pressed('Y') || btn_pressed('R1')) {
-                if (score_raum < room.length) {
-                    score_raum++;
-                    init_room(score_raum);
-                }
-            }
-            if (btn_pressed('L1')) {
-                if (score_raum > 1) {
-                    score_raum--;
-                    init_room(score_raum);
-                }
-            }
-            if (btn_pressed('A')) {
-                state = 'menu';
-                menu_draw();
-            }
-        },
-        
-        'highscore': () => {
-            if (btn_pressed('A')) {
-                state = 'menu';
-                menu_draw();
-            }
-        }
-    };
-    
+    // State-Handler ausführen (Tabelle auf Modulebene, keine Allokation)
     // State-Handler ausführen
-    const handler = state_handlers[state];
+    const handler = gamepad_state_handlers[state];
     if (handler) handler();
 }

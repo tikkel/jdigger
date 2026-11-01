@@ -64,33 +64,31 @@ function scaleReload() {
   // Scalierfaktor und Puffer aktualisieren
   scaleInit();
   scaleBuffer();
-  
+
   // Menu refreshen
-  const menudiv = document.getElementById('menudiv');
-  const menuimg = document.getElementById('menuimg');
+  const menudiv = /** @type {!HTMLElement} */ (document.getElementById('menudiv'));
+  const menuimg = /** @type {!HTMLCanvasElement} */ (document.getElementById('menuimg'));
   menudiv.style.width = body_width + 'px';
   menudiv.style.height = body_height + 'px';
   menuimg.width = body_width;
   menuimg.height = body_height;
   scalePixelated(context_menuimg);
-  
   if (state === 'menu') menu_draw();
   else if (state === 'highscore') highscore_draw();
-  
   rd_in = rd_yn = false;
-  
+
   // Scoreline refreshen
-  const scorelinediv = document.getElementById('scorelinediv');
-  const scoreline = document.getElementById('scoreline');
+  const scorelinediv = /** @type {!HTMLElement} */ (document.getElementById('scorelinediv'));
+  const scoreline = /** @type {!HTMLCanvasElement} */ (document.getElementById('scoreline'));
   scorelinediv.style.width = body_width + 'px';
   scorelinediv.style.height = scale + 'px';
   scoreline.width = body_width;
   scoreline.height = scale;
   scorelinePrewrite();
-  
+
   // Spielfeld refreshen
-  const diggerdiv = document.getElementById('diggerdiv');
-  const digger = document.getElementById('digger');
+  const diggerdiv = /** @type {!HTMLElement} */ (document.getElementById('diggerdiv'));
+  const digger = /** @type {!HTMLCanvasElement} */ (document.getElementById('digger'));
   diggerdiv.style.width = body_width + 'px';
   diggerdiv.style.height = (body_height - scale) + 'px';
   diggerdiv.style.top = scale + 'px';
@@ -339,7 +337,7 @@ function menu_draw() {
 
     // Canvas aktualisieren und anzeigen
     context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
-    document.getElementById('menudiv').style.visibility = "visible";
+    /** @type {!HTMLElement} */ (document.getElementById('menudiv')).style.visibility = "visible";
 }
 
 // zeige Gamepad-spezifische Symbole (wenn angeschlossen)
@@ -384,7 +382,7 @@ function highscore_draw() {
   context_menuimg.globalCompositeOperation = "source-over";
   context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
   
-  document.getElementById('menudiv').style.visibility = "visible";
+  /** @type {!HTMLElement} */ (document.getElementById('menudiv')).style.visibility = "visible";
   
   // Eventl. neuen Alias abfragen
   if (state === 'input' && digger_is_dead) setTimeout(highscoreInput, 50);
@@ -648,7 +646,7 @@ function storage_game_restore() {
 
 // Fullscreen aktivieren
 function fullscreen() {
-    const element = document.getElementById('body');
+    const element = /** @type {any} */ (document.getElementById('body'));
     const methods = ['requestFullscreen', 'webkitRequestFullscreen', 'mozRequestFullScreen', 'msRequestFullscreen'];
     
     for (const method of methods) {
@@ -784,7 +782,7 @@ function init_room(level) {
     scorelinePrewrite();
 
     // Menu-Bild unsichtbar
-    document.getElementById('menudiv').style.visibility = "hidden";
+    /** @type {!HTMLElement} */ (document.getElementById('menudiv')).style.visibility = "hidden";
 
     // Altes Feld sofort uebermalen: Im Menue laeuft draw_field nicht, das
     // Canvas behalte sonst 1-2 Frames den Stand des letzten Levels
@@ -1254,9 +1252,9 @@ function draw_frame1() {
     // === VIBRATION ===
     // Controller- oder Handy-Vibration für haptisches Feedback
     if (brumm) {
-        if (gamepad_rumble) {
-            // Chrome
-            navigator.getGamepads()[0].vibrationActuator.playEffect("dual-rumble", {
+        const pad0 = navigator.getGamepads()[0];
+        if (gamepad_rumble && pad0) {
+            pad0.vibrationActuator?.playEffect("dual-rumble", {
                 startDelay:0, duration:FPS*2, strongMagnitude:1.0, weakMagnitude:1.0});
         } else if (navigator.vibrate) {
             // Handy
@@ -1356,9 +1354,8 @@ function init_events() {
     // Touch-Optimierungen
     document.body.style.touchAction = 'none';
     document.body.style.userSelect = 'none';
-    //document.body.style.webkitUserSelect = 'none';
-    document.body.style.webkitTouchCallout = 'none';
-    document.body.style.webkitTapHighlightColor = 'transparent';
+    /** @type {any} */ (document.body.style).webkitTouchCallout = 'none';
+    /** @type {any} */ (document.body.style).webkitTapHighlightColor = 'transparent';
     // Verhindert Kontext-Menu bei langem Touch
     document.body.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -1371,7 +1368,7 @@ function init_events() {
     window.addEventListener('resize', scaleReload);
 
     // Gamepad verbunden|abgesteckt
-    if (navigator.getGamepads) {
+    if (typeof navigator.getGamepads === 'function') {
         window.addEventListener('gamepadconnected', gamepad_connect);
         window.addEventListener('gamepaddisconnected', gamepad_disconnect);
     }
