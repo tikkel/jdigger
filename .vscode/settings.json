@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "**/levels*_map.js": "plaintext"
+    },
+    "editor.colorDecorators": false
+}
