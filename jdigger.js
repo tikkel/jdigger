@@ -338,6 +338,7 @@ function menu_draw() {
     // Canvas aktualisieren und anzeigen
     context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
     /** @type {!HTMLElement} */ (document.getElementById('menudiv')).style.visibility = "visible";
+    /** @type {!HTMLElement} */ (document.getElementById('legal')).classList.remove('gelb');
 }
 
 // zeige Gamepad-spezifische Symbole (wenn angeschlossen)
@@ -383,6 +384,7 @@ function highscore_draw() {
   context_menuimg.drawImage(buffer_menuCanvas, 0, 0, 320, 240, 0, 0, body_width, body_height);
   
   /** @type {!HTMLElement} */ (document.getElementById('menudiv')).style.visibility = "visible";
+  /** @type {!HTMLElement} */ (document.getElementById('legal')).classList.add('gelb');
   
   // Eventl. neuen Alias abfragen
   if (state === 'input' && digger_is_dead) setTimeout(highscoreInput, 50);
