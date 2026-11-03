@@ -64,13 +64,14 @@
 		/* KC85-Zeichensatz, selbst gehostet (Cache-Buster bei Font-Updates hochsetzen) */
 		@font-face{
 			font-family:'KC85';
-			src:url('kc85.woff?v=1.8') format('woff');
+			src:url('../kc85.woff?v=1.8') format('woff');
 			font-display:swap;
 		}
 
 		/* Rechtliche Links: KC-Weiss im Menue, KC-Gelb im Highscore-Modus */
-		#legal a{color:#F3F0F9;text-decoration:none}
-		#legal.gelb a{color:#E7E95D}
+		#legal, #legal a, #legal span{color:#F3F0F9}
+		#legal a{text-decoration:none}
+		#legal.gelb, #legal.gelb a, #legal.gelb span{color:#E7E95D}
 	</style>
 </head>
 
@@ -85,9 +86,9 @@
 	<div id='menudiv'>
 		<canvas id='menuimg' moz-opaque></canvas>
 		<!-- Rechtliche Links -->
-		<div id="legal" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;z-index:1;
+		<div id="legal" style="position:absolute;bottom:10px;left:0;right:0;text-align:center;z-index:1;
 			font-family:'KC85','Courier New',monospace;font-size:16px;line-height:1;letter-spacing:0">
-			<span id="legal_imp"><a href="../impressum.html">Impressum</a></span><span id="legal_sep"> & </span><span id="legal_dat"><a href="../datenschutz.html">Datenschutz</a></span>
+			<span id="legal_imp"><a href="../impressum.html">Impressum</a></span><span id="legal_sep"> &amp; </span><span id="legal_dat"><a href="../datenschutz.html">Datenschutz</a></span>
 		</div>
 	</div>
 
@@ -106,20 +107,20 @@
 	<input id='virt_kbd'>
 	
 	<!-- Game Scripts -->
-	<script src="header.js?v=3"></script>
-	<script src="levels30_map.js?v=3"></script> <!-- Levels: from "xdigger": xd1,xd2 from "lanale.de": 30,50,68,80 -->
-	<script src="audio.js?v=3"></script>
-	<script src="keyboard.js?v=3"></script>
-	<script src="touch.js?v=3"></script>
-	<script src="gamepad.js?v=3"></script>
-	<script src="mouse.js?v=3"></script>
-	<script src="jdigger.js?v=3"></script>
+	<script src="header.js?v=2"></script>
+	<script src="levels30_map.js?v=2"></script> <!-- Levels: from "xdigger": xd1,xd2 from "lanale.de": 30,50,68,80 -->
+	<script src="audio.js?v=2"></script>
+	<script src="keyboard.js?v=2"></script>
+	<script src="touch.js?v=2"></script>
+	<script src="gamepad.js?v=2"></script>
+	<script src="mouse.js?v=2"></script>
+	<script src="jdigger.js?v=2"></script>
 	<script>
 		// Rechtliche Links: exakt die Spiel-Skalierung (scale/4), stufenlos
 		function fit_legal() {
 			var scale = Math.max(window.innerWidth / 20, window.innerHeight / 15);
 			var el = document.getElementById('legal');
-			if (el) el.style.fontSize = Math.max(8, scale / 4) + 'px';
+			if (el) el.style.fontSize = Math.max(4, scale / 8) + 'px';
 		}
 		window.addEventListener('resize', fit_legal);
 		window.addEventListener('orientationchange', fit_legal);
